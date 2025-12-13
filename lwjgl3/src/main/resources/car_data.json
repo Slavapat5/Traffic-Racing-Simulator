@@ -1,0 +1,72 @@
+[
+  {
+    "image": "Ford Fiesta ST - 2019.png",
+    "title": "2019 Ford Fiesta ST",
+    "description": "Other Car",
+    "price": 14950,
+    "horsepower": 200,
+    "weightKg": 1262,
+    "engine": "V3, 1.5L",
+    "longDescription": "Another car"
+  },
+  {
+    "image": "Volkswagen Golf GTI Mk8 - 2019.png",
+    "title": "2019 Volkswagen Golf GTI Mk8",
+    "description": "Other Car",
+    "price": 15821,
+    "horsepower": 240,
+    "weightKg": 1448,
+    "engine": "i4, 2.0L",
+    "longDescription": "Another car"
+  },
+  {
+    "image": "Mazda MX-5 Miata - 2014.png",
+    "title": "2014 Mazda MX-5 Miata",
+    "description": "Starter Car",
+    "price": 21845,
+    "horsepower": 181,
+    "weightKg": 1090,
+    "engine": "V4, 2.0L",
+    "longDescription": "This is the starter car."
+  },
+  {
+    "image": "BMW 330i - 2025.png",
+    "title": "2025 BMW 330i",
+    "description": "Other Car",
+    "price": 47125,
+    "horsepower": 255,
+    "weightKg": 1525,
+    "engine": "V4, 2.0L",
+    "longDescription": "Another car"
+  },
+  {
+    "image": "Mclaren 650s - 2015.png",
+    "title": "2015 Mclaren 650s",
+    "description": "Other Car",
+    "price": 98852,
+    "horsepower": 641,
+    "weightKg": 1370,
+    "engine": "V8, 3.8L",
+    "longDescription": "Another car"
+  },
+  {
+    "image": "Lamborghini Huracan - 2015.png",
+    "title": "2015 Lamborghini Huracan",
+    "description": "Other Car",
+    "price": 237250,
+    "horsepower": 610,
+    "weightKg": 1422,
+    "engine": "V10, 5.2L",
+    "longDescription": "Another car"
+  },
+  {
+  "image": "Ferrari 458 - 2015.png",
+  "title": "2015 Ferrari 458",
+  "description": "Other Car",
+  "price": 243090,
+  "horsepower": 597,
+  "weightKg": 1422,
+  "engine": "V8, 4.6L",
+  "longDescription": "Another car"
+}
+]

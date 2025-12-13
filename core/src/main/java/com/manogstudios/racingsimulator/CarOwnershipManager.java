@@ -1,0 +1,90 @@
+package com.manogstudios.racingsimulator;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.manogstudios.racingsimulator.network.SupabaseAuth;
+import com.manogstudios.racingsimulator.network.SupabaseGameData;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+public class CarOwnershipManager {
+    private static String FILE_PATH = "owned_cars_default.txt";
+    private static Set<String> ownedCars = new HashSet<>();
+
+    public static void setCurrentUser(String userId) {
+        if (userId == null || userId.isEmpty()) {
+            FILE_PATH = "owned_cars_default.txt";
+        } else {
+            FILE_PATH = "owned_cars_" + userId + ".txt";
+        }
+    }
+
+    public static void loadOwnedCars() {
+        ownedCars.clear();
+
+        FileHandle file = Gdx.files.local(FILE_PATH);
+        if (file.exists()) {
+            String content = file.readString().trim();
+            if (!content.isEmpty()) {
+                String[] lines = content.split("\n");
+                ownedCars.addAll(Arrays.asList(lines));
+            }
+        } else {
+            // First time this user logs in → give starter car(s)
+            ownedCars.add("Mazda MX-5 Miata - 2014.png"); //  starter car
+            saveOwnedCars();
+        }
+    }
+
+    public static void saveOwnedCars() {
+        FileHandle file = Gdx.files.local(FILE_PATH);
+        file.writeString(String.join("\n", ownedCars), false);
+    }
+
+    public static boolean ownsCar(String carImagePath) {
+        return ownedCars.contains(carImagePath);
+    }
+
+    public static void addCar(String imagePath) {
+        if (!ownedCars.contains(imagePath)) {
+            ownedCars.add(imagePath);
+            saveOwnedCars();
+
+            // Push to Supabase cloud
+            if (SupabaseAuth.isLoggedIn) {
+                SupabaseGameData.saveOwnedCar(
+                    SupabaseAuth.userId,
+                    SupabaseAuth.accessToken,
+                    imagePath
+                );
+            }
+        }
+    }
+
+    public static void removeCar(String imagePath) {
+        if (ownedCars.contains(imagePath)) {
+            ownedCars.remove(imagePath);
+            saveOwnedCars();
+
+            if (SupabaseAuth.isLoggedIn) {
+                SupabaseGameData.removeOwnedCar(
+                    SupabaseAuth.userId,
+                    SupabaseAuth.accessToken,
+                    imagePath
+                );
+            }
+        }
+    }
+
+
+    public static void clearOwnedCars() {
+        ownedCars.clear();
+        saveOwnedCars();
+    }
+
+    public static Set<String> getOwnedCars() {
+        return ownedCars;
+    }
+}

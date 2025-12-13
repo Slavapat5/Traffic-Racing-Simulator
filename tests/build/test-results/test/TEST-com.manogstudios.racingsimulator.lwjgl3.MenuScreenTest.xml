@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.manogstudios.racingsimulator.lwjgl3.MenuScreenTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-07-16T22:57:31" hostname="DESKTOP-DU7OUTD" time="0.003">
+  <properties/>
+  <testcase name="testMenuScreenCreation()" classname="com.manogstudios.racingsimulator.lwjgl3.MenuScreenTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
