@@ -35,7 +35,7 @@ public class RegisterScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        // --- Optional background image ---
+        //  background image
         try {
             bgTexture = new Texture(Gdx.files.internal("login_bg.png"));
             bgImage = new Image(bgTexture);
@@ -59,7 +59,7 @@ public class RegisterScreen implements Screen {
         card.setBackground("default-round");
         card.setColor(0.08f, 0.08f, 0.08f, 0.90f);
 
-        // --- Title + subtitle ---
+        //  Title + subtitle
         Label title = new Label("Traffic Racing Simulator", skin);
         title.setAlignment(Align.center);
         title.setFontScale(1.3f);
@@ -71,7 +71,7 @@ public class RegisterScreen implements Screen {
         card.add(title).colspan(2).padBottom(4).row();
         card.add(subtitle).colspan(2).padBottom(18).row();
 
-        // --- Email ---
+        //  Email
         Label emailLabel = new Label("Email", skin);
         TextField emailField = new TextField("", skin);
         emailField.setMessageText("you@example.com");
@@ -80,7 +80,7 @@ public class RegisterScreen implements Screen {
         card.row();
         card.add(emailField).colspan(2).width(380).row();
 
-        // --- Password + Show toggle ---
+        //  Password + Show toggle
         Label passwordLabel = new Label("Password", skin);
         TextField passwordField = new TextField("", skin);
         passwordField.setPasswordMode(true);
@@ -107,7 +107,7 @@ public class RegisterScreen implements Screen {
             }
         });
 
-        // --- Status / feedback label ---
+        //  Status  feedback label
         Label statusLabel = new Label("", skin);
         statusLabel.setAlignment(Align.center);
         statusLabel.setColor(Color.RED);
@@ -115,12 +115,12 @@ public class RegisterScreen implements Screen {
 
         card.add(statusLabel).colspan(2).width(380).padTop(8).row();
 
-        // --- Sign Up button ---
+        // Sign Up button
         TextButton registerButton = new TextButton("Sign Up", skin);
         registerButton.getLabel().setAlignment(Align.center);
         card.add(registerButton).colspan(2).width(380).height(45).padTop(10).row();
 
-        // --- "Already have an account?" + Log in ---
+        // "Already have an account?" + Log in
         Label haveAccountLabel = new Label("Already have an account?", skin);
         haveAccountLabel.setColor(Color.LIGHT_GRAY);
 
@@ -133,17 +133,14 @@ public class RegisterScreen implements Screen {
 
         card.add(bottomRow).colspan(2).padTop(10).row();
 
-        // --- Back button (to main menu) ---
+        // Back button
         TextButton backButton = new TextButton("Back to Menu", skin);
         card.add(backButton).colspan(2).width(200).height(40).padTop(10).row();
 
         // Add card into root
         root.add(card).width(480).pad(20);
 
-        // --- Button logic ---
-
-
-
+        //  Button logic
         registerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {

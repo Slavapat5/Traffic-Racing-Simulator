@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.manogstudios.racingsimulator.network.SupabaseAuth;
+import com.manogstudios.racingsimulator.network.SupabaseGameData;
 
 public class CashManager {
     private static String FILE_PATH = "cash_default.txt"; // fallback if no user
@@ -30,7 +32,7 @@ public class CashManager {
             }
         } else {
             cash = 10000;   // starter cash
-            saveCash();     // create their personal save file
+            saveCash();     // create  personal save file
         }
     }
 
@@ -58,6 +60,23 @@ public class CashManager {
             return true;
         }
         return false;
+    }
+
+    public static void addCashAndSync(int delta, String reason) {
+        // optimistic UI update
+        addCash(delta);
+        saveCash();
+
+        if (!SupabaseAuth.isLoggedIn) return;
+
+        SupabaseGameData.adjustCash(delta, reason, newCash -> {
+            if (newCash != null) {
+                setCash(newCash);
+                saveCash();
+            } else {
+                System.out.println("addCashAndSync: server sync failed (reason=" + reason + ")");
+            }
+        });
     }
 
     public static void setCash(int newCash) {

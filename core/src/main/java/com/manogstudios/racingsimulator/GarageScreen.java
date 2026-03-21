@@ -32,6 +32,10 @@ public class GarageScreen implements Screen {
     private Table infoPanel;
     private Label selectedCarLabel;
     private Label selectedPriceLabel;
+
+    // NEW: Class/PI label (info panel)
+    private Label classLabel;
+
     private Label horsepowerLabel;
     private Label weightLabel;
     private Label engineLabel;
@@ -122,7 +126,7 @@ public class GarageScreen implements Screen {
         // === INFO PANEL (BOTTOM) ===
         infoPanel = new Table(skin);
         infoPanel.setBackground("default-round");
-        infoPanel.setColor(0.1f, 0.1f, 0.1f, 1f); // fully opaque
+        infoPanel.setColor(0.1f, 0.1f, 0.1f, 1f);
         infoPanel.pad(20);
         infoPanel.defaults().space(10);
 
@@ -138,6 +142,12 @@ public class GarageScreen implements Screen {
         selectedPriceLabel.setFontScale(1.2f);
         selectedPriceLabel.setAlignment(Align.center);
 
+        //  class label in info panel
+        classLabel = new Label("", skin);
+        classLabel.setFontScale(1.1f);
+        classLabel.setAlignment(Align.center);
+        classLabel.setColor(Color.LIGHT_GRAY);
+
         horsepowerLabel = new Label("", skin);
         weightLabel = new Label("", skin);
         engineLabel = new Label("", skin);
@@ -151,6 +161,10 @@ public class GarageScreen implements Screen {
         infoContent.add(carPreviewImage).size(300, 150).row();
         infoContent.add(selectedCarLabel).center().row();
         infoContent.add(selectedPriceLabel).center().row();
+
+        //  show class/PI right under price
+        infoContent.add(classLabel).center().row();
+
         infoContent.add(horsepowerLabel).center().row();
         infoContent.add(weightLabel).center().row();
         infoContent.add(engineLabel).center().row();
@@ -175,7 +189,6 @@ public class GarageScreen implements Screen {
         topBar.setFillParent(true);
         topBar.add(cashContainer).left();
 
-        // Custom textured back button
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
         backButton.addListener(new ClickListener() {
             @Override
@@ -184,9 +197,7 @@ public class GarageScreen implements Screen {
             }
         });
 
-
         topBar.add(backButton).right().width(80).height(30);
-
         stage.addActor(topBar);
 
         // ARROW BUTTONS USE SAME LOGIC AS KEYBOARD
@@ -204,7 +215,7 @@ public class GarageScreen implements Screen {
             }
         });
 
-        // KEYBOARD INPUT (A/D or LEFT/RIGHT)
+        // KEYBOARD INPUT
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
@@ -217,7 +228,6 @@ public class GarageScreen implements Screen {
                     return true;
                 }
                 if (keycode == Input.Keys.ENTER || keycode == Input.Keys.SPACE) {
-                    // Activate currently centered car
                     if (currentCenterIndex >= 0 && currentCenterIndex < carCards.size) {
                         Table card = carCards.get(currentCenterIndex);
                         Object obj = card.getUserObject();
@@ -239,17 +249,11 @@ public class GarageScreen implements Screen {
             }
         });
 
-
         if (carCards.size > 0) {
             currentCenterIndex = 0;
             updateCenterHighlight();
-            if (scrollPane.getMaxX() > 0) {
-                snapping = true;
-            } else {
-                snapping = false;
-            }
+            snapping = scrollPane.getMaxX() > 0;
         }
-
     }
 
     // === ADD ONE CAR CARD TO HORIZONTAL ROW ===
@@ -277,6 +281,24 @@ public class GarageScreen implements Screen {
         nameLabel.setFontScale(1.2f);
         carBox.add(nameLabel).row();
 
+        // NEW: Class/PI line on the card itself
+        CarStats stats = CarRegistry.getStats(car.image);
+        String classText = (stats != null && stats.carClass != null)
+            ? (stats.carClass.name() + " " + stats.pi)
+            : "Class: ?";
+
+        Label classPiLabel = new Label("Class: " + classText, skin);
+
+        if (stats != null) {
+            classPiLabel.setColor(getClassColor(stats.carClass));
+        } else {
+            classPiLabel.setColor(Color.LIGHT_GRAY);
+        }
+
+        carBox.add(classPiLabel).row();
+
+
+
         // Description
         Label descriptionLabel = new Label(car.description, skin);
         descriptionLabel.setColor(Color.LIGHT_GRAY);
@@ -289,7 +311,6 @@ public class GarageScreen implements Screen {
         selectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // Save selected car texture for modes to use
                 CarSelectionData.setSelectedCarTexture(car.image);
                 System.out.println("Selected car set to: " + car.image);
                 System.out.println("Selected car: " + car.title);
@@ -299,12 +320,10 @@ public class GarageScreen implements Screen {
                 }
 
                 showCarInfo(car);
-
                 game.setScreen(new GameModeSelectorScreen(game));
             }
         });
         carBox.add(selectButton).padTop(10).row();
-
 
         // SELL button
         TextButton sellButton = new TextButton("Sell", skin);
@@ -314,12 +333,7 @@ public class GarageScreen implements Screen {
 
                 String selectedTexture = CarSelectionData.getSelectedCarTexture();
                 if (selectedTexture != null && selectedTexture.equals(car.image)) {
-                    Dialog warningDialog = new Dialog("Can't Sell Selected Car", skin) {
-                        @Override
-                        protected void result(Object object) {
-                            // nothing, just close
-                        }
-                    };
+                    Dialog warningDialog = new Dialog("Can't Sell Selected Car", skin) { };
                     warningDialog.text("You can't sell the car you're currently using.");
                     warningDialog.button("OK");
                     warningDialog.show(stage);
@@ -332,7 +346,6 @@ public class GarageScreen implements Screen {
 
                     CarOwnershipManager.removeCar(car.image);
                     CashManager.addCash(refund);
-                    CarOwnershipManager.saveOwnedCars();
 
                     System.out.println("Sold car: " + car.title + " for $" + refund);
 
@@ -343,7 +356,6 @@ public class GarageScreen implements Screen {
                         CarOwnershipManager.addCar(defaultImage);
                         CarOwnershipManager.saveOwnedCars();
                     } else {
-                        // If sold car was globally 'SelectedCar', pick another
                         if (SelectedCar.get().equals(car.image)) {
                             String firstOwned = new ArrayList<>(CarOwnershipManager.getOwnedCars()).get(0);
                             SelectedCar.set(firstOwned);
@@ -351,7 +363,6 @@ public class GarageScreen implements Screen {
                         }
                     }
 
-                    // Refresh screen
                     game.setScreen(new GarageScreen(game));
                 } else {
                     System.err.println("Couldn't find car data for selling: " + car.image);
@@ -368,7 +379,6 @@ public class GarageScreen implements Screen {
             }
         });
 
-        // Add to horizontal row
         parent.add(carBox).width(CAR_BOX_WIDTH).pad(CAR_BOX_PAD);
         carCards.add(carBox);
     }
@@ -387,6 +397,16 @@ public class GarageScreen implements Screen {
         weightLabel.setText("Weight: " + car.weightKg + " kg");
         engineLabel.setText("Engine: " + car.engine);
         historyLabel.setText(car.longDescription);
+
+        // set class label here too
+        CarStats stats = CarRegistry.getStats(car.image);
+        if (stats != null && stats.carClass != null) {
+            classLabel.setText("Class: " + stats.carClass.name() + " " + stats.pi);
+            classLabel.setColor(getClassColor(stats.carClass));
+        } else {
+            classLabel.setText("Class: ?");
+            classLabel.setColor(Color.LIGHT_GRAY);
+        }
     }
 
     private String formatCash(int cash) {
@@ -410,43 +430,30 @@ public class GarageScreen implements Screen {
         return new TextureRegionDrawable(new TextureRegion(texture));
     }
 
-    //  Move by one car (left/right), used by arrows + keyboard
     private void moveSelection(int direction) {
         if (carCards.size == 0) return;
 
-        // Ensure we have a valid current index
-        if (currentCenterIndex < 0) {
-            currentCenterIndex = 0;
-        }
+        if (currentCenterIndex < 0) currentCenterIndex = 0;
 
-        // Move logical selection
         int targetIndex = currentCenterIndex + direction;
         if (targetIndex < 0) targetIndex = 0;
         if (targetIndex > carCards.size - 1) targetIndex = carCards.size - 1;
 
-        // If nothing changed, bail
         if (targetIndex == currentCenterIndex) return;
 
         currentCenterIndex = targetIndex;
 
         float maxX = scrollPane.getMaxX();
-
-        // If there *is* scroll range, move the scroll to that "page"
         if (maxX > 0 && carCards.size > 1) {
             float pageWidth = maxX / (carCards.size - 1);
             float targetX = currentCenterIndex * pageWidth;
             scrollPane.setScrollX(targetX);
         }
 
-
         updateCenterHighlight();
         snapping = false;
     }
 
-
-
-
-    // Snapping to closest owned car
     private void snapToClosestCar(float delta) {
         if (carCards.size == 0) return;
 
@@ -484,6 +491,22 @@ public class GarageScreen implements Screen {
             snapping = false;
         }
     }
+
+    private Color getClassColor(CarClass carClass) {
+        if (carClass == null) return Color.LIGHT_GRAY;
+
+        switch (carClass) {
+            case D:  return Color.RED;                         // D = red
+            case C:  return Color.ORANGE;                      // C = orange
+            case B:  return Color.YELLOW;                      // B = yellow
+            case A:  return Color.GREEN;                       // A = green
+            case S1: return Color.CYAN;                        // S1 = cyan
+            case S2: return Color.BLUE;                         // S2 = blue
+            case X:  return new Color(0.65f, 0.20f, 0.95f, 1f); // X = purple
+            default: return Color.LIGHT_GRAY;
+        }
+    }
+
 
     private void updateCenterHighlight() {
         for (int i = 0; i < carCards.size; i++) {

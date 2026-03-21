@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
@@ -18,6 +19,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.manogstudios.racingsimulator.network.SupabaseAuth;
+import com.manogstudios.racingsimulator.network.SupabaseGameData;
 
 public class DealershipScreen implements Screen {
     private final Game game;
@@ -26,15 +29,22 @@ public class DealershipScreen implements Screen {
     private Table infoPanel;
     private Label selectedCarLabel;
     private Label selectedPriceLabel;
+
     public int horsepower;
     public int weightKg;
     public String engine;
+
     private Label horsepowerLabel;
     private Label weightLabel;
     private Label engineLabel;
     private Label historyLabel;
+
+    // Class label in info panel
+    private Label classLabel;
+
     private Label cashLabel;
     private Image carPreviewImage;
+
     private static final float CAR_BOX_WIDTH = 420f;
     private static final float CAR_BOX_PAD   = 20f;
     float PAGE_WIDTH = CAR_BOX_WIDTH + (CAR_BOX_PAD * 2);
@@ -49,13 +59,81 @@ public class DealershipScreen implements Screen {
         this.game = game;
     }
 
-    public boolean tryBuyCar(CarData car) {
-        if (CashManager.getCash() >= car.price) {
-            CashManager.subtractCash(car.price);
-            CarOwnershipManager.addCar(car.image);
-            return true;
+    /**
+     * Server-authoritative purchase via Edge Function.
+     * - Prevents client-side cash cheating
+     * - Prevents duplicate ownership server-side
+     */
+    public void tryBuyCarSecure(CarData car, Runnable onDoneUI) {
+
+        if (CarOwnershipManager.ownsCar(car.image)) {
+            Dialog d = new Dialog("Already Owned", skin);
+            d.text("You already own this car.");
+            d.button("OK");
+            d.show(stage);
+            return;
         }
-        return false;
+
+        if (!SupabaseAuth.isLoggedIn) {
+            Dialog d = new Dialog("Login Required", skin);
+            d.text("Please log in to buy cars (cloud save).");
+            d.button("OK");
+            d.show(stage);
+            return;
+        }
+
+        // Disable input while request runs (prevents double-buy)
+        stage.getRoot().setTouchable(Touchable.disabled);
+
+        // Important - SupabaseGameData.purchaseCar signature should be: purchaseCar(String carImage, int price, Consumer<Integer> onSuccessCash, Consumer<String> onFail)
+        SupabaseGameData.purchaseCar(
+            car.image,
+            car.price,
+            newCash -> {
+                // Update local cash immediately if server returned it
+                if (newCash >= 0) {
+                    CashManager.setCash(newCash);
+                    CashManager.saveCash();
+                    if (cashLabel != null) {
+                        cashLabel.setText("$" + formatCash(CashManager.getCash()));
+                    }
+                }
+
+                // Re-pull owned cars from cloud so UI reflects server truth immediately
+                SupabaseGameData.loadOwnedCars(
+                    SupabaseAuth.userId,
+                    SupabaseAuth.accessToken,
+                    () -> {
+                        Dialog success = new Dialog("Purchase Complete", skin);
+                        success.text("You bought " + car.title + " for $" + String.format("%,d", car.price));
+                        success.button("OK");
+                        success.show(stage);
+
+                        stage.getRoot().setTouchable(Touchable.enabled);
+
+                        if (onDoneUI != null) onDoneUI.run();
+                    }
+                );
+            },
+            err -> {
+                stage.getRoot().setTouchable(Touchable.enabled);
+
+                String msg;
+                switch (err) {
+                    case "insufficient_funds": msg = "You don't have enough cash."; break;
+                    case "already_owned": msg = "You already own this car."; break;
+                    case "profile_not_found": msg = "Profile not found. Try re-logging."; break;
+                    case "invalid_price": msg = "Invalid price (client/server mismatch)."; break;
+                    case "not_logged_in": msg = "Please log in again."; break;
+                    default: msg = "Purchase failed: " + err; break;
+                }
+
+                Dialog fail = new Dialog("Purchase Failed", skin);
+                fail.text(msg);
+                fail.button("OK");
+                fail.show(stage);
+            }
+        );
     }
 
     @Override
@@ -84,7 +162,7 @@ public class DealershipScreen implements Screen {
 
         ScrollPane scrollPane = new ScrollPane(carListTable, skin);
         scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollingDisabled(false, true); // horizontal scroll only
+        scrollPane.setScrollingDisabled(false, true); // horizontal only
         scrollPane.setSmoothScrolling(true);
         scrollPane.setFlingTime(0.2f);
         scrollPane.setScrollbarsOnTop(false);
@@ -94,7 +172,7 @@ public class DealershipScreen implements Screen {
         scrollPane.addListener(new InputListener() {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-                snapping = true;    // Begin snapping when user releases scroll
+                snapping = true;
             }
         });
 
@@ -118,14 +196,14 @@ public class DealershipScreen implements Screen {
         leftArrow.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                moveSelection(-1);  // one car to the left
+                moveSelection(-1);
             }
         });
 
         rightArrow.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                moveSelection(1);   // one car to the right
+                moveSelection(1);
             }
         });
 
@@ -149,6 +227,11 @@ public class DealershipScreen implements Screen {
         selectedPriceLabel.setFontScale(1.2f);
         selectedPriceLabel.setAlignment(Align.center);
 
+        classLabel = new Label("", skin);
+        classLabel.setFontScale(1.1f);
+        classLabel.setAlignment(Align.center);
+        classLabel.setColor(Color.GOLD);
+
         horsepowerLabel = new Label("", skin);
         weightLabel = new Label("", skin);
         engineLabel = new Label("", skin);
@@ -161,6 +244,7 @@ public class DealershipScreen implements Screen {
         infoContent.add(carPreviewImage).size(300, 150).row();
         infoContent.add(selectedCarLabel).center().row();
         infoContent.add(selectedPriceLabel).center().row();
+        infoContent.add(classLabel).center().row();
         infoContent.add(horsepowerLabel).center().row();
         infoContent.add(weightLabel).center().row();
         infoContent.add(engineLabel).center().row();
@@ -170,10 +254,10 @@ public class DealershipScreen implements Screen {
 
         // Top: arrows + scrollable dealership area
         root.add(dealershipRow).expand().fill().row();
-        // Bottom: info panel (full width)
+        // Bottom: info panel
         root.add(infoPanel).height(300).expandX().fillX().padTop(10);
 
-        // === Keyboard input: A/D + LEFT/RIGHT + ENTER to buy (NEW) ===
+        // Keyboard input
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
@@ -186,12 +270,10 @@ public class DealershipScreen implements Screen {
                     return true;
                 }
 
-                // NEW: Press ENTER or SPACE to attempt a purchase
                 if (keycode == Input.Keys.ENTER || keycode == Input.Keys.SPACE) {
                     CarData centeredCar = getCenteredCar();
                     if (centeredCar == null) return true;
 
-                    // If already owned, just tell the player
                     if (CarOwnershipManager.ownsCar(centeredCar.image)) {
                         Dialog ownedDialog = new Dialog("Already Owned", skin);
                         ownedDialog.text("You already own this car.");
@@ -200,27 +282,12 @@ public class DealershipScreen implements Screen {
                         return true;
                     }
 
-                    // Confirm purchase dialog
                     Dialog confirmDialog = new Dialog("Confirm Purchase", skin) {
                         @Override
                         protected void result(Object object) {
                             boolean yes = (Boolean) object;
                             if (yes) {
-                                if (tryBuyCar(centeredCar)) {
-                                    Dialog success = new Dialog("Purchase Complete", skin);
-                                    success.text("You bought " + centeredCar.title +
-                                        " for $" + String.format("%,d", centeredCar.price));
-                                    success.button("OK");
-                                    success.show(stage);
-
-                                    // Refresh screen so button becomes "Owned" and cash updates
-                                    game.setScreen(new DealershipScreen(game));
-                                } else {
-                                    Dialog fail = new Dialog("Not Enough Cash", skin);
-                                    fail.text("You don't have enough cash to buy this car.");
-                                    fail.button("OK");
-                                    fail.show(stage);
-                                }
+                                tryBuyCarSecure(centeredCar, () -> game.setScreen(new DealershipScreen(game)));
                             }
                         }
                     };
@@ -253,7 +320,6 @@ public class DealershipScreen implements Screen {
         topBar.setFillParent(true);
         topBar.add(cashContainer).left();
 
-        // Custom textured back button
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
         backButton.addListener(new ClickListener() {
             @Override
@@ -262,14 +328,13 @@ public class DealershipScreen implements Screen {
             }
         });
 
-// You can control its size here if needed
         topBar.add(backButton).right().width(80).height(30);
-
-
         stage.addActor(topBar);
 
         if (carCards.size > 0) {
-            snapping = true; // first frame will snap to the nearest center card
+            currentCenterIndex = 0;
+            updateCenterHighlight();
+            snapping = true;
         }
     }
 
@@ -299,6 +364,13 @@ public class DealershipScreen implements Screen {
 
         carBox.add(new Label(car.title, skin)).row();
 
+        CarStats stats = CarRegistry.getStats(car.image);
+        if (stats != null && stats.carClass != null) {
+            Label classOnCard = new Label(stats.carClass.name() + " " + stats.pi, skin);
+            classOnCard.setColor(getClassColor(stats.carClass));
+            carBox.add(classOnCard).row();
+        }
+
         Label descriptionLabel = new Label(car.description, skin);
         descriptionLabel.setColor(Color.LIGHT_GRAY);
         descriptionLabel.setAlignment(Align.center);
@@ -312,18 +384,12 @@ public class DealershipScreen implements Screen {
         priceLabel.setAlignment(Align.center);
         carBox.add(priceLabel).row();
 
-        // Buy button if not owned (mouse click)
         if (!CarOwnershipManager.ownsCar(car.image)) {
             TextButton buyButton = new TextButton("Buy", skin);
             buyButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    if (tryBuyCar(car)) {
-                        System.out.println("Bought " + car.title);
-                        game.setScreen(new DealershipScreen(game)); // Refresh screen
-                    } else {
-                        System.out.println("Not enough cash to buy " + car.title);
-                    }
+                    tryBuyCarSecure(car, () -> game.setScreen(new DealershipScreen(game)));
                 }
             });
             carBox.add(buyButton).padTop(10).row();
@@ -355,6 +421,15 @@ public class DealershipScreen implements Screen {
         weightLabel.setText("Weight: " + car.weightKg + " kg");
         engineLabel.setText("Engine: " + car.engine);
         historyLabel.setText(car.longDescription);
+
+        CarStats stats = CarRegistry.getStats(car.image);
+        if (stats != null && stats.carClass != null) {
+            classLabel.setText("Class: " + stats.carClass.name() + "  (PI " + stats.pi + ")");
+            classLabel.setColor(getClassColor(stats.carClass));
+        } else {
+            classLabel.setText("Class: N/A");
+            classLabel.setColor(Color.LIGHT_GRAY);
+        }
     }
 
     private Drawable createCashLabelBackground() {
@@ -451,13 +526,26 @@ public class DealershipScreen implements Screen {
         }
     }
 
-    // helper to figure out which car is currently selected
+    private Color getClassColor(CarClass carClass) {
+        if (carClass == null) return Color.LIGHT_GRAY;
+
+        switch (carClass) {
+            case D:  return Color.RED;
+            case C:  return Color.ORANGE;
+            case B:  return Color.YELLOW;
+            case A:  return Color.GREEN;
+            case S1: return Color.CYAN;
+            case S2: return Color.BLUE;
+            case X:  return new Color(0.65f, 0.20f, 0.95f, 1f);
+            default: return Color.LIGHT_GRAY;
+        }
+    }
+
     private CarData getCenteredCar() {
         if (carCards.size == 0) return null;
 
         int index = currentCenterIndex;
 
-        // If theres no valid index yet, approximate from scroll position
         if (index < 0) {
             float maxX = scrollPane.getMaxX();
             if (maxX <= 0 || carCards.size == 1) {

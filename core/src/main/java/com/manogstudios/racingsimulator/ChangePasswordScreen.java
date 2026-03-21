@@ -109,7 +109,7 @@ public class ChangePasswordScreen implements Screen {
                     return;
                 }
 
-                // 🔒 Strength validation (same rule as registration)
+                //  Strength validation
                 if (!isStrongPassword(pw1)) {
                     statusLabel.setColor(Color.RED);
                     statusLabel.setText(

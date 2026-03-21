@@ -30,7 +30,7 @@ public class LeaderboardScreen implements Screen {
     private Label playerBestLabel;
     private String currentModeKey = "free_ride";
 
-    // Optional background
+    //  background
     private Texture bgTexture;
     private Image bgImage;
 
@@ -59,13 +59,13 @@ public class LeaderboardScreen implements Screen {
             bgTexture = null; // just black if missing
         }
 
-        // --- Root layout: center a card ---
+        //  Root layout: center a card
         Table root = new Table();
         root.setFillParent(true);
         root.center();
         stage.addActor(root);
 
-        // --- Card / panel ---
+        //  Card
         Table card = new Table(skin);
         card.pad(25);
         card.defaults().pad(6).fillX();
@@ -86,7 +86,7 @@ public class LeaderboardScreen implements Screen {
         card.add(titleLabel).colspan(2).padBottom(4).center().row();
         card.add(subtitleLabel).colspan(2).padBottom(10).center().row();
 
-        // --- Mode buttons row (tabs) ---
+        // Mode buttons row
         Table modeRow = new Table();
         modeRow.defaults().pad(4).width(150).height(40);
 
@@ -98,13 +98,13 @@ public class LeaderboardScreen implements Screen {
 
         card.add(modeRow).colspan(2).padBottom(8).center().row();
 
-        // --- "Your best" label ---
+        // Best score label
         playerBestLabel = new Label("Your best: 0", skin);
         playerBestLabel.setAlignment(Align.left);
         playerBestLabel.setColor(Color.LIGHT_GRAY);
         card.add(playerBestLabel).left().colspan(2).padBottom(4).row();
 
-        // --- Entries table (username + score) ---
+        //  Entries table
         entriesTable = new Table(skin);
         entriesTable.defaults().pad(4).left();
         entriesTable.setBackground("default-round");
@@ -155,9 +155,9 @@ public class LeaderboardScreen implements Screen {
         parent.add(button);
     }
 
-    /**
-     * Load leaderboard for a given mode using Supabase global leaderboard.
-     */
+
+     // Load leaderboard for a given mode using Supabase global leaderboard.
+
     private void loadLeaderboardForMode(String modeKey) {
         titleLabel.setText("Leaderboards – " + prettifyModeName(modeKey));
 
@@ -191,7 +191,7 @@ public class LeaderboardScreen implements Screen {
         );
     }
 
-    /** Builds the table rows from a list of entries. */
+    // Builds the table rows from a list of entries.
     private void populateEntries(List<SimpleEntry> entries) {
         entriesTable.clear();
 

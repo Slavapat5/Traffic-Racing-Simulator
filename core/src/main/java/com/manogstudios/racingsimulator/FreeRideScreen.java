@@ -23,6 +23,9 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import java.util.ArrayList;
 import java.util.List;
 import com.badlogic.gdx.utils.Array;
+import com.manogstudios.racingsimulator.network.SupabaseAuth;
+import com.manogstudios.racingsimulator.network.SupabaseGameData;
+
 
 public class FreeRideScreen implements Screen {
 
@@ -44,6 +47,9 @@ public class FreeRideScreen implements Screen {
     private static final float SEGMENT_HEIGHT = 1080f;
     private float roadCenterX = VIEW_WIDTH / 2f;
     private float roadWidth = 800f;
+
+
+
 
     private static class TrafficCar {
         Texture texture;
@@ -78,8 +84,8 @@ public class FreeRideScreen implements Screen {
         }
 
         private final List<TrafficCar> trafficCars = new ArrayList<>();
-        private final List<TrafficCarType> trafficTypes = new ArrayList<>();  // NEW
-        private float totalTrafficWeight = 0f;                                // NEW
+        private final List<TrafficCarType> trafficTypes = new ArrayList<>();
+        private float totalTrafficWeight = 0f;
         private float spawnTimer = 0f;
         private float spawnInterval = 1.5f;
 
@@ -92,6 +98,16 @@ public class FreeRideScreen implements Screen {
     private int score = 0;
     private int bonusPoints = 0;   // near misses, etc.
     private boolean gameOver = false;
+
+    // --- Telemetry (run session) ---
+    private long runStartMillis = 0L;
+    private int runCrashCount = 0;
+    private int runNearMisses = 0;
+
+    private float speedSumMphSeconds = 0f; // mph * seconds
+    private float speedSampleSeconds = 0f;
+    private float maxSpeedMph = 0f;
+
 
     // UI
     private Stage uiStage;
@@ -150,6 +166,8 @@ public class FreeRideScreen implements Screen {
         // measures distance travelled
         this.startY = startYWorld;
 
+
+
 // Simple lane setup: 4 lanes across the road
         laneWidth = roadWidth / 4f;
 
@@ -193,7 +211,7 @@ public class FreeRideScreen implements Screen {
         scoreLabel.setAlignment(Align.left);
         topBar.add(scoreLabel).left().expandX();
 
-        // NEW: Distance label
+        // Distance label
         distanceLabel = new Label("Dist: 0 m", skin);
         distanceLabel.setFontScale(1.2f);
         distanceLabel.setAlignment(Align.left);
@@ -230,7 +248,6 @@ public class FreeRideScreen implements Screen {
         menuTable.add(homeBtn).row();
         menuTable.add(quitBtn).row();
 
-        // put under the menu button area (roughly top-right)
         Table menuContainer = new Table();
         menuContainer.setFillParent(true);
         menuContainer.top().right().pad(10, 10, 0, 10);
@@ -264,6 +281,14 @@ public class FreeRideScreen implements Screen {
                 game.setScreen(new PlayScreen(game));
             }
         });
+
+        runStartMillis = System.currentTimeMillis();
+        runCrashCount = 0;
+        runNearMisses = 0;
+        speedSumMphSeconds = 0f;
+        speedSampleSeconds = 0f;
+        maxSpeedMph = 0f;
+
     }
 
     @Override
@@ -274,7 +299,7 @@ public class FreeRideScreen implements Screen {
             updateLogic(delta);
         }
 
-        // --- World render ---
+        //  World render
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -339,8 +364,8 @@ public class FreeRideScreen implements Screen {
         if (dy < 0) dy = 0;
         distanceScore = dy;
 
-        // Convert raw distance to something like "meters" for display
-        int displayDistance = (int) (distanceScore / 10f); // tweak /10f as you like
+        // Convert raw distance to something like meters for display
+        int displayDistance = (int) (distanceScore / 10f);
 
         // Simple scoring formula
         int distancePoints = (int) (distanceScore / 10f);   // 1 point per 10 units
@@ -353,10 +378,18 @@ public class FreeRideScreen implements Screen {
         timeLabel.setText(String.format("Time: %.1fs", elapsedTime));
 
 
-        float rawSpeed = playerCar.getSpeed();  // this matches your "speed" stat at top speed
+        float rawSpeed = playerCar.getSpeed();
 
         // Convert from "mph * 10" back to mph
         float mph = rawSpeed / 10f;
+
+        if (mph > 0f) {
+            speedSumMphSeconds += mph * delta;
+            speedSampleSeconds += delta;
+            if (mph > maxSpeedMph) maxSpeedMph = mph;
+        }
+
+
         int speedDisplay = (int) mph;
 
         speedLabel.setText("Speed: " + speedDisplay + " mph");
@@ -404,13 +437,14 @@ public class FreeRideScreen implements Screen {
                     float dx = Math.abs(playerCenterX - carCenterX);
                     float dyCenter = Math.abs(playerCenterY - carCenterY);
 
-                    // Tweak these thresholds as needed
+
                     boolean closeHorizontally = dx < playerRect.width * 1f;   // 1 car width apart
                     boolean closeVertically = dyCenter < playerRect.height;   // passed very close
 
                     if (closeHorizontally && closeVertically) {
                         bonusPoints += 200;          // award near-miss bonus
                         t.nearMissAwarded = true;   // don't award twice for this car
+                        runNearMisses++;
                         System.out.println("Near miss! +50 points");
                     }
                 }
@@ -420,7 +454,7 @@ public class FreeRideScreen implements Screen {
 
     private boolean isLaneClearForSpawn(float laneXPos, float spawnY) {
         // Minimum vertical gap between cars in the same lane
-        final float MIN_GAP_Y = 400f;  // tweak this (higher = more distance)
+        final float MIN_GAP_Y = 400f;  // higher = more distance
 
         for (TrafficCar t : trafficCars) {
             // Same lane? (roughly)
@@ -453,7 +487,7 @@ public class FreeRideScreen implements Screen {
             float spawnY = baseSpawnY;
 
             if (isLaneClearForSpawn(x, spawnY)) {
-                // Random speed within that type's range (moving forward with us)
+                // Random speed within that type's range
                 float speed = MathUtils.random(type.minSpeed, type.maxSpeed);
 
                 TrafficCar car = new TrafficCar(type.texture, x, spawnY, speed);
@@ -462,13 +496,12 @@ public class FreeRideScreen implements Screen {
             }
             // else: try another lane/attempt
         }
-
         // If no suitable lane found after a few tries, just skip this spawn.
     }
 
     /** How much cash to award for this Free Ride run */
     private int calculateCashReward() {
-        // Distance in "meters" (your display value)
+        // Distance in "meters"
         int distMeters = (int) (distanceScore / 10f);
 
         // - 1 cash per 20 meters
@@ -489,54 +522,90 @@ public class FreeRideScreen implements Screen {
 
     private void onCrash() {
         gameOver = true;
+        runCrashCount++;
 
-        // High score based on combined score (distance + time + near misses)
+        long endMillis = System.currentTimeMillis();
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.submitRunTelemetry(
+                "free_ride",
+                runStartMillis,
+                endMillis,
+                elapsedTime,
+                (int) (distanceScore / 10f),
+                score,
+                runCrashCount,
+                runNearMisses,
+                null,
+                null,
+                CarSelectionData.getSelectedCarTexture(),
+                "0.1.0",
+                () -> System.out.println("Telemetry saved"),
+                (err) -> System.out.println("Telemetry failed: " + err)
+            );
+        }
+
+
+        // Local best
         HighScoreManager.submitScore("free_ride", score);
         int bestScore = HighScoreManager.getHighScore("free_ride");
 
-        //  calculate and award cash
-        int cashEarned = calculateCashReward();
-        CashManager.addCash(cashEarned);
+        // Server leaderboard
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.submitScore("free_ride", score);
+        }
 
-        //  achievements
+        // Cash
+        int cashEarned = calculateCashReward();
         int distMeters = (int) (distanceScore / 10f);
+
+        // Achievements
         Array<AchievementsManager.AchievementState> newlyUnlocked =
             AchievementsManager.onFreeRideFinished(score, distMeters, elapsedTime);
 
-        // Build dialog text
-        StringBuilder sb = new StringBuilder();
-        sb.append("You crashed!\n")
-            .append("Score: ").append(score).append("\n")
-            .append("Distance: ").append(distMeters).append(" m\n")
-            .append("Time: ").append(String.format("%.1f s", elapsedTime)).append("\n")
-            .append("Best Score: ").append(bestScore).append("\n\n")
-            .append("Cash earned: $").append(cashEarned).append("\n")
-            .append("Total cash: $").append(formatCash(CashManager.getCash()));
+        Runnable showCrashDialog = () -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append("You crashed!\n")
+                .append("Score: ").append(score).append("\n")
+                .append("Distance: ").append(distMeters).append(" m\n")
+                .append("Time: ").append(String.format("%.1f s", elapsedTime)).append("\n")
+                .append("Best Score: ").append(bestScore).append("\n\n")
+                .append("Cash earned: $").append(cashEarned).append("\n")
+                .append("Total cash: $").append(formatCash(CashManager.getCash()));
 
-        if (newlyUnlocked != null && newlyUnlocked.size > 0) {
-            sb.append("\n\nAchievements unlocked:\n");
-            for (AchievementsManager.AchievementState a : newlyUnlocked) {
-                sb.append("• ").append(a.def.name).append("\n");
-            }
-        }
-
-        Dialog dialog = new Dialog("Crash!", skin) {
-            @Override
-            protected void result(Object obj) {
-                String choice = (String) obj;
-                if ("retry".equals(choice)) {
-                    game.setScreen(new FreeRideScreen(game));
-                } else if ("modes".equals(choice)) {
-                    game.setScreen(new GameModeSelectorScreen(game));
+            if (newlyUnlocked != null && newlyUnlocked.size > 0) {
+                sb.append("\n\nAchievements unlocked:\n");
+                for (AchievementsManager.AchievementState a : newlyUnlocked) {
+                    sb.append("• ").append(a.def.name).append("\n");
                 }
             }
+
+            Dialog dialog = new Dialog("Crash!", skin) {
+                @Override
+                protected void result(Object obj) {
+                    String choice = (String) obj;
+                    if ("retry".equals(choice)) {
+                        game.setScreen(new FreeRideScreen(game));
+                    } else if ("modes".equals(choice)) {
+                        game.setScreen(new GameModeSelectorScreen(game));
+                    }
+                }
+            };
+
+            dialog.text(sb.toString());
+            dialog.button("Retry", "retry");
+            dialog.button("Back to Modes", "modes");
+            dialog.show(uiStage);
         };
 
-        dialog.text(sb.toString());
-        dialog.button("Retry", "retry");
-        dialog.button("Back to Modes", "modes");
-        dialog.show(uiStage);
+        if (SupabaseAuth.isLoggedIn) {
+            CashManager.addCashAndSync(cashEarned, "free_ride_reward");
+            Gdx.app.postRunnable(showCrashDialog);
+        } else {
+            showCrashDialog.run();
+        }
     }
+
+
 
 
     private TrafficCarType pickRandomTrafficType() {
@@ -552,7 +621,7 @@ public class FreeRideScreen implements Screen {
             }
         }
 
-        // Fallback (in case of rounding issues)
+        // Fallback
         return trafficTypes.get(trafficTypes.size() - 1);
     }
 
@@ -564,7 +633,6 @@ public class FreeRideScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // You can keep fixed 1920x1080 like the other screens:
         Gdx.graphics.setWindowedMode((int) VIEW_WIDTH, (int) VIEW_HEIGHT);
     }
 

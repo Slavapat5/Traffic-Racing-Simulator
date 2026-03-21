@@ -32,7 +32,7 @@ public class CarOwnershipManager {
                 ownedCars.addAll(Arrays.asList(lines));
             }
         } else {
-            // First time this user logs in → give starter car(s)
+            // First time this user logs in, give starter car
             ownedCars.add("Mazda MX-5 Miata - 2014.png"); //  starter car
             saveOwnedCars();
         }
@@ -48,12 +48,25 @@ public class CarOwnershipManager {
     }
 
     public static void addCar(String imagePath) {
+        // Local-only. Cloud writes must be server-side
+        addCarInternal(imagePath, false);
+    }
+
+
+    // This is ONLY for when loading cars FROM Supabase, to avoid re-uploading.
+    public static void addCarFromCloud(String imagePath) {
+        addCarInternal(imagePath, false);
+    }
+
+    private static void addCarInternal(String imagePath, boolean pushToCloud) {
+        if (imagePath == null || imagePath.isEmpty()) return;
+
         if (!ownedCars.contains(imagePath)) {
             ownedCars.add(imagePath);
             saveOwnedCars();
 
-            // Push to Supabase cloud
-            if (SupabaseAuth.isLoggedIn) {
+            // Push to Supabase cloud (only if this was a local change, like buying a car)
+            if (pushToCloud && SupabaseAuth.isLoggedIn) {
                 SupabaseGameData.saveOwnedCar(
                     SupabaseAuth.userId,
                     SupabaseAuth.accessToken,
@@ -62,6 +75,7 @@ public class CarOwnershipManager {
             }
         }
     }
+
 
     public static void removeCar(String imagePath) {
         if (ownedCars.contains(imagePath)) {

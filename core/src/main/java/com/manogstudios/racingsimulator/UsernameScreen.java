@@ -81,7 +81,7 @@ public class UsernameScreen implements Screen {
         card.add(title).colspan(2).padBottom(4).row();
         card.add(subtitle).colspan(2).width(420).padBottom(16).row();
 
-        // --- Username field ---
+        // Username field
         Label usernameLabel = new Label("Username", skin);
         TextField usernameField = new TextField("", skin);
         usernameField.setMessageText("Racer123");
@@ -103,7 +103,7 @@ public class UsernameScreen implements Screen {
         confirmButton.getLabel().setAlignment(Align.center);
         card.add(confirmButton).colspan(2).width(360).height(45).padTop(10).row();
 
-        //  Back to login/menu if user changes their mind
+        //  Back to menu if user changes their mind
         TextButton backButton = new TextButton("Back to Menu", skin);
         card.add(backButton).colspan(2).width(200).height(40).padTop(8).row();
 
@@ -116,7 +116,6 @@ public class UsernameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 String entered = usernameField.getText().trim();
 
-                // Basic validation
                 if (entered.isEmpty()) {
                     statusLabel.setColor(Color.RED);
                     statusLabel.setText("Please enter a username.");
@@ -127,7 +126,6 @@ public class UsernameScreen implements Screen {
                     statusLabel.setText("Username must be 3–16 characters long.");
                     return;
                 }
-                // Allow only letters, numbers, underscore for now
                 if (!entered.matches("^[A-Za-z0-9_]+$")) {
                     statusLabel.setColor(Color.RED);
                     statusLabel.setText("Only letters, numbers, and _ are allowed.");
@@ -143,21 +141,34 @@ public class UsernameScreen implements Screen {
                     SupabaseAuth.accessToken,
                     entered,
                     success -> {
-                        Gdx.app.postRunnable(() -> {
-                            if (success) {
-                                statusLabel.setColor(Color.GREEN);
-                                statusLabel.setText("Username set! Loading game...");
-                                game.setScreen(new PlayScreen(game));
-                            } else {
-                                statusLabel.setColor(Color.RED);
-                                statusLabel.setText("That username may be taken or invalid.\nTry another.");
-                                confirmButton.setDisabled(false);
+                        if (!success) {
+                            statusLabel.setColor(Color.RED);
+                            statusLabel.setText("That username may be taken or invalid.\nTry another.");
+                            confirmButton.setDisabled(false);
+                            return;
+                        }
+
+                        SupabaseGameData.upsertPublicUsername(
+                            SupabaseAuth.userId,
+                            SupabaseAuth.accessToken,
+                            entered,
+                            publicSuccess -> {
+                                if (publicSuccess) {
+                                    statusLabel.setColor(Color.GREEN);
+                                    statusLabel.setText("Username set! Loading game...");
+                                    game.setScreen(new PlayScreen(game));
+                                } else {
+                                    statusLabel.setColor(Color.RED);
+                                    statusLabel.setText("Saved username, but failed to publish it.\nTry again.");
+                                    confirmButton.setDisabled(false);
+                                }
                             }
-                        });
+                        );
                     }
                 );
             }
         });
+
 
         backButton.addListener(new ClickListener() {
             @Override

@@ -20,21 +20,15 @@ public class Car {
     private final float maxSpeed;
     private final float minSpeed;
     private final float turnSpeed;
+
     private static final float COAST_DAMPING = 0.997f; // closer to 1.0 = slower slowdown
     private static final float BRAKE_DAMPING = 0.95f;  // stronger slowdown when braking
 
-
-    public Rectangle getBoundingRectangle() {
-        return new Rectangle(x, y, texture.getWidth(), texture.getHeight());
-    }
-
-    // Old constructor – no minSpeed (defaults to 0)
     public Car(String texturePath, float startX, float startY,
                float acceleration, float maxSpeed, float turnSpeed) {
         this(texturePath, startX, startY, acceleration, maxSpeed, turnSpeed, 0f);
     }
 
-    // New constructor with minSpeed
     public Car(String texturePath, float startX, float startY,
                float acceleration, float maxSpeed, float turnSpeed, float minSpeed) {
         this.texture = new Texture(texturePath);
@@ -50,13 +44,16 @@ public class Car {
         this.minSpeed = minSpeed;
     }
 
+    public Rectangle getBoundingRectangle() {
+        return new Rectangle(x, y, texture.getWidth(), texture.getHeight());
+    }
+
     public void update(float delta,
                        boolean moveForward, boolean brake,
                        boolean turnLeft, boolean turnRight,
                        List<Rectangle> borders) {
 
-
-        // Accelerate / decelerate using a scalar speed
+        // Accelerate / decelerate
         if (moveForward) {
             speed += acceleration * delta;
         } else {
@@ -83,11 +80,8 @@ public class Car {
         }
 
         // --- STEERING ---
-
-        // arcade feel: allow decent steering even at low speeds
         float steerFactor = 1f;
         if (speed > 0) {
-            // If you want slightly less steering at very high speeds, you can tweak this:
             steerFactor = MathUtils.clamp(0.6f + (1f - speed / maxSpeed) * 0.4f, 0.6f, 1f);
         }
 
@@ -100,9 +94,7 @@ public class Car {
 
         rotation = (rotation + 360f) % 360f;
 
-        //  VELOCITY 100% ALIGNED WITH ROTATION
-
-        // Forward direction from rotation (pointing "up" relative to texture)
+        // Forward direction from rotation
         Vector2 forward = new Vector2(
             MathUtils.cosDeg(rotation + 90f),
             MathUtils.sinDeg(rotation + 90f)
@@ -112,7 +104,6 @@ public class Car {
         velocity.set(forward).scl(speed);
 
         // --- PREDICT MOVEMENT & COLLISIONS ---
-
         float nextX = x + velocity.x * delta;
         float nextY = y + velocity.y * delta;
 
@@ -143,12 +134,34 @@ public class Car {
         else velocity.y = 0;
     }
 
+
+     //Soft reset position. This stops motion but keeps rotation unless I want otherwise.
+
     public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;
-        this.velocity.set(0, 0); // stop movement when reset
+        this.velocity.set(0, 0);
         this.speed = 0f;
-        this.rotation = 0f;      // reset rotation if needed
+        // this.rotation = 0f;
+    }
+
+
+     // Sets speed safely using existing fields
+    public void setSpeed(float s) {
+        if (s < 0f) s = 0f;
+        if (s > maxSpeed) s = maxSpeed;
+
+        if (s > 0f && s < minSpeed) s = minSpeed;
+
+        this.speed = s;
+    }
+
+    public float getMinSpeed() {
+        return minSpeed;
+    }
+
+    public float getSpeed() {
+        return speed;
     }
 
     public void render(SpriteBatch batch) {
@@ -164,11 +177,6 @@ public class Car {
             false, false
         );
     }
-
-    public float getSpeed() {
-        return speed;
-    }
-
 
     public void dispose() {
         texture.dispose();

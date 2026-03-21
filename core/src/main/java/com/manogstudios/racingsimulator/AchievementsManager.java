@@ -4,6 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.manogstudios.racingsimulator.network.SupabaseAuth;
+import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.time.Instant;
 
 public class AchievementsManager {
 
@@ -34,17 +40,14 @@ public class AchievementsManager {
     private static Preferences prefs;
 
     static {
-        // define achievements here
-
+        // === Define achievements here ===
         register("free_ride_first_run",
             "First Ride",
             "Finish a Free Ride run for the first time.");
 
-
         register("free_ride_10000",
             "High Roller",
             "Score 10,000 or more in a single Free Ride run.");
-
 
         register("free_ride_50000",
             "Speed Demon",
@@ -69,6 +72,77 @@ public class AchievementsManager {
         load();
     }
 
+    public static Array<AchievementState> getAll() {
+        return achievements;
+    }
+
+    public static boolean isUnlocked(String id) {
+        AchievementState a = findById(id);
+        return a != null && a.unlocked;
+    }
+
+
+    public static Array<AchievementState> unlock(String id) {
+        Array<AchievementState> newly = new Array<>();
+        unlockIf(newly, id, true);
+        if (newly.size > 0) save();
+        return newly;
+    }
+
+    // Called after a Free Ride run ends, returns newly unlocked achievements.
+    public static Array<AchievementState> onFreeRideFinished(int score, int distMeters, float timeSeconds) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "free_ride_first_run", true);
+        unlockIf(newlyUnlocked, "free_ride_10000", score >= 10_000);
+        unlockIf(newlyUnlocked, "free_ride_50000", score >= 50_000);
+        unlockIf(newlyUnlocked, "free_ride_5km", distMeters >= 5_000);
+        unlockIf(newlyUnlocked, "free_ride_300s", timeSeconds >= 300f);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+        return newlyUnlocked;
+    }
+
+
+    public static void syncFromCloud(Runnable onDone) {
+        if (!SupabaseAuth.isLoggedIn || SupabaseAuth.userId == null || SupabaseAuth.accessToken == null) {
+            if (onDone != null) Gdx.app.postRunnable(onDone);
+            return;
+        }
+
+        SupabaseGameData.loadAchievements(SupabaseAuth.userId, SupabaseAuth.accessToken, (JSONArray arr) -> {
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject row = arr.getJSONObject(i);
+
+                String achId = row.optString("achievement_id", null);
+                String unlockedAtStr = row.optString("unlockedat",
+                    row.optString("unlocked_at", null));
+
+                if (achId == null) continue;
+
+                AchievementState a = findById(achId);
+                if (a == null) continue;
+
+                a.unlocked = true;
+
+                if (unlockedAtStr != null && !unlockedAtStr.isEmpty()) {
+                    try {
+                        a.unlockedAt = Instant.parse(unlockedAtStr).toEpochMilli();
+                    } catch (Exception ignored) {
+                        if (a.unlockedAt == 0L) a.unlockedAt = TimeUtils.millis();
+                    }
+                } else {
+                    if (a.unlockedAt == 0L) a.unlockedAt = TimeUtils.millis();
+                }
+            }
+
+            save();
+            if (onDone != null) onDone.run();
+        });
+    }
+
     private static void load() {
         if (prefs == null) return;
         for (AchievementState a : achievements) {
@@ -86,33 +160,23 @@ public class AchievementsManager {
         prefs.flush();
     }
 
-    public static Array<AchievementState> getAll() {
-        return achievements;
-    }
-
-    /** Called after a Free Ride run ends (on crash). Returns newly unlocked achievements. */
-    public static Array<AchievementState> onFreeRideFinished(int score, int distMeters, float timeSeconds) {
-        Array<AchievementState> newlyUnlocked = new Array<>();
-
-        unlockIf(newlyUnlocked, "free_ride_first_run", true);
-        unlockIf(newlyUnlocked, "free_ride_10000", score >= 10_000);
-        unlockIf(newlyUnlocked, "free_ride_50000", score >= 50_000);
-        unlockIf(newlyUnlocked, "free_ride_5km", distMeters >= 5_000);
-        unlockIf(newlyUnlocked, "free_ride_300s", timeSeconds >= 300f);
-
-        if (newlyUnlocked.size > 0) {
-            save();
-        }
-        return newlyUnlocked;
-    }
-
     private static void unlockIf(Array<AchievementState> newly, String id, boolean condition) {
         if (!condition) return;
+
         AchievementState a = findById(id);
-        if (a != null && !a.unlocked) {
-            a.unlocked = true;
-            a.unlockedAt = TimeUtils.millis();
-            newly.add(a);
+        if (a == null || a.unlocked) return;
+
+        a.unlocked = true;
+        a.unlockedAt = TimeUtils.millis();
+        newly.add(a);
+
+        // Push to cloud using Edge Function
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.unlockAchievement(
+                a.def.id,
+                () -> System.out.println("Achievement unlocked in cloud: " + a.def.id),
+                (err) -> System.out.println("unlockAchievement failed (" + a.def.id + "): " + err)
+            );
         }
     }
 

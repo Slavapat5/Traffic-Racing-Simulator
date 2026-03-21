@@ -29,7 +29,7 @@ public class MenuScreen implements Screen {
     private Texture backgroundTexture;
     private SpriteBatch batch;
 
-    // New: settings button textures
+    // settings button textures
     private Texture settingsUpTex, settingsDownTex, settingsOverTex;
 
     public MenuScreen(Game game) {
@@ -62,7 +62,7 @@ public class MenuScreen implements Screen {
         centerRoot.center();
         stage.addActor(centerRoot);
 
-        // Dark “card” behind the big menu buttons (currently commented out bg)
+        // Dark card behind the big menu buttons
         Table card = new Table(skin);
         card.pad(30);
         card.defaults().pad(10);
@@ -103,7 +103,7 @@ public class MenuScreen implements Screen {
 
         centerRoot.add(card);
 
-        // --- Button listeners ---
+        //  Button listeners
         button3.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -133,7 +133,7 @@ public class MenuScreen implements Screen {
             }
         });
 
-        // ===== TOP BAR: CASH + USERNAME (with dropdown) =====
+        // ===== TOP BAR: CASH + USERNAME  =====
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.2f);
         cashLabel.setAlignment(Align.center);
@@ -335,11 +335,35 @@ public class MenuScreen implements Screen {
                     @Override
                     protected void result(Object object) {
                         if ((Boolean) object) {
-                            CashManager.addCash(10000);
+                            // Server-side cash grant for testing
+                            if (!com.manogstudios.racingsimulator.network.SupabaseAuth.isLoggedIn) {
+                                Dialog d = new Dialog("Not logged in", skin);
+                                d.text("Login first so cash can be saved to the cloud.");
+                                d.button("OK");
+                                d.show(stage);
+                                return;
+                            }
+
+                            com.manogstudios.racingsimulator.network.SupabaseGameData.adjustCash(
+                                10000,
+                                newCash -> {
+                                    // update local cache + UI
+                                    CashManager.setCash(newCash);
+                                    CashManager.saveCash();
+                                    // cashLabel.setText("$" + formatCash(CashManager.getCash()));
+                                },
+                                err -> {
+                                    Dialog d = new Dialog("Cash update failed", skin);
+                                    d.text("Error: " + err);
+                                    d.button("OK");
+                                    d.show(stage);
+                                }
+                            );
                         }
                     }
                 };
-                confirmDialog.text("Are you sure you want to add cash?");
+
+                confirmDialog.text("Add $10,000 server-side?");
                 confirmDialog.button("Yes", true);
                 confirmDialog.button("No", false);
                 confirmDialog.show(stage);

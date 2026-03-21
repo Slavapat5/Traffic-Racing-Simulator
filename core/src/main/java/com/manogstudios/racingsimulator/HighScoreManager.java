@@ -77,17 +77,13 @@ public class HighScoreManager {
             scores.put(modeKey, newScore);
             saveHighScores();
 
-            // Push to Supabase
+            // Push to Supabase via Edge Function (server-side write)
             if (SupabaseAuth.isLoggedIn) {
-                SupabaseGameData.saveHighScore(
-                    SupabaseAuth.userId,
-                    SupabaseAuth.accessToken,
-                    modeKey,
-                    newScore
-                );
+                SupabaseGameData.submitScore(modeKey, newScore);
             }
         }
     }
+
 
     // Reset local highs for this user (file + in-memory)
     public static void resetAll() {

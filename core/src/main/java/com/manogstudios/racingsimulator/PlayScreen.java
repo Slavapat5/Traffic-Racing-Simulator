@@ -36,6 +36,9 @@ public class PlayScreen implements Screen {
 
     @Override
     public void show() {
+        SupabaseAuth.restoreSessionFromPrefs();
+
+
         if (!SupabaseAuth.isLoggedIn) {
             System.out.println("You must be logged in to play.");
             game.setScreen(new LoginScreen(game));
@@ -59,12 +62,11 @@ public class PlayScreen implements Screen {
 
         SupabaseGameData.loadProfile(userId, token, () -> {
             System.out.println("Profile loaded from Supabase. Cash = " + CashManager.getCash());
-            // If you want, you could refresh any cash labels here.
+            // could refresh any cash labels here.
         });
 
         SupabaseGameData.loadOwnedCars(userId, token, () -> {
             System.out.println("Owned cars loaded from Supabase: " + CarOwnershipManager.getOwnedCars().size());
-            // If you have UI that depends on owned cars being ready, you can refresh it here.
         });
 
         SupabaseGameData.loadHighScores(userId, token, () -> {
@@ -109,7 +111,7 @@ public class PlayScreen implements Screen {
             }
         });
 
-        //  LEADERBOARDS BUTTON ---
+        //  Leaderboard button
         TextButton leaderboardButton = new TextButton("Leaderboards", buttonStyle);
         leaderboardButton.setTransform(true);
         leaderboardButton.setSize(300, 40);
@@ -122,7 +124,7 @@ public class PlayScreen implements Screen {
             }
         });
 
-        // ACHIEVEMENTS BUTTON ---
+        // ACHIEVEMENTS BUTTON
         TextButton achievementsButton = new TextButton("Achievements", buttonStyle);
         achievementsButton.setTransform(true);
         achievementsButton.setSize(300, 40);

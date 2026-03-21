@@ -137,7 +137,7 @@ public class AccountScreen implements Screen {
         bestEndlessTwoWayLabel = new Label("Endless Two Way: " + bestEndless2, skin);
         bestDragSprintLabel    = new Label("Drag Sprint: " + bestDragSprint, skin);
 
-        // --- BUTTONS AT BOTTOM ---
+        // BUTTONS AT BOTTOM
         TextButton backButton = new TextButton("Back to Menu", skin);
         backButton.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
@@ -228,7 +228,7 @@ public class AccountScreen implements Screen {
 
         root.add(bottomButtons).colspan(2).right().padTop(20);
 
-        // --- Load existing username from Supabase ---
+        // Load existing username from Supabase
         SupabaseGameData.fetchUsername(
             SupabaseAuth.userId,
             SupabaseAuth.accessToken,

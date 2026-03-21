@@ -30,7 +30,7 @@ public class GameModeSelectorScreen implements Screen {
     private Label cashLabel;
     private ScrollPane scrollPane;
 
-    // New: background + card texture
+    // Background + card texture
     private Texture bgTexture;
     private Image bgImage;
     private Texture modeCardTexture;
@@ -53,7 +53,7 @@ public class GameModeSelectorScreen implements Screen {
         // === ROOT LAYOUT OVERLAY ===
         Table root = new Table();
         root.setFillParent(true);
-        root.top().padTop(90).padLeft(60).padRight(60).padBottom(60);
+        root.top().padTop(90).padLeft(60).padRight(60).padBottom(110); // extra bottom pad for bottom controls
         stage.addActor(root);
 
         // --- Title row ---
@@ -78,7 +78,6 @@ public class GameModeSelectorScreen implements Screen {
         modeListTable.defaults().space(40);
         modeListTable.left();
 
-        // Add  modes
         addModeCard(modeListTable,
             "Free Ride",
             "Drive freely in traffic, no timer. Earn cash by distance, time, and near misses.",
@@ -104,6 +103,11 @@ public class GameModeSelectorScreen implements Screen {
             "Short drag race sprint. Nail your launch and gear shifts.",
             "drag_sprint");
 
+        addModeCard(modeListTable,
+            "Test Drive",
+            "Take any owned car for a no-pressure drive to feel its speed, handling and acceleration.",
+            "test_drive");
+
         scrollPane = new ScrollPane(modeListTable, skin);
         scrollPane.setFadeScrollBars(false);
         scrollPane.setScrollingDisabled(false, true); // horizontal only
@@ -111,19 +115,12 @@ public class GameModeSelectorScreen implements Screen {
         scrollPane.setFlingTime(0.2f);
         scrollPane.setScrollbarsOnTop(false);
 
-        // --- Make scroll pane transparent & hide the scroll bar track ---
+        //  Make scroll pane transparent & hide the scroll bar track
         ScrollPane.ScrollPaneStyle spStyle = new ScrollPane.ScrollPaneStyle(scrollPane.getStyle());
-
-        // Remove the grey background box
         spStyle.background = null;
-
-        // Option 1: hide the scrollbar completely (still scrolls with mouse/drag)
         spStyle.hScroll = null;
         spStyle.hScrollKnob = null;
-
-        // Apply style back
         scrollPane.setStyle(spStyle);
-
 
         root.add(scrollPane)
             .expand()
@@ -131,7 +128,7 @@ public class GameModeSelectorScreen implements Screen {
             .padTop(10)
             .row();
 
-        // === TOP BAR: CASH + RESET + BACK ===
+        // === CASH (TOP-LEFT) ===
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.2f);
         cashLabel.setAlignment(Align.center);
@@ -140,14 +137,13 @@ public class GameModeSelectorScreen implements Screen {
         cashContainer.setBackground(createCashLabelBackground());
         cashContainer.setColor(Color.BLACK);
 
-        Table topBar = new Table();
-        topBar.setFillParent(true);
-        topBar.top().padTop(15).padLeft(20).padRight(20);
-        stage.addActor(topBar);
+        Table cashOverlay = new Table();
+        cashOverlay.setFillParent(true);
+        cashOverlay.top().left().padTop(15).padLeft(20);
+        cashOverlay.add(cashContainer).left();
+        stage.addActor(cashOverlay);
 
-        topBar.add(cashContainer).left().padRight(20f);
-
-        // Reset Scores button
+        // === RESET SCORES (BOTTOM-CENTER) ===
         TextButton resetButton = new TextButton("Reset Scores", skin);
         resetButton.addListener(new ClickListener() {
             @Override
@@ -177,9 +173,14 @@ public class GameModeSelectorScreen implements Screen {
                 dialog.show(stage);
             }
         });
-        topBar.add(resetButton).right().padRight(10f);
 
-        // Custom textured back button
+        Table bottomCenter = new Table();
+        bottomCenter.setFillParent(true);
+        bottomCenter.bottom().padBottom(18);
+        bottomCenter.add(resetButton).center().width(200).height(45);
+        stage.addActor(bottomCenter);
+
+        // === BACK BUTTON (BOTTOM-RIGHT) ===
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
         backButton.addListener(new ClickListener() {
             @Override
@@ -188,10 +189,13 @@ public class GameModeSelectorScreen implements Screen {
             }
         });
 
-        topBar.add(backButton).right().width(80).height(30);
+        Table bottomRight = new Table();
+        bottomRight.setFillParent(true);
+        bottomRight.bottom().right().padRight(20).padBottom(18);
+        bottomRight.add(backButton).width(80).height(30);
+        stage.addActor(bottomRight);
 
-
-        // Keyboard shortcut (ESC / Backspace)
+        // Keyboard shortcut
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
@@ -204,7 +208,20 @@ public class GameModeSelectorScreen implements Screen {
         });
     }
 
-    /** Background image, similar to Login/Register screens */
+    private boolean hasLeaderboard(String modeKey) {
+        switch (modeKey) {
+            case "free_ride":
+            case "time_trial":
+            case "endless_one_way":
+            case "endless_two_way":
+            case "drag_sprint":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Background image
     private void setupBackground() {
         try {
             bgTexture = new Texture(Gdx.files.internal("login_bg.png"));
@@ -216,14 +233,13 @@ public class GameModeSelectorScreen implements Screen {
         }
     }
 
-    /** Mode card background (uses custom texture if available, otherwise a tinted default) */
+    // Mode card background
     private void setupModeCardBackground() {
         try {
             modeCardTexture = new Texture(Gdx.files.internal("mode_card_bg.png"));
             modeCardBackground = new TextureRegionDrawable(new TextureRegion(modeCardTexture));
         } catch (Exception e) {
             modeCardTexture = null;
-            // Fallback: dark rounded panel using uiskin
             modeCardBackground = skin.newDrawable("default-round",
                 new Color(0.1f, 0.1f, 0.1f, 0.9f));
         }
@@ -234,22 +250,19 @@ public class GameModeSelectorScreen implements Screen {
         Table card = new Table(skin);
         card.setBackground(modeCardBackground);
         card.pad(18).defaults().space(8);
-        card.setTransform(true);  // allow scaling for the "pop" effect
+        card.setTransform(true);
 
-        // Title
         Label titleLabel = new Label(title, skin);
         titleLabel.setAlignment(Align.center);
         titleLabel.setFontScale(1.1f);
         card.add(titleLabel).center().padBottom(4).row();
 
-        // Description
         Label descLabel = new Label(description, skin);
         descLabel.setColor(Color.LIGHT_GRAY);
         descLabel.setAlignment(Align.center);
         descLabel.setWrap(true);
         card.add(descLabel).width(280).padBottom(6).row();
 
-        // High score (styled like price in dealership)
         int bestScore = HighScoreManager.getHighScore(modeKey);
         Label highScoreLabel = new Label("Best: " + bestScore, skin);
         highScoreLabel.setAlignment(Align.center);
@@ -257,26 +270,27 @@ public class GameModeSelectorScreen implements Screen {
         highScoreLabel.setFontScale(1.0f);
         card.add(highScoreLabel).padTop(2).row();
 
-        // Button row: Play + optional Leaderboard
         Table buttonRow = new Table();
         TextButton playButton = new TextButton("Play", skin);
         buttonRow.add(playButton).width(110).height(40).padRight(6);
 
-        if ("free_ride".equals(modeKey)) {
-            TextButton leaderboardButton = new TextButton("Leaderboard", skin);
-            buttonRow.add(leaderboardButton).width(130).height(40);
+        TextButton leaderboardButton = new TextButton("Leaderboard", skin);
+        buttonRow.add(leaderboardButton).width(130).height(40);
 
-            leaderboardButton.addListener(new ClickListener() {
-                @Override
-                public void clicked(InputEvent event, float x, float y) {
-                    showLeaderboardDialog("free_ride");
-                }
-            });
-        }
+        boolean supported = hasLeaderboard(modeKey);
+        leaderboardButton.setDisabled(!supported);
+        leaderboardButton.getLabel().setColor(supported ? Color.WHITE : Color.GRAY);
+
+        leaderboardButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (leaderboardButton.isDisabled()) return;
+                showLeaderboardDialog(modeKey);
+            }
+        });
 
         card.add(buttonRow).padTop(6).center().row();
 
-        // Play button logic
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -284,7 +298,6 @@ public class GameModeSelectorScreen implements Screen {
             }
         });
 
-        // Whole card press animation + click
         card.addListener(new ClickListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y,
@@ -305,7 +318,6 @@ public class GameModeSelectorScreen implements Screen {
             }
         });
 
-        // Add to horizontal row
         parent.add(card).width(340).height(260).pad(20);
     }
 
@@ -318,7 +330,6 @@ public class GameModeSelectorScreen implements Screen {
             return;
         }
 
-        // Small loading dialog
         Dialog loading = new Dialog("Leaderboard", skin);
         loading.text("Loading top scores...");
         loading.button("Close");
@@ -354,7 +365,6 @@ public class GameModeSelectorScreen implements Screen {
         content.pad(15);
         content.defaults().pad(4);
 
-        // Optional: dark card background inside dialog
         content.setBackground("default-round");
         content.setColor(0.06f, 0.06f, 0.06f, 0.95f);
 
@@ -366,14 +376,11 @@ public class GameModeSelectorScreen implements Screen {
             return;
         }
 
-
-
-        // --- Header row ---
         Table header = new Table();
         header.defaults().pad(3).left();
 
-        Label rankHeader  = new Label("#", skin);
-        Label nameHeader  = new Label("Player", skin);
+        Label rankHeader = new Label("#", skin);
+        Label nameHeader = new Label("Player", skin);
         Label scoreHeader = new Label("Score", skin);
 
         rankHeader.setColor(Color.GOLD);
@@ -386,7 +393,6 @@ public class GameModeSelectorScreen implements Screen {
 
         content.add(header).expandX().fillX().row();
 
-        // --- Entries table (scrollable) ---
         Table entriesTable = new Table(skin);
         entriesTable.defaults().pad(3).left();
         entriesTable.setBackground("default-round");
@@ -398,8 +404,8 @@ public class GameModeSelectorScreen implements Screen {
                 ? e.username
                 : "Player";
 
-            Label rankLabel  = new Label(String.valueOf(rank), skin);
-            Label nameLabel  = new Label(username, skin);
+            Label rankLabel = new Label(String.valueOf(rank), skin);
+            Label nameLabel = new Label(username, skin);
             Label scoreLabel = new Label(String.valueOf(e.score), skin);
 
             rankLabel.setColor(Color.LIGHT_GRAY);
@@ -431,15 +437,15 @@ public class GameModeSelectorScreen implements Screen {
 
     private String prettifyModeName(String modeKey) {
         switch (modeKey) {
-            case "free_ride":         return "Free Ride";
-            case "time_trial":        return "Time Trial";
-            case "endless_one_way":   return "Endless One Way";
-            case "endless_two_way":   return "Endless Two Way";
-            case "drag_sprint":       return "Drag Sprint";
-            default:                  return modeKey;
+            case "free_ride":       return "Free Ride";
+            case "time_trial":      return "Time Trial";
+            case "endless_one_way": return "Endless One Way";
+            case "endless_two_way": return "Endless Two Way";
+            case "drag_sprint":     return "Drag Sprint";
+            case "test_drive":      return "Test Drive";
+            default:                return modeKey;
         }
     }
-
 
     /** Decides which screen to go to when a mode is selected */
     private void startMode(String modeKey) {
@@ -449,20 +455,24 @@ public class GameModeSelectorScreen implements Screen {
                 System.out.println("Start Free Ride");
                 break;
             case "time_trial":
-                // game.setScreen(new TimeTrialScreen(game));
+                game.setScreen(new TimeTrialScreen(game));
                 System.out.println("Start Time Trial");
                 break;
             case "endless_one_way":
-                // game.setScreen(new EndlessOneWayScreen(game));
+                game.setScreen(new EndlessOneWayScreen(game));
                 System.out.println("Start Endless One Way");
                 break;
             case "endless_two_way":
-                // game.setScreen(new EndlessTwoWayScreen(game));
+                game.setScreen(new EndlessTwoWayScreen(game));
                 System.out.println("Start Endless Two Way");
                 break;
             case "drag_sprint":
-                // game.setScreen(new DragSprintScreen(game));
+                game.setScreen(new DragRaceScreen(game));
                 System.out.println("Start Drag Sprint");
+                break;
+            case "test_drive":
+                game.setScreen(new TestDriveScreen(game));
+                System.out.println("Start Test Drive");
                 break;
         }
     }

@@ -49,22 +49,22 @@ public class LoginScreen implements Screen {
             bgTexture = null;
         }
 
-        // Root table (centers the card)
+        // Root table
         Table root = new Table();
         root.setFillParent(true);
         root.center();
         stage.addActor(root);
 
-        // --- Card / panel ---
+        // Card / panel
         Table card = new Table(skin);
         card.pad(30);
         card.defaults().pad(8).fillX();
 
-        // Use the default rounded background from uiskin, and darken it a bit
+        // Using the default rounded background from uiskin, and darken it a bit
         card.setBackground("default-round");
         card.setColor(0.08f, 0.08f, 0.08f, 0.90f);
 
-        // --- Title + subtitle ---
+        // Title + subtitle
         Label title = new Label("Traffic Racing Simulator", skin);
         title.setAlignment(Align.center);
         title.setFontScale(1.3f);
@@ -76,7 +76,7 @@ public class LoginScreen implements Screen {
         card.add(title).colspan(2).padBottom(4).row();
         card.add(subtitle).colspan(2).padBottom(18).row();
 
-        // --- Email field ---
+        // Email field
         Label emailLabel = new Label("Email", skin);
         TextField emailField = new TextField("", skin);
         emailField.setMessageText("you@example.com");
@@ -85,17 +85,17 @@ public class LoginScreen implements Screen {
         card.row();
         card.add(emailField).colspan(2).width(380).row();
 
-        // --- Password + Show toggle ---
+        // Password + Show toggle
         Label passwordLabel = new Label("Password", skin);
         TextField passwordField = new TextField("", skin);
         passwordField.setPasswordMode(true);
         passwordField.setPasswordCharacter('*');
         passwordField.setMessageText("••••••••");
 
-        // little "Show" button to the right
+        // little "Show" button
         TextButton showButton = new TextButton("Show", skin);
 
-        // Row: password field + show button
+        // password field + show button
         Table passwordRow = new Table();
         passwordRow.add(passwordField).width(300).padRight(6);
         passwordRow.add(showButton).width(70);
@@ -104,7 +104,7 @@ public class LoginScreen implements Screen {
         card.row();
         card.add(passwordRow).colspan(2).row();
 
-        // Show/hide behavior
+        // Show/hide
         showButton.addListener(new ClickListener() {
             private boolean showing = false;
 
@@ -116,7 +116,7 @@ public class LoginScreen implements Screen {
             }
         });
 
-        // --- Feedback label (errors, success) ---
+        // Feedback label
         Label feedbackLabel = new Label("", skin);
         feedbackLabel.setAlignment(Align.center);
         feedbackLabel.setColor(Color.RED);
@@ -124,7 +124,7 @@ public class LoginScreen implements Screen {
 
         card.add(feedbackLabel).colspan(2).width(380).padTop(8).row();
 
-        // --- Forgot password link ---
+        //  Forgot password link
         TextButton forgotPasswordButton = new TextButton("Forgot password?", skin);
         forgotPasswordButton.getLabel().setColor(Color.SKY);
         forgotPasswordButton.getLabel().setAlignment(Align.center);
@@ -132,18 +132,18 @@ public class LoginScreen implements Screen {
 
         card.add(forgotPasswordButton).colspan(2).width(200).height(30).padTop(4).row();
 
-        // --- Login button ---
+        // Login button
         TextButton loginButton = new TextButton("Login", skin);
         loginButton.getLabel().setAlignment(Align.center);
         card.add(loginButton).colspan(2).width(380).height(45).padTop(10).row();
 
-        // --- Divider text ---
+        //  Divider text
         Label orLabel = new Label("Don't have an account?", skin);
         orLabel.setAlignment(Align.center);
         orLabel.setColor(Color.LIGHT_GRAY);
         card.add(orLabel).colspan(2).padTop(10).row();
 
-        // --- Register button (link style) ---
+        // Register button
         TextButton toRegisterButton = new TextButton("Create account", skin);
         toRegisterButton.getLabel().setColor(Color.SKY);
         card.add(toRegisterButton).colspan(2).width(200).height(40).padTop(4).row();
@@ -156,7 +156,7 @@ public class LoginScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 long now = System.currentTimeMillis();
 
-                // 1) Check if we're currently locked out
+                // 1) Check if its currently locked out
                 if (now < lockoutEndTimeMs) {
                     long remainingMs = lockoutEndTimeMs - now;
                     long remainingSec = (remainingMs + 999) / 1000; // round up to seconds
@@ -194,6 +194,9 @@ public class LoginScreen implements Screen {
 
                             String userId = SupabaseAuth.userId;
                             String token  = SupabaseAuth.accessToken;
+                            AchievementsManager.setCurrentUser(userId);
+                            AchievementsManager.syncFromCloud(null);
+
 
                             SupabaseGameData.loadProfile(userId, token, () -> {
                                 SupabaseGameData.fetchUsername(userId, token, username -> {

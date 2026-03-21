@@ -39,7 +39,7 @@ public class AchievementsScreen implements Screen {
         title.setAlignment(Align.center);
         root.add(title).padBottom(20).center().row();
 
-        // Description / hint
+        // Description
         Label subtitle = new Label(
             "Complete challenges while playing to unlock achievements.",
             skin
@@ -49,7 +49,7 @@ public class AchievementsScreen implements Screen {
         subtitle.setWrap(true);
         root.add(subtitle).width(600).padBottom(20).center().row();
 
-        // List table with rounded background (overall panel)
+        // List table with rounded background
         Table listTable = new Table(skin);
         listTable.defaults().pad(8).left();
         listTable.setBackground("default-round");

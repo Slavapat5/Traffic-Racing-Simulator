@@ -1,0 +1,500 @@
+package com.manogstudios.racingsimulator;
+
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.manogstudios.racingsimulator.network.SupabaseAuth;
+import com.manogstudios.racingsimulator.network.SupabaseGameData;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class TestDriveScreen implements Screen {
+
+    private final Game game;
+
+    // Rendering
+    private SpriteBatch batch;
+    private OrthographicCamera camera;
+
+    // Player
+    private Car playerCar;
+    private List<Rectangle> borderRectangles;
+
+    // Road
+    private Texture roadTexture;
+    private static final float VIEW_WIDTH = 1920f;
+    private static final float VIEW_HEIGHT = 1080f;
+    private static final float SEGMENT_WIDTH = 1920f;
+    private static final float SEGMENT_HEIGHT = 1080f;
+    private float roadCenterX = VIEW_WIDTH / 2f;
+    private float roadWidth = 800f;
+
+    // Traffic
+    private static class TrafficCar {
+        Texture texture;
+        float x, y;
+        float speed;
+        Rectangle bounds;
+
+        TrafficCar(Texture texture, float x, float y, float speed) {
+            this.texture = texture;
+            this.x = x;
+            this.y = y;
+            this.speed = speed;
+            this.bounds = new Rectangle(x, y, texture.getWidth(), texture.getHeight());
+        }
+
+        void update(float delta) {
+            y += speed * delta;
+            bounds.setPosition(x, y);
+        }
+
+        void render(SpriteBatch batch) {
+            batch.draw(texture, x, y);
+        }
+    }
+
+    private static class TrafficCarType {
+        Texture texture;
+        float minSpeed;
+        float maxSpeed;
+        float weight;
+    }
+
+    private final List<TrafficCar> trafficCars = new ArrayList<>();
+    private final List<TrafficCarType> trafficTypes = new ArrayList<>();
+    private float totalTrafficWeight = 0f;
+    private float spawnTimer = 0f;
+
+    // Test drive should feel consistent: fixed spawn interval, no scaling.
+    private float spawnInterval = 1.6f;
+
+    // Session metrics (display only)
+    private float startY;
+    private float elapsedTime = 0f;
+    private float distanceTravelled = 0f;
+    private boolean gameOver = false;
+
+    // --- Telemetry (run session) ---
+    private long runStartMillis = 0L;
+    private int runCrashCount = 0;
+    private int runNearMisses = 0;
+
+    private float speedSumMphSeconds = 0f; // mph * seconds
+    private float speedSampleSeconds = 0f;
+    private float maxSpeedMph = 0f;
+
+
+    // UI
+    private Stage uiStage;
+    private Skin skin;
+
+    private Label modeLabel;
+    private Label speedLabel;
+    private Label distanceLabel;
+    private Label timeLabel;
+
+    private float laneWidth;
+    private float[] laneX;
+
+    public TestDriveScreen(Game game) {
+        this.game = game;
+    }
+
+    @Override
+    public void show() {
+        batch = new SpriteBatch();
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, VIEW_WIDTH, VIEW_HEIGHT);
+
+        // UI
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        uiStage = new Stage(new ScreenViewport());
+        Gdx.input.setInputProcessor(uiStage);
+
+        // Road texture
+        roadTexture = new Texture(Gdx.files.internal("Segment1.png"));
+
+        // Traffic car types
+        addTrafficType("BMW 330i - 2025.png", 600f, 600f, 5f);
+        addTrafficType("Ford Fiesta ST - 2019.png", 600f, 600f, 4f);
+        addTrafficType("Mazda MX-5 Miata - 2014.png", 600f, 600f, 3f);
+        addTrafficType("Mclaren 650s - 2015.png", 600f, 600f, 1.5f);
+
+        // Player car (selected)
+        String selectedCarTexture = CarSelectionData.getSelectedCarTexture();
+        CarStats stats = CarRegistry.getStats(selectedCarTexture);
+
+        float startX = roadCenterX;
+        float startYWorld = 0f;
+
+        float MIN_SPEED = 150f;
+        playerCar = new Car(
+            selectedCarTexture,
+            startX,
+            startYWorld,
+            stats.acceleration,
+            stats.speed,
+            stats.handling,
+            MIN_SPEED
+        );
+
+        this.startY = startYWorld;
+
+        // Lane setup: 4 lanes
+        laneWidth = roadWidth / 4f;
+        laneX = new float[] {
+            roadCenterX - laneWidth * 1.5f,
+            roadCenterX - laneWidth * 0.5f,
+            roadCenterX + laneWidth * 0.5f,
+            roadCenterX + laneWidth * 1.5f
+        };
+
+        // Borders (keep car on road)
+        borderRectangles = new ArrayList<>();
+        float leftEdge = roadCenterX - roadWidth / 2f;
+        float rightEdge = roadCenterX + roadWidth / 2f;
+        borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
+        borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
+
+        setupUI();
+
+        runStartMillis = System.currentTimeMillis();
+        runCrashCount = 0;
+        runNearMisses = 0;
+        speedSumMphSeconds = 0f;
+        speedSampleSeconds = 0f;
+        maxSpeedMph = 0f;
+
+    }
+
+    private void setupUI() {
+        Table root = new Table();
+        root.setFillParent(true);
+        uiStage.addActor(root);
+
+        // Top bar
+        Table topBar = new Table();
+        topBar.top().left().pad(10);
+        topBar.setFillParent(true);
+
+        modeLabel = new Label("TEST DRIVE", skin);
+        modeLabel.setFontScale(1.2f);
+        modeLabel.setAlignment(Align.left);
+        topBar.add(modeLabel).left().padRight(20f);
+
+        distanceLabel = new Label("Dist: 0 m", skin);
+        distanceLabel.setFontScale(1.2f);
+        distanceLabel.setAlignment(Align.left);
+        topBar.add(distanceLabel).left().padRight(20f);
+
+        timeLabel = new Label("Time: 0.0s", skin);
+        timeLabel.setFontScale(1.2f);
+        timeLabel.setAlignment(Align.left);
+        topBar.add(timeLabel).left().padRight(20f);
+
+        speedLabel = new Label("Speed: 0 mph", skin);
+        speedLabel.setFontScale(1.2f);
+        speedLabel.setAlignment(Align.left);
+        topBar.add(speedLabel).left().expandX();
+
+        TextButton menuButton = new TextButton("Menu", skin);
+        topBar.add(menuButton).right().width(80f);
+
+        uiStage.addActor(topBar);
+
+        // Dropdown menu
+        final Table menuTable = new Table(skin);
+        menuTable.setVisible(false);
+        menuTable.defaults().pad(5).fillX().uniformX();
+        menuTable.background("default-round");
+
+        TextButton switchCarBtn = new TextButton("Switch Car", skin);
+        TextButton modesBtn = new TextButton("Game Modes", skin);
+        TextButton homeBtn = new TextButton("Home", skin);
+
+        menuTable.add(switchCarBtn).row();
+        menuTable.add(modesBtn).row();
+        menuTable.add(homeBtn).row();
+
+        Table menuContainer = new Table();
+        menuContainer.setFillParent(true);
+        menuContainer.top().right().pad(10, 10, 0, 10);
+        menuContainer.add(menuTable);
+        uiStage.addActor(menuContainer);
+
+        menuButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                menuTable.setVisible(!menuTable.isVisible());
+            }
+        });
+
+        switchCarBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GarageScreen(game));
+            }
+        });
+
+        modesBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameModeSelectorScreen(game));
+            }
+        });
+
+        homeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new MenuScreen(game));
+            }
+        });
+    }
+
+    @Override
+    public void render(float delta) {
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        if (!gameOver) {
+            updateLogic(delta);
+        }
+
+        // --- World render ---
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+        float baseY = (float) Math.floor(camera.position.y / SEGMENT_HEIGHT) * SEGMENT_HEIGHT;
+        float roadX = roadCenterX - SEGMENT_WIDTH / 2f;
+
+        for (int i = -1; i <= 1; i++) {
+            float y = baseY + i * SEGMENT_HEIGHT;
+            batch.draw(roadTexture, roadX, y, SEGMENT_WIDTH, SEGMENT_HEIGHT);
+        }
+
+        for (TrafficCar t : trafficCars) {
+            t.render(batch);
+        }
+
+        playerCar.render(batch);
+        batch.end();
+
+        // --- UI ---
+        uiStage.act(delta);
+        uiStage.draw();
+
+        // Keyboard shortcut
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
+            game.setScreen(new GameModeSelectorScreen(game));
+        }
+    }
+
+    private void updateLogic(float delta) {
+        // Player input
+        boolean moveForward = Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean brake = Gdx.input.isKeyPressed(Input.Keys.S);
+        boolean turnLeft = Gdx.input.isKeyPressed(Input.Keys.A);
+        boolean turnRight = Gdx.input.isKeyPressed(Input.Keys.D);
+
+        playerCar.update(delta, moveForward, brake, turnLeft, turnRight, borderRectangles);
+
+        // Camera follows the car
+        float camY = playerCar.getY() + 300f;
+        camera.position.set(roadCenterX, camY, 0);
+
+        // Metrics (display only)
+        elapsedTime += delta;
+
+        float dy = playerCar.getY() - startY;
+        if (dy < 0) dy = 0;
+        distanceTravelled = dy;
+        int displayDistance = (int) (distanceTravelled / 10f);
+
+        timeLabel.setText(String.format("Time: %.1fs", elapsedTime));
+        distanceLabel.setText("Dist: " + displayDistance + " m");
+
+        float rawSpeed = playerCar.getSpeed();
+        int mph = (int) (rawSpeed / 10f);
+
+        if (mph > 0f) {
+            speedSumMphSeconds += mph * delta;
+            speedSampleSeconds += delta;
+            if (mph > maxSpeedMph) maxSpeedMph = mph;
+        }
+
+
+        speedLabel.setText("Speed: " + mph + " mph");
+
+        // Spawn traffic (fixed rate)
+        spawnTimer -= delta;
+        if (spawnTimer <= 0f) {
+            spawnTrafficCar();
+            spawnTimer = spawnInterval;
+        }
+
+        // Update traffic + collision
+        Rectangle playerRect = playerCar.getBoundingRectangle();
+
+        for (int i = trafficCars.size() - 1; i >= 0; i--) {
+            TrafficCar t = trafficCars.get(i);
+            t.update(delta);
+
+            if (t.y < playerCar.getY() - 2000f) {
+                trafficCars.remove(i);
+                continue;
+            }
+
+            if (playerRect.overlaps(t.bounds)) {
+                onCrash();
+                break;
+            }
+        }
+    }
+
+    private void addTrafficType(String texturePath, float minSpeed, float maxSpeed, float weight) {
+        Texture tex = new Texture(Gdx.files.internal(texturePath));
+        TrafficCarType type = new TrafficCarType();
+        type.texture = tex;
+        type.minSpeed = minSpeed;
+        type.maxSpeed = maxSpeed;
+        type.weight = weight;
+        trafficTypes.add(type);
+        totalTrafficWeight += weight;
+    }
+
+    private TrafficCarType pickRandomTrafficType() {
+        if (trafficTypes.isEmpty()) return null;
+
+        float r = MathUtils.random() * totalTrafficWeight;
+        float cumulative = 0f;
+
+        for (TrafficCarType type : trafficTypes) {
+            cumulative += type.weight;
+            if (r <= cumulative) return type;
+        }
+        return trafficTypes.get(trafficTypes.size() - 1);
+    }
+
+    private boolean isLaneClearForSpawn(float laneXPos, float spawnY) {
+        final float MIN_GAP_Y = 400f;
+        for (TrafficCar t : trafficCars) {
+            float dx = Math.abs(t.x - laneXPos);
+            if (dx < laneWidth * 1f) {
+                float dy = Math.abs(t.y - spawnY);
+                if (dy < MIN_GAP_Y) return false;
+            }
+        }
+        return true;
+    }
+
+    private void spawnTrafficCar() {
+        float baseSpawnY = playerCar.getY() + 2000f;
+
+        TrafficCarType type = pickRandomTrafficType();
+        if (type == null) return;
+
+        final int MAX_ATTEMPTS = 5;
+        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            int laneIdx = MathUtils.random(0, laneX.length - 1);
+            float x = laneX[laneIdx];
+            float spawnY = baseSpawnY;
+
+            if (isLaneClearForSpawn(x, spawnY)) {
+                float speed = MathUtils.random(type.minSpeed, type.maxSpeed);
+                trafficCars.add(new TrafficCar(type.texture, x, spawnY, speed));
+                return;
+            }
+        }
+    }
+
+    private void onCrash() {
+        gameOver = true;
+        runCrashCount++;
+
+        // Telemetry
+        runCrashCount++;
+        long endMillis = System.currentTimeMillis();
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.submitRunTelemetry(
+                "test_drive",
+                runStartMillis,
+                endMillis,
+                elapsedTime,
+                (int) (distanceTravelled / 10f),
+                0,              // score = 0 for test drive
+                runCrashCount,
+                0,              // near misses not tracked here
+                null,
+                null,
+                CarSelectionData.getSelectedCarTexture(),
+                "0.1.0",
+                () -> System.out.println("Telemetry saved"),
+                (err) -> System.out.println("Telemetry failed: " + err)
+            );
+        }
+
+        int distMeters = (int) (distanceTravelled / 10f);
+
+        Dialog dialog = new Dialog("Crash!", skin) {
+            @Override
+            protected void result(Object obj) {
+                String choice = (String) obj;
+                if ("retry".equals(choice)) {
+                    game.setScreen(new TestDriveScreen(game));
+                } else if ("modes".equals(choice)) {
+                    game.setScreen(new GameModeSelectorScreen(game));
+                }
+            }
+        };
+
+        dialog.text("You crashed!\n\n"
+            + "Distance: " + distMeters + " m\n"
+            + "Time: " + String.format("%.1f s", elapsedTime) + "\n\n"
+            + "No cash or scores are awarded in Test Drive.");
+        dialog.button("Restart", "retry");
+        dialog.button("Back to Modes", "modes");
+        dialog.show(uiStage);
+    }
+
+
+    @Override
+    public void resize(int width, int height) {
+        Gdx.graphics.setWindowedMode((int) VIEW_WIDTH, (int) VIEW_HEIGHT);
+    }
+
+    @Override public void pause() { }
+    @Override public void resume() { }
+    @Override public void hide() { }
+
+    @Override
+    public void dispose() {
+        if (batch != null) batch.dispose();
+        if (roadTexture != null) roadTexture.dispose();
+        if (uiStage != null) uiStage.dispose();
+        if (skin != null) skin.dispose();
+        if (playerCar != null) playerCar.dispose();
+
+        for (TrafficCarType type : trafficTypes) {
+            if (type.texture != null) type.texture.dispose();
+        }
+    }
+}
