@@ -33,3 +33,44 @@ Useful Gradle tasks and flags:
 
 Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
 For example, `core:clean` removes `build` folder only from the `core` project.
+
+## Running the Game
+Follow these steps to download, build, and run Traffic Racing Simulator
+
+## Things you need
+• IntelliJ IDEA (Community Edition Works)
+• Java Development Kit (JDK 11 or later preferably)
+• Internet connection 
+
+##  Setup Instructions
+### 1. Download the Project
+
+Click the Code button on GitHub and choose Download ZIP
+
+Extract the ZIP file to your preferred folder
+
+### 2. Open the Project in IntelliJ
+
+Open IntelliJ IDEA
+
+Select Open and choose the highest level build.gradle file in the project root
+
+IntelliJ will import the Gradle project (may take a while)
+
+### 3. Build the Project
+
+Open the Terminal inside IntelliJ (panel at the bottom)
+
+Run the command: ./gradlew clean build
+
+### 4. Run the Game
+
+Open the Gradle tab (usually on the right side of IntelliJ)
+
+Navigate to:
+lwjgl3 → Tasks → application → run
+
+Double-click run to launch the game
+
+## Troubleshooting
+If ./gradlew doesn’t work on Windows, use: gradlew.bat clean build
