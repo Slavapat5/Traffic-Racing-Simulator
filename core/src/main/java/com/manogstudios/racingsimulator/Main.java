@@ -11,6 +11,7 @@ public class Main extends Game {
 
     @Override
     public void create() {
+        GameSettings.applyDisplaySettings();
         CashManager.loadCash();
 
         if (SupabaseAuth.isLoggedIn) {

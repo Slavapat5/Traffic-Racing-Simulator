@@ -175,6 +175,38 @@ public class AccountScreen implements Screen {
             }
         });
 
+        TextButton logoutAllDevicesButton = new TextButton("Log out all devices", skin);
+
+
+        logoutAllDevicesButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Dialog confirmDialog = new Dialog("Confirm", skin) {
+                    @Override
+                    protected void result(Object object) {
+                        if ((Boolean) object) {
+                            SupabaseAuth.logoutAllDevices(success -> {
+                                Dialog resultDialog = new Dialog("Signed out", skin);
+                                if (success) {
+                                    resultDialog.text("You have been signed out on all devices.");
+                                } else {
+                                    resultDialog.text("Local session cleared. Other devices may already be expired or could not be contacted.");
+                                }
+                                resultDialog.button("OK");
+                                resultDialog.show(stage);
+
+                                game.setScreen(new LoginScreen(game));
+                            });
+                        }
+                    }
+                };
+
+                confirmDialog.text("Log out from all devices?");
+                confirmDialog.button("Yes", true);
+                confirmDialog.button("No", false);
+                confirmDialog.show(stage);
+            }
+        });
 
         // Title
         root.add(title).colspan(2).padBottom(30).center().row();
@@ -225,6 +257,7 @@ public class AccountScreen implements Screen {
         bottomButtons.add(backButton).width(160).padRight(20);
         bottomButtons.add(logoutButton).width(160);
         bottomButtons.add(changePwButton);
+        bottomButtons.add(logoutAllDevicesButton);
 
         root.add(bottomButtons).colspan(2).right().padTop(20);
 

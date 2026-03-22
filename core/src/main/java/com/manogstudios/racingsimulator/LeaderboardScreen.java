@@ -123,7 +123,7 @@ public class LeaderboardScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new MenuScreen(game));
+                game.setScreen(new PlayScreen(game));
             }
         });
 

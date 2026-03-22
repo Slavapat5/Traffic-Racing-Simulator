@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 
 
 public class PlayScreen implements Screen {
@@ -25,9 +26,12 @@ public class PlayScreen implements Screen {
     private Stage stage;
     private Skin skin;
     private TextButton playButton;
-    private TextButton leaderboardButton;
     private SpriteBatch batch;
     private Texture backgroundTexture;
+    private Label versionLabel;
+    private static final String GAME_VERSION = "Beta 1.1";
+
+
 
     public PlayScreen(Game game) {
         this.game = game;
@@ -88,6 +92,8 @@ public class PlayScreen implements Screen {
             new Texture(Gdx.files.internal("PlayButton2.png"))));
 
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+        versionLabel = new Label(GAME_VERSION, skin);
+        versionLabel.setFontScale(1.6f);
 
         playButton = new TextButton("Play", buttonStyle);
         playButton.setTransform(true);
@@ -124,7 +130,20 @@ public class PlayScreen implements Screen {
             }
         });
 
-        // ACHIEVEMENTS BUTTON
+        // Settings button
+        TextButton settingsButton = new TextButton("Settings", buttonStyle);
+        settingsButton.setTransform(true);
+        settingsButton.setSize(300, 40);
+        settingsButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if (game != null) {
+                    game.setScreen(new SettingsScreen(game));
+                }
+            }
+        });
+
+        // Achievements button
         TextButton achievementsButton = new TextButton("Achievements", buttonStyle);
         achievementsButton.setTransform(true);
         achievementsButton.setSize(300, 40);
@@ -151,9 +170,19 @@ public class PlayScreen implements Screen {
         table.row();
         table.add(leaderboardButton).width(300).height(40).padBottom(10).right().bottom();
         table.row();
+        table.add(settingsButton).width(300).height(40).padBottom(10).right().bottom();
+        table.row();
         table.add(quitButton).width(300).height(40).right().bottom();
 
+        Table versionTable = new Table();
+        versionTable.setFillParent(true);
+        versionTable.bottom().left();
+        versionTable.padLeft(20);
+        versionTable.padBottom(20);
 
+        versionTable.add(versionLabel);
+
+        stage.addActor(versionTable);
         stage.addActor(table);
 
         Gdx.input.setInputProcessor(stage);

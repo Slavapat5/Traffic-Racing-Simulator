@@ -490,7 +490,7 @@ public class DragRaceScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        Gdx.graphics.setWindowedMode((int) VIEW_WIDTH, (int) VIEW_HEIGHT);
+        uiStage.getViewport().update(width, height, true);
     }
 
     @Override public void pause() {}

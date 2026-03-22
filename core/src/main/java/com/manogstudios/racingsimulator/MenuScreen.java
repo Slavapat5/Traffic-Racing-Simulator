@@ -242,21 +242,22 @@ public class MenuScreen implements Screen {
         settingsTitle.setAlignment(Align.center);
         settingsPopup.add(settingsTitle).expandX().left().padBottom(6).row();
 
-        Label divider = new Label("------------------------", skin);
+        Label divider = new Label("-----------------------------------------", skin);
         divider.setColor(Color.DARK_GRAY);
         settingsPopup.add(divider).expandX().left().padBottom(4).row();
 
         TextButton logoutButton = new TextButton("Log out", skin);
-        TextButton toMainMenu   = new TextButton("Back to Title", skin);
+        TextButton toMainMenu   = new TextButton("Back to Title Screen", skin);
         TextButton quitButton   = new TextButton("Quit Game", skin);
-        TextButton resetButton  = new TextButton("Reset Cash", skin);
         TextButton cashButton   = new TextButton("Add Cash (debug)", skin);
+        TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
 
-        settingsPopup.add(logoutButton).row();
+        settingsPopup.add(fullscreenButton).row();
         settingsPopup.add(toMainMenu).row();
-        settingsPopup.add(quitButton).row();
-        settingsPopup.add(resetButton).row();
         settingsPopup.add(cashButton).row();
+        settingsPopup.add(logoutButton).row();
+        settingsPopup.add(quitButton).row();
+
 
         // Attach popup above the settings button
         Table popupContainer = new Table();
@@ -264,6 +265,22 @@ public class MenuScreen implements Screen {
         popupContainer.bottom().right().padBottom(70).padRight(20);
         popupContainer.add(settingsPopup).width(220);
         stage.addActor(popupContainer);
+
+        fullscreenButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                boolean enableFullscreen = !Gdx.graphics.isFullscreen();
+
+                if (enableFullscreen) {
+                    Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+                } else {
+                    Gdx.graphics.setWindowedMode(1600, 900);
+                }
+
+                GameSettings.setFullscreenEnabled(enableFullscreen);
+                fullscreenButton.setText(getFullscreenText());
+            }
+        });
 
         // Toggle popup
         settingsButton.addListener(new ClickListener() {
@@ -310,23 +327,6 @@ public class MenuScreen implements Screen {
             }
         });
 
-        resetButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Dialog confirmDialog = new Dialog("Confirm Reset", skin) {
-                    @Override
-                    protected void result(Object object) {
-                        if ((Boolean) object) {
-                            CashManager.setCash(10000);
-                        }
-                    }
-                };
-                confirmDialog.text("Are you sure you want to reset your cash?");
-                confirmDialog.button("Yes", true);
-                confirmDialog.button("No", false);
-                confirmDialog.show(stage);
-            }
-        });
 
         cashButton.addListener(new ClickListener() {
             @Override
@@ -373,6 +373,10 @@ public class MenuScreen implements Screen {
 
     private String formatCash(int cash) {
         return String.format("%,d", cash);
+    }
+
+    private String getFullscreenText() {
+        return "Fullscreen: " + (Gdx.graphics.isFullscreen() ? "ON" : "OFF");
     }
 
     private Drawable createCashLabelBackground() {

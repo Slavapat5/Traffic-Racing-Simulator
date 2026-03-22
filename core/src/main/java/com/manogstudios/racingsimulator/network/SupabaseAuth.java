@@ -266,6 +266,8 @@ public class SupabaseAuth {
         }
     }
 
+
+
     public static boolean registerUser(String email, String password) {
         try {
             URL url = new URL(SUPABASE_URL + "/auth/v1/signup");
@@ -290,6 +292,56 @@ public class SupabaseAuth {
         }
     }
 
+    public static void logoutAllDevices(java.util.function.Consumer<Boolean> callback) {
+        ensureValidSession(ok -> {
+            if (!ok || accessToken == null || accessToken.isEmpty()) {
+                // still clear local session on this device
+                isLoggedIn = false;
+                clearSessionInMemory();
+                clearSessionInPrefs();
+
+                if (callback != null) {
+                    Gdx.app.postRunnable(() -> callback.accept(false));
+                }
+                return;
+            }
+
+            final String token = accessToken;
+
+            new Thread(() -> {
+                boolean success = false;
+
+                try {
+                    HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(SUPABASE_URL + "/auth/v1/logout?scope=global"))
+                        .header("apikey", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .POST(HttpRequest.BodyPublishers.noBody())
+                        .build();
+
+                    HttpResponse<String> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    System.out.println("logoutAllDevices: " + response.statusCode() + " body=" + response.body());
+
+                    success = (response.statusCode() / 100 == 2);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    // clear THIS device either way
+                    isLoggedIn = false;
+                    clearSessionInMemory();
+                    clearSessionInPrefs();
+
+                    boolean finalSuccess = success;
+                    if (callback != null) {
+                        Gdx.app.postRunnable(() -> callback.accept(finalSuccess));
+                    }
+                }
+            }).start();
+        });
+    }
 
 
     private static void persistSession() {
