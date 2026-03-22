@@ -1,4 +1,4 @@
-# RacingSimulator
+# Traffic Racing Simulator
 
 ## Running the Game
 Follow these steps to download, build, and run Traffic Racing Simulator
