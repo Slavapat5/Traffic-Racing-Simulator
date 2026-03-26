@@ -151,6 +151,8 @@ public class LoginScreen implements Screen {
         // Add the card to the root
         root.add(card).width(480).pad(20);
 
+
+
         loginButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -185,27 +187,33 @@ public class LoginScreen implements Screen {
                 SupabaseAuth.login(email, password, success -> {
                     Gdx.app.postRunnable(() -> {
                         if (success) {
-                            //  Success: reset counters & go on
                             failedAttempts = 0;
                             lockoutEndTimeMs = 0L;
 
-                            feedbackLabel.setColor(Color.GREEN);
-                            feedbackLabel.setText("Login successful!");
+                            feedbackLabel.setColor(Color.LIGHT_GRAY);
+                            feedbackLabel.setText("Password accepted. Checking 2FA...");
 
-                            String userId = SupabaseAuth.userId;
-                            String token  = SupabaseAuth.accessToken;
-                            AchievementsManager.setCurrentUser(userId);
-                            AchievementsManager.syncFromCloud(null);
+                            SupabaseAuth.fetchMfaStatus(aalResult -> {
+                                if (!aalResult.success) {
+                                    feedbackLabel.setColor(Color.RED);
+                                    feedbackLabel.setText(
+                                        "Login worked, but 2FA status could not be checked.\n" +
+                                            "Error: " + (aalResult.error == null ? "unknown" : aalResult.error)
+                                    );
+                                    return;
+                                }
 
+                                boolean needsMfa =
+                                    "aal1".equalsIgnoreCase(aalResult.currentLevel) &&
+                                        "aal2".equalsIgnoreCase(aalResult.nextLevel);
 
-                            SupabaseGameData.loadProfile(userId, token, () -> {
-                                SupabaseGameData.fetchUsername(userId, token, username -> {
-                                    if (username == null || username.trim().isEmpty()) {
-                                        game.setScreen(new UsernameScreen(game));
-                                    } else {
-                                        game.setScreen(new PlayScreen(game));
-                                    }
-                                });
+                                if (needsMfa) {
+                                    game.setScreen(new MfaCodeScreen(game));
+                                } else {
+                                    feedbackLabel.setColor(Color.GREEN);
+                                    feedbackLabel.setText("Login successful!");
+                                    continueAfterSuccessfulAuth();
+                                }
                             });
 
                         } else {
@@ -252,6 +260,8 @@ public class LoginScreen implements Screen {
             }
         });
 
+
+
         forgotPasswordButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -292,6 +302,24 @@ public class LoginScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new RegisterScreen(game));
             }
+        });
+    }
+
+    private void continueAfterSuccessfulAuth() {
+        String userId = SupabaseAuth.userId;
+        String token = SupabaseAuth.accessToken;
+
+        AchievementsManager.setCurrentUser(userId);
+        AchievementsManager.syncFromCloud(null);
+
+        SupabaseGameData.loadProfile(userId, token, () -> {
+            SupabaseGameData.fetchUsername(userId, token, username -> {
+                if (username == null || username.trim().isEmpty()) {
+                    game.setScreen(new UsernameScreen(game));
+                } else {
+                    game.setScreen(new PlayScreen(game));
+                }
+            });
         });
     }
 

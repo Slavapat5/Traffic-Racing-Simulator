@@ -1,0 +1,323 @@
+package com.manogstudios.racingsimulator;
+
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.manogstudios.racingsimulator.network.SupabaseAuth;
+
+public class MfaSetupScreen implements Screen {
+
+    private final Game game;
+    private Stage stage;
+    private Skin skin;
+
+    private Label statusLabel;
+    private Label currentFactorLabel;
+    private TextArea setupInfoArea;
+    private TextField codeField;
+
+    private String pendingFactorId;
+    private String pendingChallengeId;
+    private String verifiedFactorId;
+
+    public MfaSetupScreen(Game game) {
+        this.game = game;
+    }
+
+    @Override
+    public void show() {
+        stage = new Stage(new ScreenViewport());
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        Gdx.input.setInputProcessor(stage);
+
+        Label titleLabel = new Label("Two-Factor Authentication", skin);
+        titleLabel.setFontScale(1.7f);
+        titleLabel.setAlignment(Align.center);
+
+        statusLabel = new Label("Checking MFA status...", skin);
+        statusLabel.setWrap(true);
+        statusLabel.setAlignment(Align.center);
+
+        currentFactorLabel = new Label("No factor loaded", skin);
+        currentFactorLabel.setWrap(true);
+
+        setupInfoArea = new TextArea("", skin);
+        setupInfoArea.setDisabled(true);
+        setupInfoArea.setPrefRows(6);
+
+        codeField = new TextField("", skin);
+        codeField.setMessageText("Enter 6-digit authenticator code");
+
+        TextButton refreshButton = new TextButton("Refresh Status", skin);
+        TextButton enableButton = new TextButton("Enable 2FA", skin);
+        TextButton verifyButton = new TextButton("Verify Code", skin);
+        TextButton disableButton = new TextButton("Disable 2FA", skin);
+        TextButton backButton = new TextButton("Back", skin);
+
+        refreshButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                loadFactorState();
+            }
+        });
+
+        enableButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                beginTotpEnrollment();
+            }
+        });
+
+        verifyButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                verifyEnrollmentCode();
+            }
+        });
+
+        disableButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                disableCurrentFactor();
+            }
+        });
+
+        backButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                game.setScreen(new SettingsScreen(game));
+            }
+        });
+
+        Table table = new Table();
+        table.setFillParent(true);
+        table.pad(30);
+
+        table.add(titleLabel).width(700).padBottom(20);
+        table.row();
+
+        table.add(statusLabel).width(700).padBottom(15);
+        table.row();
+
+        table.add(currentFactorLabel).width(700).padBottom(15).left();
+        table.row();
+
+        table.add(setupInfoArea).width(700).height(150).padBottom(15);
+        table.row();
+
+        table.add(codeField).width(420).height(50).padBottom(15);
+        table.row();
+
+        table.add(refreshButton).width(320).height(50).padBottom(10);
+        table.row();
+
+        table.add(enableButton).width(320).height(50).padBottom(10);
+        table.row();
+
+        table.add(verifyButton).width(320).height(50).padBottom(10);
+        table.row();
+
+        table.add(disableButton).width(320).height(50).padBottom(20);
+        table.row();
+
+        table.add(backButton).width(320).height(50);
+
+        stage.addActor(table);
+
+        loadFactorState();
+    }
+
+    private void loadFactorState() {
+        statusLabel.setColor(Color.LIGHT_GRAY);
+        statusLabel.setText("Loading MFA factors...");
+
+        SupabaseAuth.listMfaFactors(result -> {
+            if (!result.success) {
+                statusLabel.setColor(Color.RED);
+                statusLabel.setText("Could not load MFA factors: " + safe(result.error));
+                currentFactorLabel.setText("No factor data available.");
+                return;
+            }
+
+            verifiedFactorId = null;
+            pendingFactorId = null;
+            pendingChallengeId = null;
+            setupInfoArea.setText("");
+            codeField.setText("");
+
+            if (result.factors.isEmpty()) {
+                statusLabel.setColor(Color.YELLOW);
+                statusLabel.setText("2FA is not enabled.");
+                currentFactorLabel.setText("No MFA factors enrolled.");
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (SupabaseAuth.MfaFactor factor : result.factors) {
+                sb.append("• ")
+                    .append(factor.friendlyName != null ? factor.friendlyName : "(unnamed)")
+                    .append(" | type=").append(factor.factorType)
+                    .append(" | status=").append(factor.status)
+                    .append("\n");
+
+                if ("verified".equalsIgnoreCase(factor.status)) {
+                    verifiedFactorId = factor.id;
+                }
+            }
+
+            currentFactorLabel.setText(sb.toString().trim());
+
+            if (verifiedFactorId != null) {
+                statusLabel.setColor(Color.GREEN);
+                statusLabel.setText("2FA is enabled.");
+            } else {
+                statusLabel.setColor(Color.ORANGE);
+                statusLabel.setText("You have an unverified MFA factor.");
+            }
+        });
+    }
+
+    private void beginTotpEnrollment() {
+        statusLabel.setColor(Color.LIGHT_GRAY);
+        statusLabel.setText("Starting TOTP enrollment...");
+
+        SupabaseAuth.enrollTotpFactor("Traffic Racing Simulator", result -> {
+            if (!result.success) {
+                statusLabel.setColor(Color.RED);
+                statusLabel.setText("Failed to start 2FA setup: " + safe(result.error));
+                return;
+            }
+
+            pendingFactorId = result.factorId;
+            pendingChallengeId = null;
+
+            StringBuilder info = new StringBuilder();
+            info.append("Add this factor to your authenticator app.\n\n");
+
+            if (result.secret != null) {
+                info.append("Secret:\n").append(result.secret).append("\n\n");
+            }
+
+            if (result.uri != null) {
+                info.append("URI:\n").append(result.uri).append("\n\n");
+            }
+
+            info.append("Then enter the 6-digit code below and press Verify Code.");
+
+            setupInfoArea.setText(info.toString());
+            statusLabel.setColor(Color.YELLOW);
+            statusLabel.setText("2FA factor created. Now verify it.");
+        });
+    }
+
+    private void verifyEnrollmentCode() {
+        String code = codeField.getText().trim();
+
+        if (pendingFactorId == null || pendingFactorId.isEmpty()) {
+            statusLabel.setColor(Color.RED);
+            statusLabel.setText("No pending factor. Press Enable 2FA first.");
+            return;
+        }
+
+        if (code.isEmpty()) {
+            statusLabel.setColor(Color.RED);
+            statusLabel.setText("Enter the 6-digit code from your authenticator app.");
+            return;
+        }
+
+        statusLabel.setColor(Color.LIGHT_GRAY);
+        statusLabel.setText("Creating challenge...");
+
+        SupabaseAuth.createMfaChallenge(pendingFactorId, challengeResult -> {
+            if (!challengeResult.success) {
+                statusLabel.setColor(Color.RED);
+                statusLabel.setText("Failed to create challenge: " + safe(challengeResult.error));
+                return;
+            }
+
+            pendingChallengeId = challengeResult.challengeId;
+
+            statusLabel.setText("Verifying code...");
+
+            SupabaseAuth.verifyMfaChallenge(pendingFactorId, pendingChallengeId, code, verifyResult -> {
+                if (!verifyResult.success) {
+                    statusLabel.setColor(Color.RED);
+                    statusLabel.setText("Verification failed: " + safe(verifyResult.error));
+                    return;
+                }
+
+                statusLabel.setColor(Color.GREEN);
+                statusLabel.setText("2FA enabled successfully.");
+                loadFactorState();
+            });
+        });
+    }
+
+    private void disableCurrentFactor() {
+        if (verifiedFactorId == null || verifiedFactorId.isEmpty()) {
+            statusLabel.setColor(Color.RED);
+            statusLabel.setText("No verified factor to disable.");
+            return;
+        }
+
+        statusLabel.setColor(Color.LIGHT_GRAY);
+        statusLabel.setText("Disabling 2FA...");
+
+        SupabaseAuth.unenrollMfaFactor(verifiedFactorId, result -> {
+            if (!result.success) {
+                statusLabel.setColor(Color.RED);
+                statusLabel.setText("Failed to disable 2FA: " + safe(result.error));
+                return;
+            }
+
+            statusLabel.setColor(Color.GREEN);
+            statusLabel.setText("2FA disabled.");
+            loadFactorState();
+        });
+    }
+
+    private String safe(String s) {
+        return (s == null || s.isEmpty()) ? "unknown_error" : s;
+    }
+
+    @Override
+    public void render(float delta) {
+        Gdx.gl.glClearColor(0.08f, 0.08f, 0.08f, 1f);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        stage.act(Math.min(delta, 1 / 30f));
+        stage.draw();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    @Override public void pause() {}
+    @Override public void resume() {}
+
+    @Override
+    public void hide() {
+        dispose();
+    }
+
+    @Override
+    public void dispose() {
+        if (stage != null) stage.dispose();
+        if (skin != null) skin.dispose();
+    }
+}

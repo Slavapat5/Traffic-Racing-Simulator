@@ -35,6 +35,8 @@ public class SettingsScreen implements Screen {
         final TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
         TextButton backButton = new TextButton("Back", skin);
 
+        final TextButton mfaButton = new TextButton("Two-Factor Authentication", skin);
+
         fullscreenButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -49,6 +51,13 @@ public class SettingsScreen implements Screen {
 
                 GameSettings.setFullscreenEnabled(enableFullscreen);
                 fullscreenButton.setText(getFullscreenText());
+            }
+        });
+
+        mfaButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                game.setScreen(new MfaSetupScreen(game));
             }
         });
 
@@ -67,6 +76,9 @@ public class SettingsScreen implements Screen {
         table.row();
 
         table.add(fullscreenButton).width(320).height(55).padBottom(25);
+        table.row();
+
+        table.add(mfaButton).width(320).height(55).padBottom(20);
         table.row();
 
         table.add(backButton).width(320).height(55);

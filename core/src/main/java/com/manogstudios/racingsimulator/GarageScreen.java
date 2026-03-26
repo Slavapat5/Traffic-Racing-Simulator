@@ -69,6 +69,10 @@ public class GarageScreen implements Screen {
         root.setFillParent(true);
         stage.addActor(root);
 
+        root.setBackground(new TextureRegionDrawable(new TextureRegion(
+            new Texture(Gdx.files.internal("Default_Background.png"))
+        )));
+
         // Load data
         CarOwnershipManager.loadOwnedCars();
         CarDataBase.load();
@@ -136,16 +140,16 @@ public class GarageScreen implements Screen {
 
         selectedCarLabel = new Label("Select a car", skin);
         selectedCarLabel.setFontScale(1.4f);
-        selectedCarLabel.setAlignment(Align.center);
+        selectedCarLabel.setAlignment(Align.left);
 
         selectedPriceLabel = new Label("", skin);
         selectedPriceLabel.setFontScale(1.2f);
-        selectedPriceLabel.setAlignment(Align.center);
+        selectedPriceLabel.setAlignment(Align.left);
 
         //  class label in info panel
         classLabel = new Label("", skin);
         classLabel.setFontScale(1.1f);
-        classLabel.setAlignment(Align.center);
+        classLabel.setAlignment(Align.left);
         classLabel.setColor(Color.LIGHT_GRAY);
 
         horsepowerLabel = new Label("", skin);
@@ -154,40 +158,71 @@ public class GarageScreen implements Screen {
 
         historyLabel = new Label("", skin);
         historyLabel.setWrap(true);
-        historyLabel.setAlignment(Align.topLeft);
+        historyLabel.setAlignment(Align.left);
         historyLabel.setColor(Color.LIGHT_GRAY);
 
+        carPreviewImage = new Image();
+        carPreviewImage.setScaling(Scaling.fit);
+
+        Table statsTable = new Table();
+        statsTable.defaults().left().padBottom(6);
+
+        statsTable.add(selectedCarLabel).left().row();
+        statsTable.add(selectedPriceLabel).left().row();
+        statsTable.add(classLabel).left().row();
+        statsTable.add(horsepowerLabel).left().row();
+        statsTable.add(weightLabel).left().row();
+        statsTable.add(engineLabel).left().row();
+
         Table infoContent = new Table();
-        infoContent.add(carPreviewImage).size(300, 150).row();
-        infoContent.add(selectedCarLabel).center().row();
-        infoContent.add(selectedPriceLabel).center().row();
+        infoContent.defaults().pad(10);
 
-        //  show class/PI right under price
-        infoContent.add(classLabel).center().row();
+        // left = image
+        infoContent.add(carPreviewImage)
+            .size(320, 180)
+            .left()
+            .top()
+            .padRight(20);
 
-        infoContent.add(horsepowerLabel).center().row();
-        infoContent.add(weightLabel).center().row();
-        infoContent.add(engineLabel).center().row();
-        infoContent.add(historyLabel).width(300).padTop(10).colspan(2).row();
+// right = stats
+        infoContent.add(statsTable)
+            .expandX()
+            .fillX()
+            .top()
+            .left()
+            .row();
+
+// bottom = history across both columns
+        infoContent.add(historyLabel)
+            .colspan(2)
+            .expandX()
+            .fillX()
+            .left()
+            .top()
+            .padTop(10)
+            .width(700)
+            .row();
+
+
 
         infoPanel.add(infoContent).expand().center();
 
         // BOTTOM: info panel full width
-        root.add(infoPanel).height(300).expandX().fillX().padTop(10);
+        root.add(infoPanel).height(320).expandX().fillX().padTop(10);
 
         // === TOP BAR (CASH + BACK) ===
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.2f);
-        cashLabel.setAlignment(Align.center);
+        cashLabel.setAlignment(Align.left);
 
         Container<Label> cashContainer = new Container<>(cashLabel);
         cashContainer.setBackground(createCashLabelBackground());
         cashContainer.setColor(Color.BLACK);
 
         Table topBar = new Table();
-        topBar.top().left().pad(10);
+        topBar.top().pad(10);
         topBar.setFillParent(true);
-        topBar.add(cashContainer).left();
+        topBar.add(cashContainer).expandX().left().padLeft(75);
 
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
         backButton.addListener(new ClickListener() {
@@ -197,7 +232,7 @@ public class GarageScreen implements Screen {
             }
         });
 
-        topBar.add(backButton).right().width(80).height(30);
+        topBar.add(backButton).right().width(80).height(30).padRight(75);
         stage.addActor(topBar);
 
         // ARROW BUTTONS USE SAME LOGIC AS KEYBOARD
@@ -302,7 +337,7 @@ public class GarageScreen implements Screen {
         // Description
         Label descriptionLabel = new Label(car.description, skin);
         descriptionLabel.setColor(Color.LIGHT_GRAY);
-        descriptionLabel.setAlignment(Align.center);
+        descriptionLabel.setAlignment(Align.left);
         descriptionLabel.setWrap(true);
         carBox.add(descriptionLabel).width(400).row();
 

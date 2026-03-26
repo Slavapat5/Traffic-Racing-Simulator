@@ -21,6 +21,7 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.badlogic.gdx.graphics.GL20;
 
 public class DealershipScreen implements Screen {
     private final Game game;
@@ -147,6 +148,10 @@ public class DealershipScreen implements Screen {
         root.setFillParent(true);
         stage.addActor(root);
 
+        root.setBackground(new TextureRegionDrawable(new TextureRegion(
+            new Texture(Gdx.files.internal("Default_Background.png"))
+        )));
+
         CarOwnershipManager.loadOwnedCars();
         CarDataBase.load();
 
@@ -216,20 +221,20 @@ public class DealershipScreen implements Screen {
 
         historyLabel = new Label("Select a car to see its history.", skin);
         historyLabel.setWrap(true);
-        historyLabel.setAlignment(Align.topLeft);
+        historyLabel.setAlignment(Align.left);
         historyLabel.setColor(Color.LIGHT_GRAY);
 
         selectedCarLabel = new Label("Select a car", skin);
         selectedCarLabel.setFontScale(1.5f);
-        selectedCarLabel.setAlignment(Align.center);
+        selectedCarLabel.setAlignment(Align.left);
 
         selectedPriceLabel = new Label("", skin);
         selectedPriceLabel.setFontScale(1.2f);
-        selectedPriceLabel.setAlignment(Align.center);
+        selectedPriceLabel.setAlignment(Align.left);
 
         classLabel = new Label("", skin);
         classLabel.setFontScale(1.1f);
-        classLabel.setAlignment(Align.center);
+        classLabel.setAlignment(Align.left);
         classLabel.setColor(Color.GOLD);
 
         horsepowerLabel = new Label("", skin);
@@ -240,22 +245,56 @@ public class DealershipScreen implements Screen {
         carPreviewImage.setScaling(Scaling.fit);
         carPreviewImage.setSize(300, 300);
 
+        carPreviewImage = new Image();
+        carPreviewImage.setScaling(Scaling.fit);
+
+        Table statsTable = new Table();
+        statsTable.defaults().left().padBottom(6);
+
+        statsTable.add(selectedCarLabel).left().row();
+        statsTable.add(selectedPriceLabel).left().row();
+        statsTable.add(classLabel).left().row();
+        statsTable.add(horsepowerLabel).left().row();
+        statsTable.add(weightLabel).left().row();
+        statsTable.add(engineLabel).left().row();
+
         Table infoContent = new Table();
-        infoContent.add(carPreviewImage).size(300, 150).row();
-        infoContent.add(selectedCarLabel).center().row();
-        infoContent.add(selectedPriceLabel).center().row();
-        infoContent.add(classLabel).center().row();
-        infoContent.add(horsepowerLabel).center().row();
-        infoContent.add(weightLabel).center().row();
-        infoContent.add(engineLabel).center().row();
-        infoContent.add(historyLabel).width(300).padTop(10).colspan(2).row();
+        infoContent.defaults().pad(10);
+
+// left = image
+        infoContent.add(carPreviewImage)
+            .size(320, 180)
+            .left()
+            .top()
+            .padRight(20);
+
+// right = stats
+        infoContent.add(statsTable)
+            .expandX()
+            .fillX()
+            .top()
+            .left()
+            .row();
+
+// bottom = history across both columns
+        infoContent.add(historyLabel)
+            .colspan(2)
+            .expandX()
+            .fillX()
+            .left()
+            .top()
+            .padTop(10)
+            .width(700)
+            .row();
+
+
 
         infoPanel.add(infoContent).expand().center();
 
         // Top: arrows + scrollable dealership area
         root.add(dealershipRow).expand().fill().row();
         // Bottom: info panel
-        root.add(infoPanel).height(300).expandX().fillX().padTop(10);
+        root.add(infoPanel).height(320).expandX().fillX().padTop(10);
 
         // Keyboard input
         stage.addListener(new InputListener() {
@@ -316,9 +355,10 @@ public class DealershipScreen implements Screen {
         cashContainer.setColor(Color.BLACK);
 
         Table topBar = new Table();
-        topBar.top().left().pad(10);
+        topBar.top().pad(10);
         topBar.setFillParent(true);
-        topBar.add(cashContainer).left();
+        topBar.add(cashContainer).expandX().left().padLeft(75);
+
 
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
         backButton.addListener(new ClickListener() {
@@ -328,7 +368,7 @@ public class DealershipScreen implements Screen {
             }
         });
 
-        topBar.add(backButton).right().width(80).height(30);
+        topBar.add(backButton).right().width(80).height(30).padRight(75);
         stage.addActor(topBar);
 
         if (carCards.size > 0) {
@@ -373,7 +413,7 @@ public class DealershipScreen implements Screen {
 
         Label descriptionLabel = new Label(car.description, skin);
         descriptionLabel.setColor(Color.LIGHT_GRAY);
-        descriptionLabel.setAlignment(Align.center);
+        descriptionLabel.setAlignment(Align.left);
         descriptionLabel.setWrap(true);
         carBox.add(descriptionLabel).width(400).row();
 
@@ -381,7 +421,7 @@ public class DealershipScreen implements Screen {
         Label priceLabel = new Label("$" + formattedPrice, skin);
         priceLabel.setColor(Color.GREEN);
         priceLabel.setFontScale(1.2f);
-        priceLabel.setAlignment(Align.center);
+        priceLabel.setAlignment(Align.left);
         carBox.add(priceLabel).row();
 
         if (!CarOwnershipManager.ownsCar(car.image)) {
@@ -569,6 +609,9 @@ public class DealershipScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         stage.act(delta);
 
         if (snapping) {
@@ -577,7 +620,6 @@ public class DealershipScreen implements Screen {
 
         stage.draw();
     }
-
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
