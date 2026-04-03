@@ -107,8 +107,8 @@ public class GarageScreen implements Screen {
         });
 
         // === ARROWS + CAROUSEL ROW ===
-        Texture leftTex = new Texture(Gdx.files.internal("Arrow2.png"));
-        Texture rightTex = new Texture(Gdx.files.internal("Arrow1.png"));
+        Texture leftTex = new Texture(Gdx.files.internal("Arrow2_V2.png"));
+        Texture rightTex = new Texture(Gdx.files.internal("Arrow1_V2.png"));
 
         ImageButton leftArrow = new ImageButton(new TextureRegionDrawable(new TextureRegion(leftTex)));
         ImageButton rightArrow = new ImageButton(new TextureRegionDrawable(new TextureRegion(rightTex)));
@@ -337,7 +337,7 @@ public class GarageScreen implements Screen {
         // Description
         Label descriptionLabel = new Label(car.description, skin);
         descriptionLabel.setColor(Color.LIGHT_GRAY);
-        descriptionLabel.setAlignment(Align.left);
+        descriptionLabel.setAlignment(Align.center);
         descriptionLabel.setWrap(true);
         carBox.add(descriptionLabel).width(400).row();
 

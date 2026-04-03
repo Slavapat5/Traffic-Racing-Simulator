@@ -181,8 +181,8 @@ public class DealershipScreen implements Screen {
             }
         });
 
-        Texture leftTex = new Texture(Gdx.files.internal("Arrow2.png"));
-        Texture rightTex = new Texture(Gdx.files.internal("Arrow1.png"));
+        Texture leftTex = new Texture(Gdx.files.internal("Arrow2_V2.png"));
+        Texture rightTex = new Texture(Gdx.files.internal("Arrow1_V2.png"));
 
         ImageButton leftArrow = new ImageButton(new TextureRegionDrawable(new TextureRegion(leftTex)));
         ImageButton rightArrow = new ImageButton(new TextureRegionDrawable(new TextureRegion(rightTex)));
@@ -195,7 +195,15 @@ public class DealershipScreen implements Screen {
 
         Table dealershipRow = new Table();
         dealershipRow.add(leftArrow).padRight(10).width(60).expandY().center();
-        dealershipRow.add(scrollPane).expand().fill();
+        Table carouselContainer = new Table();
+        carouselContainer.setBackground(new TextureRegionDrawable(
+            new TextureRegion(new Texture(Gdx.files.internal("carousel_bg.png")))
+        ));
+        carouselContainer.pad(20);
+
+        carouselContainer.add(scrollPane).expand().fill();
+
+        dealershipRow.add(carouselContainer).expand().fill();
         dealershipRow.add(rightArrow).padLeft(10).width(60).expandY().center();
 
         leftArrow.addListener(new ClickListener() {
@@ -413,7 +421,7 @@ public class DealershipScreen implements Screen {
 
         Label descriptionLabel = new Label(car.description, skin);
         descriptionLabel.setColor(Color.LIGHT_GRAY);
-        descriptionLabel.setAlignment(Align.left);
+        descriptionLabel.setAlignment(Align.center);
         descriptionLabel.setWrap(true);
         carBox.add(descriptionLabel).width(400).row();
 
