@@ -142,12 +142,12 @@ public class MfaSetupScreen implements Screen {
 
     private void loadFactorState() {
         statusLabel.setColor(Color.LIGHT_GRAY);
-        statusLabel.setText("Loading MFA factors...");
+        statusLabel.setText("Checking MFA status...");
 
-        SupabaseAuth.listMfaFactors(result -> {
+        SupabaseAuth.fetchMfaStatus(result -> {
             if (!result.success) {
                 statusLabel.setColor(Color.RED);
-                statusLabel.setText("Could not load MFA factors: " + safe(result.error));
+                statusLabel.setText("Could not load MFA status: " + safe(result.error));
                 currentFactorLabel.setText("No factor data available.");
                 return;
             }
@@ -158,34 +158,22 @@ public class MfaSetupScreen implements Screen {
             setupInfoArea.setText("");
             codeField.setText("");
 
-            if (result.factors.isEmpty()) {
+            if (!result.verifiedFactorIds.isEmpty()) {
+                verifiedFactorId = result.verifiedFactorIds.get(0);
+            }
+
+            if (result.hasVerifiedFactor) {
+                statusLabel.setColor(Color.GREEN);
+                statusLabel.setText("2FA is enabled.");
+                currentFactorLabel.setText("A verified authenticator factor is enrolled.");
+            } else if (result.factorCount > 0) {
+                statusLabel.setColor(Color.ORANGE);
+                statusLabel.setText("2FA setup exists but is not verified yet.");
+                currentFactorLabel.setText("No verified factor is active yet.");
+            } else {
                 statusLabel.setColor(Color.YELLOW);
                 statusLabel.setText("2FA is not enabled.");
                 currentFactorLabel.setText("No MFA factors enrolled.");
-                return;
-            }
-
-            StringBuilder sb = new StringBuilder();
-            for (SupabaseAuth.MfaFactor factor : result.factors) {
-                sb.append("• ")
-                    .append(factor.friendlyName != null ? factor.friendlyName : "(unnamed)")
-                    .append(" | type=").append(factor.factorType)
-                    .append(" | status=").append(factor.status)
-                    .append("\n");
-
-                if ("verified".equalsIgnoreCase(factor.status)) {
-                    verifiedFactorId = factor.id;
-                }
-            }
-
-            currentFactorLabel.setText(sb.toString().trim());
-
-            if (verifiedFactorId != null) {
-                statusLabel.setColor(Color.GREEN);
-                statusLabel.setText("2FA is enabled.");
-            } else {
-                statusLabel.setColor(Color.ORANGE);
-                statusLabel.setText("You have an unverified MFA factor.");
             }
         });
     }

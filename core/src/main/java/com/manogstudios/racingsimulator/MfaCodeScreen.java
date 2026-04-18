@@ -168,22 +168,18 @@ public class MfaCodeScreen implements Screen {
                         statusLabel.setColor(Color.LIGHT_GRAY);
                         statusLabel.setText("2FA verified. Checking session...");
 
-                        SupabaseAuth.getAuthenticatorAssuranceLevel(aalResult -> {
-                            if (!aalResult.success) {
-                                statusLabel.setColor(Color.RED);
-                                statusLabel.setText("2FA code worked, but session check failed.");
-                                return;
-                            }
+                        String currentAal = SupabaseAuth.getCurrentAal();
 
-                            if ("aal2".equalsIgnoreCase(aalResult.currentLevel)) {
-                                statusLabel.setColor(Color.GREEN);
-                                statusLabel.setText("2FA successful. Loading profile...");
-                                continueAfterSuccessfulAuth();
-                            } else {
-                                statusLabel.setColor(Color.RED);
-                                statusLabel.setText("2FA verification did not upgrade the session.");
-                            }
-                        });
+                        System.out.println("Post-MFA current AAL = " + currentAal);
+
+                        if ("aal2".equalsIgnoreCase(currentAal)) {
+                            statusLabel.setColor(Color.GREEN);
+                            statusLabel.setText("2FA successful. Loading profile...");
+                            continueAfterSuccessfulAuth();
+                        } else {
+                            statusLabel.setColor(Color.RED);
+                            statusLabel.setText("2FA verification did not upgrade the session.");
+                        }
                     })
                 );
             });

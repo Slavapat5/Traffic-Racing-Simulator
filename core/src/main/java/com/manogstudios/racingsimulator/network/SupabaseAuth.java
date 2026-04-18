@@ -584,7 +584,12 @@ public class SupabaseAuth {
 
                         String current = decodeAalFromJwt(accessToken);
                         result.currentLevel = (current != null && !current.isEmpty()) ? current : "aal1";
-                        result.nextLevel = result.hasVerifiedFactor ? "aal2" : "aal1";
+
+                        if ("aal2".equalsIgnoreCase(result.currentLevel)) {
+                            result.nextLevel = "aal2";
+                        } else {
+                            result.nextLevel = result.hasVerifiedFactor ? "aal2" : "aal1";
+                        }
 
                         if (!result.success) {
                             result.error = json.optString("error", "mfa_status_failed");
@@ -599,6 +604,15 @@ public class SupabaseAuth {
                     result.success = false;
                     result.error = "exception";
                 }
+
+                System.out.println("fetchMfaStatus parsed:");
+                System.out.println("  success = " + result.success);
+                System.out.println("  error = " + result.error);
+                System.out.println("  currentLevel = " + result.currentLevel);
+                System.out.println("  nextLevel = " + result.nextLevel);
+                System.out.println("  hasVerifiedFactor = " + result.hasVerifiedFactor);
+                System.out.println("  factorCount = " + result.factorCount);
+                System.out.println("  verifiedFactorIds = " + result.verifiedFactorIds);
 
                 if (callback != null) {
                     Gdx.app.postRunnable(() -> callback.accept(result));
@@ -870,6 +884,10 @@ public class SupabaseAuth {
             result.error = "exception";
             if (callback != null) Gdx.app.postRunnable(() -> callback.accept(result));
         }
+    }
+
+    public static String getCurrentAal() {
+        return decodeAalFromJwt(accessToken);
     }
 
     private static String decodeAalFromJwt(String jwt) {
