@@ -184,7 +184,32 @@ public class PlayScreen implements Screen {
 
         versionTable.add(versionLabel);
 
+
+// Privacy / data notice text
+        Label privacyLabel = new Label(
+            "By using an account, you agree that this game stores your email/login account, " +
+                "username, leaderboard scores, owned cars, cash, achievements, and 2FA status using Supabase. " +
+                "See Privacy Notice.",
+            skin
+        );
+
+        privacyLabel.setFontScale(1f);
+        privacyLabel.setColor(Color.LIGHT_GRAY);
+        privacyLabel.setWrap(true);
+        privacyLabel.setAlignment(Align.center);
+
+        Table privacyTable = new Table();
+        privacyTable.setFillParent(true);
+        privacyTable.bottom();
+        privacyTable.padBottom(10);
+        privacyTable.padLeft(260);
+        privacyTable.padRight(260);
+
+        privacyTable.add(privacyLabel).width(900).center();
+
+
         stage.addActor(versionTable);
+        stage.addActor(privacyTable);
         stage.addActor(table);
 
         Gdx.input.setInputProcessor(stage);

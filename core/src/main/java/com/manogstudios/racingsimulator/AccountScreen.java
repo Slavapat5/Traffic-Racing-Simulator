@@ -189,6 +189,35 @@ public class AccountScreen implements Screen {
             }
         });
 
+        TextButton privacyNoticeButton = new TextButton("Privacy Notice", skin);
+
+        privacyNoticeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Dialog privacyDialog = new Dialog("Privacy Notice", skin);
+
+                privacyDialog.text(
+                    "Traffic Racing Simulator is a project game.\n\n" +
+
+                        "If you create an account, the game stores account and gameplay data using Supabase. " +
+                        "This may include your email address for login, username, user ID, cash balance, owned cars, " +
+                        "leaderboard scores, achievements, and two-factor authentication status.\n\n" +
+
+                        "This data is used only to let you log in, save progress, display leaderboards, " +
+                        "and secure your account.\n\n" +
+
+                        "Passwords are handled by Supabase Auth and are not stored directly by the game.\n\n" +
+
+                        "Gameplay data may be used for testing, debugging, and demonstrating the project.\n\n" +
+
+                        "This project is not a commercial product."
+                );
+
+                privacyDialog.button("OK");
+                privacyDialog.show(stage);
+            }
+        });
+
 
         logoutAllDevicesButton.addListener(new ClickListener() {
             @Override
@@ -273,6 +302,7 @@ public class AccountScreen implements Screen {
         bottomButtons.add(changePwButton).width(170);
         bottomButtons.add(logoutAllDevicesButton).width(190);
         bottomButtons.add(exportDataButton).width(160);
+        bottomButtons.add(privacyNoticeButton).width(180);
 
         root.add(bottomButtons).colspan(2).right().padTop(20);
 
