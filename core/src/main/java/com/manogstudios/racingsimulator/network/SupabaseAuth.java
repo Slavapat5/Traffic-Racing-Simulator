@@ -114,8 +114,6 @@ public class SupabaseAuth {
 
                     applySessionFromAuthResponse(json);
 
-                    System.out.println("ACCESS TOKEN: " + accessToken);
-
                     persistSession();
 
                     isLoggedIn = (accessToken != null && refreshToken != null && userId != null);
@@ -605,15 +603,6 @@ public class SupabaseAuth {
                     result.error = "exception";
                 }
 
-                System.out.println("fetchMfaStatus parsed:");
-                System.out.println("  success = " + result.success);
-                System.out.println("  error = " + result.error);
-                System.out.println("  currentLevel = " + result.currentLevel);
-                System.out.println("  nextLevel = " + result.nextLevel);
-                System.out.println("  hasVerifiedFactor = " + result.hasVerifiedFactor);
-                System.out.println("  factorCount = " + result.factorCount);
-                System.out.println("  verifiedFactorIds = " + result.verifiedFactorIds);
-
                 if (callback != null) {
                     Gdx.app.postRunnable(() -> callback.accept(result));
                 }
@@ -653,7 +642,7 @@ public class SupabaseAuth {
                     HttpResponse<String> response =
                         client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                    System.out.println("enrollTotpFactor: " + response.statusCode() + " body=" + response.body());
+                    System.out.println("enrollTotpFactor: " + response.statusCode());
 
                     if (response.statusCode() / 100 == 2) {
                         JSONObject json = new JSONObject(response.body());
@@ -769,8 +758,6 @@ public class SupabaseAuth {
 
                     HttpResponse<String> response =
                         client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                    System.out.println("verifyMfaChallenge: " + response.statusCode() + " body=" + response.body());
 
                     if (response.statusCode() / 100 == 2) {
                         result.success = true;

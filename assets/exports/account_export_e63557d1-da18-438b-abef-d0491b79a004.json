@@ -1,0 +1,25 @@
+{
+    "high_scores": {
+        "endless_two_way": 16570,
+        "free_ride": 53874,
+        "endless_one_way": 31878,
+        "time_trial": 13232,
+        "drag_sprint": 62616
+    },
+    "game": "Traffic Racing Simulator",
+    "owned_cars": [
+        "Mazda MX-5 Miata - 2014.png",
+        "Ferrari 458 - 2015.png",
+        "Mclaren 650s - 2015.png",
+        "BMW 330i - 2025.png",
+        "Lamborghini Huracan - 2015.png",
+        "Ford Fiesta ST - 2019.png",
+        "Volkswagen Golf GTI Mk8 - 2019.png"
+    ],
+    "exported_at": "2026-04-19T19:15:41.199444400Z",
+    "account": {
+        "user_id": "e63557d1-da18-438b-abef-d0491b79a004",
+        "cash": 56546,
+        "username": "Slavapat5"
+    }
+}

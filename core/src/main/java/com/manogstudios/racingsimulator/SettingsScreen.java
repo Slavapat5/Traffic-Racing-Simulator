@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 
 public class SettingsScreen implements Screen {
 
@@ -33,9 +34,9 @@ public class SettingsScreen implements Screen {
         titleLabel.setFontScale(2.0f);
 
         final TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
-        TextButton backButton = new TextButton("Back", skin);
-
         final TextButton mfaButton = new TextButton("Two-Factor Authentication", skin);
+        TextButton logoutButton = new TextButton("Log out", skin);
+        TextButton backButton = new TextButton("Back", skin);
 
         fullscreenButton.addListener(new ChangeListener() {
             @Override
@@ -61,12 +62,33 @@ public class SettingsScreen implements Screen {
             }
         });
 
+        logoutButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Dialog confirmDialog = new Dialog("Confirm Logout", skin) {
+                    @Override
+                    protected void result(Object object) {
+                        if ((Boolean) object) {
+                            game.setScreen(new LoginScreen(game));
+                        }
+                    }
+                };
+
+                confirmDialog.text("Are you sure you want to log out?");
+                confirmDialog.button("Yes", true);
+                confirmDialog.button("No", false);
+                confirmDialog.show(stage);
+            }
+        });
+
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.setScreen(new PlayScreen(game));
             }
         });
+
+
 
         Table table = new Table();
         table.setFillParent(true);
@@ -79,6 +101,9 @@ public class SettingsScreen implements Screen {
         table.row();
 
         table.add(mfaButton).width(320).height(55).padBottom(20);
+        table.row();
+
+        table.add(logoutButton).width(320).height(55).padBottom(20);
         table.row();
 
         table.add(backButton).width(320).height(55);

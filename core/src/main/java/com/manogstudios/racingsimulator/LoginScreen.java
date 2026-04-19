@@ -194,15 +194,7 @@ public class LoginScreen implements Screen {
                             feedbackLabel.setText("Password accepted. Checking 2FA...");
 
                             SupabaseAuth.fetchMfaStatus(aalResult -> {
-                                System.out.println("=== MFA STATUS DEBUG ===");
-                                System.out.println("success = " + aalResult.success);
-                                System.out.println("error = " + aalResult.error);
-                                System.out.println("currentLevel = " + aalResult.currentLevel);
-                                System.out.println("nextLevel = " + aalResult.nextLevel);
-                                System.out.println("hasVerifiedFactor = " + aalResult.hasVerifiedFactor);
-                                System.out.println("factorCount = " + aalResult.factorCount);
-                                System.out.println("verifiedFactorIds = " + aalResult.verifiedFactorIds);
-                                System.out.println("========================");
+
 
                                 if (!aalResult.success) {
                                     feedbackLabel.setColor(Color.RED);

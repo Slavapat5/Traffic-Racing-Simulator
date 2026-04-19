@@ -17,6 +17,9 @@ import com.manogstudios.racingsimulator.HighScoreManager;
 import com.manogstudios.racingsimulator.MenuScreen;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.time.Instant;
 
 public class AccountScreen implements Screen {
 
@@ -177,6 +180,15 @@ public class AccountScreen implements Screen {
 
         TextButton logoutAllDevicesButton = new TextButton("Log out all devices", skin);
 
+        TextButton exportDataButton = new TextButton("Export Data", skin);
+
+        exportDataButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                exportAccountData();
+            }
+        });
+
 
         logoutAllDevicesButton.addListener(new ClickListener() {
             @Override
@@ -254,10 +266,13 @@ public class AccountScreen implements Screen {
 
         // Bottom buttons
         Table bottomButtons = new Table();
-        bottomButtons.add(backButton).width(160).padRight(20);
+        bottomButtons.defaults().padRight(10);
+
+        bottomButtons.add(backButton).width(160);
         bottomButtons.add(logoutButton).width(160);
-        bottomButtons.add(changePwButton);
-        bottomButtons.add(logoutAllDevicesButton);
+        bottomButtons.add(changePwButton).width(170);
+        bottomButtons.add(logoutAllDevicesButton).width(190);
+        bottomButtons.add(exportDataButton).width(160);
 
         root.add(bottomButtons).colspan(2).right().padTop(20);
 
@@ -275,6 +290,72 @@ public class AccountScreen implements Screen {
 
     private String formatCash(int cash) {
         return String.format("%,d", cash);
+    }
+
+    private void exportAccountData() {
+        try {
+            JSONObject export = new JSONObject();
+
+            export.put("exported_at", Instant.now().toString());
+            export.put("game", "Traffic Racing Simulator");
+
+            JSONObject account = new JSONObject();
+            account.put("user_id", SupabaseAuth.userId);
+            account.put("username", usernameField.getText().trim());
+            account.put("cash", CashManager.getCash());
+
+            export.put("account", account);
+
+            JSONArray ownedCars = new JSONArray();
+            for (String car : CarOwnershipManager.getOwnedCars()) {
+                ownedCars.put(car);
+            }
+            export.put("owned_cars", ownedCars);
+
+            JSONObject highScores = new JSONObject();
+            highScores.put("free_ride", HighScoreManager.getHighScore("free_ride"));
+            highScores.put("time_trial", HighScoreManager.getHighScore("time_trial"));
+            highScores.put("endless_one_way", HighScoreManager.getHighScore("endless_one_way"));
+            highScores.put("endless_two_way", HighScoreManager.getHighScore("endless_two_way"));
+            highScores.put("drag_sprint", HighScoreManager.getHighScore("drag_sprint"));
+
+            export.put("high_scores", highScores);
+
+            String safeUserId = SupabaseAuth.userId == null
+                ? "unknown_user"
+                : SupabaseAuth.userId.replaceAll("[^a-zA-Z0-9_-]", "_");
+
+            String fileName = "account_export_" + safeUserId + ".json";
+
+            com.badlogic.gdx.files.FileHandle exportDir = Gdx.files.local("exports");
+            if (!exportDir.exists()) {
+                exportDir.mkdirs();
+            }
+
+            com.badlogic.gdx.files.FileHandle file = Gdx.files.local("exports/" + fileName);
+            file.writeString(export.toString(4), false, "UTF-8");
+
+            statusLabel.setColor(Color.GREEN);
+            statusLabel.setText("Data exported to: " + file.path());
+
+            Dialog dialog = new Dialog("Export Complete", skin);
+            dialog.text("Your account data was exported to:\n" + file.path());
+            dialog.button("OK");
+            dialog.show(stage);
+
+            System.out.println("Account data exported to: " + file.file().getAbsolutePath());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            statusLabel.setColor(Color.RED);
+            statusLabel.setText("Failed to export account data.");
+
+            Dialog dialog = new Dialog("Export Failed", skin);
+            dialog.text("Could not export account data.\nCheck the console for details.");
+            dialog.button("OK");
+            dialog.show(stage);
+        }
     }
 
     @Override
