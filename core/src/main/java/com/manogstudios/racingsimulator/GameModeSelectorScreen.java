@@ -449,32 +449,7 @@ public class GameModeSelectorScreen implements Screen {
 
     /** Decides which screen to go to when a mode is selected */
     private void startMode(String modeKey) {
-        switch (modeKey) {
-            case "free_ride":
-                game.setScreen(new FreeRideScreen(game));
-                System.out.println("Start Free Ride");
-                break;
-            case "time_trial":
-                game.setScreen(new TimeTrialScreen(game));
-                System.out.println("Start Time Trial");
-                break;
-            case "endless_one_way":
-                game.setScreen(new EndlessOneWayScreen(game));
-                System.out.println("Start Endless One Way");
-                break;
-            case "endless_two_way":
-                game.setScreen(new EndlessTwoWayScreen(game));
-                System.out.println("Start Endless Two Way");
-                break;
-            case "drag_sprint":
-                game.setScreen(new DragRaceScreen(game));
-                System.out.println("Start Drag Sprint");
-                break;
-            case "test_drive":
-                game.setScreen(new TestDriveScreen(game));
-                System.out.println("Start Test Drive");
-                break;
-        }
+        game.setScreen(new LocationSelectorScreen(game, modeKey));
     }
 
     private String formatCash(int cash) {

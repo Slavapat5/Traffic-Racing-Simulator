@@ -1,1 +1,1 @@
-free_ride=2310
+free_ride=2563
