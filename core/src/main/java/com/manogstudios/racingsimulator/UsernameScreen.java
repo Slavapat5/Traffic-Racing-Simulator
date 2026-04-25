@@ -157,6 +157,7 @@ public class UsernameScreen implements Screen {
                                     statusLabel.setColor(Color.GREEN);
                                     statusLabel.setText("Username set! Loading game...");
                                     game.setScreen(new PlayScreen(game));
+                                    System.out.println("Warning: public username did not update.");
                                 } else {
                                     statusLabel.setColor(Color.RED);
                                     statusLabel.setText("Saved username, but failed to publish it.\nTry again.");

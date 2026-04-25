@@ -104,6 +104,17 @@ public class AccountScreen implements Screen {
                         if (success) {
                             statusLabel.setText("Username updated.");
                             statusLabel.setColor(Color.GREEN);
+
+                            SupabaseGameData.upsertPublicUsername(
+                                SupabaseAuth.userId,
+                                SupabaseAuth.accessToken,
+                                entered,
+                                publicSuccess -> {
+                                    if (!publicSuccess) {
+                                        System.out.println("Warning: public username did not update.");
+                                    }
+                                }
+                            );
                         } else {
                             statusLabel.setText("Failed to update (maybe taken?). Try another.");
                             statusLabel.setColor(Color.RED);
@@ -196,7 +207,7 @@ public class AccountScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Dialog privacyDialog = new Dialog("Privacy Notice", skin);
 
-                privacyDialog.text(
+                Label privacyText = new Label(
                     "Traffic Racing Simulator is a project game.\n\n" +
 
                         "If you create an account, the game stores account and gameplay data using Supabase. " +
@@ -210,14 +221,34 @@ public class AccountScreen implements Screen {
 
                         "Gameplay data may be used for testing, debugging, and demonstrating the project.\n\n" +
 
-                        "This project is not a commercial product."
+                        "This project is not a commercial product.",
+                    skin
                 );
+
+                privacyText.setWrap(true);
+                privacyText.setAlignment(Align.topLeft);
+
+                Table privacyContent = new Table();
+                privacyContent.top().left();
+                privacyContent.add(privacyText).width(620).left().top().pad(10);
+
+                ScrollPane scrollPane = new ScrollPane(privacyContent, skin);
+                scrollPane.setFadeScrollBars(false);
+                scrollPane.setScrollingDisabled(true, false);
+
+                privacyDialog.getContentTable().pad(15);
+                privacyDialog.getContentTable().add(scrollPane).width(650).height(320).fill().expand();
 
                 privacyDialog.button("OK");
                 privacyDialog.show(stage);
+
+                privacyDialog.setSize(720, 430);
+                privacyDialog.setPosition(
+                    (stage.getWidth() - privacyDialog.getWidth()) / 2f,
+                    (stage.getHeight() - privacyDialog.getHeight()) / 2f
+                );
             }
         });
-
 
         logoutAllDevicesButton.addListener(new ClickListener() {
             @Override

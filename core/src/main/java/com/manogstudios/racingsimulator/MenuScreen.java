@@ -19,6 +19,8 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class MenuScreen implements Screen {
     private final Game game;
@@ -28,6 +30,7 @@ public class MenuScreen implements Screen {
     private Label usernameLabel;
     private Texture backgroundTexture;
     private SpriteBatch batch;
+
 
     // settings button textures
     private Texture settingsUpTex, settingsDownTex, settingsOverTex;

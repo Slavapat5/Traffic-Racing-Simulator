@@ -502,6 +502,7 @@ public class SupabaseGameData {
         }
 
         new Thread(() -> {
+
             List<LeaderboardEntry> result = new ArrayList<>();
             try {
                 String query = "high_scores"
@@ -630,29 +631,28 @@ public class SupabaseGameData {
             boolean success = false;
             try {
                 JSONObject body = new JSONObject();
+                body.put("user_id", userId);
                 body.put("username", username);
 
-                String query = "profiles?user_id=eq." + userId;
+                String query = "profiles?on_conflict=user_id";
                 HttpRequest request = baseRequest(query, accessToken)
-                    .header("Prefer", "return=minimal")
-                    .method("PATCH", HttpRequest.BodyPublishers.ofString(body.toString()))
+                    .header("Prefer", "resolution=merge-duplicates,return=minimal")
+                    .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                     .build();
 
                 HttpResponse<String> response =
                     client.send(request, HttpResponse.BodyHandlers.ofString());
 
+                System.out.println("updateUsername UPSERT: " + response.statusCode() + " body=" + response.body());
+
                 if (response.statusCode() / 100 == 2) {
                     success = true;
-                    System.out.println("updateUsername: username set to " + username + " for " + userId);
-                } else {
-                    System.out.println("updateUsername: non-2xx: " + response.statusCode()
-                        + " body=" + response.body());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
+                boolean finalSuccess = success;
                 if (callback != null) {
-                    boolean finalSuccess = success;
                     Gdx.app.postRunnable(() -> callback.accept(finalSuccess));
                 }
             }

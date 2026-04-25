@@ -27,6 +27,7 @@ public class MfaCodeScreen implements Screen {
     private TextField codeField;
 
     private String verifiedFactorId;
+    private boolean mfaCompleted = false;
 
     public MfaCodeScreen(Game game) {
         this.game = game;
@@ -173,6 +174,8 @@ public class MfaCodeScreen implements Screen {
                         System.out.println("Post-MFA current AAL = " + currentAal);
 
                         if ("aal2".equalsIgnoreCase(currentAal)) {
+                            mfaCompleted = true;
+
                             statusLabel.setColor(Color.GREEN);
                             statusLabel.setText("2FA successful. Loading profile...");
                             continueAfterSuccessfulAuth();
@@ -227,9 +230,13 @@ public class MfaCodeScreen implements Screen {
 
     @Override
     public void hide() {
+        if (!mfaCompleted) {
+            SupabaseAuth.logout();
+        }
+
         dispose();
     }
-
+    
     @Override
     public void dispose() {
         if (stage != null) stage.dispose();

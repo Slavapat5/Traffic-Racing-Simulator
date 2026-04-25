@@ -22,6 +22,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class DealershipScreen implements Screen {
     private final Game game;
@@ -316,36 +318,11 @@ public class DealershipScreen implements Screen {
                     moveSelection(1);
                     return true;
                 }
-
                 if (keycode == Input.Keys.ENTER || keycode == Input.Keys.SPACE) {
                     CarData centeredCar = getCenteredCar();
                     if (centeredCar == null) return true;
 
-                    if (CarOwnershipManager.ownsCar(centeredCar.image)) {
-                        Dialog ownedDialog = new Dialog("Already Owned", skin);
-                        ownedDialog.text("You already own this car.");
-                        ownedDialog.button("OK");
-                        ownedDialog.show(stage);
-                        return true;
-                    }
-
-                    Dialog confirmDialog = new Dialog("Confirm Purchase", skin) {
-                        @Override
-                        protected void result(Object object) {
-                            boolean yes = (Boolean) object;
-                            if (yes) {
-                                tryBuyCarSecure(centeredCar, () -> game.setScreen(new DealershipScreen(game)));
-                            }
-                        }
-                    };
-
-                    confirmDialog.text(
-                        "Buy " + centeredCar.title + " for $" +
-                            String.format("%,d", centeredCar.price) + "?"
-                    );
-                    confirmDialog.button("Yes", true);
-                    confirmDialog.button("No", false);
-                    confirmDialog.show(stage);
+                    showPurchaseConfirmDialog(centeredCar);
                     return true;
                 }
 
@@ -384,6 +361,35 @@ public class DealershipScreen implements Screen {
             updateCenterHighlight();
             snapping = true;
         }
+    }
+
+    private void showPurchaseConfirmDialog(CarData car) {
+        if (car == null) return;
+
+        if (CarOwnershipManager.ownsCar(car.image)) {
+            Dialog ownedDialog = new Dialog("Already Owned", skin);
+            ownedDialog.text("You already own this car.");
+            ownedDialog.button("OK");
+            ownedDialog.show(stage);
+            return;
+        }
+
+        Dialog confirmDialog = new Dialog("Confirm Purchase", skin) {
+            @Override
+            protected void result(Object object) {
+                boolean yes = (Boolean) object;
+                if (yes) {
+                    tryBuyCarSecure(car, () -> game.setScreen(new DealershipScreen(game)));
+                }
+            }
+        };
+
+        confirmDialog.text(
+            "Buy " + car.title + " for $" + String.format("%,d", car.price) + "?"
+        );
+        confirmDialog.button("Yes", true);
+        confirmDialog.button("No", false);
+        confirmDialog.show(stage);
     }
 
     private void addCarToList(Table parent, CarData car) {
@@ -437,7 +443,7 @@ public class DealershipScreen implements Screen {
             buyButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    tryBuyCarSecure(car, () -> game.setScreen(new DealershipScreen(game)));
+                    showPurchaseConfirmDialog(car);
                 }
             });
             carBox.add(buyButton).padTop(10).row();

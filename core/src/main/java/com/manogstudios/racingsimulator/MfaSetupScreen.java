@@ -17,6 +17,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class MfaSetupScreen implements Screen {
 
