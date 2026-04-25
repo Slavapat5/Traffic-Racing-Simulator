@@ -291,6 +291,17 @@ public class GarageScreen implements Screen {
             updateCenterHighlight();
             snapping = scrollPane.getMaxX() > 0;
         }
+
+        stage.addListener(new InputListener() {
+            @Override
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACKSPACE) {
+                    game.setScreen(new MenuScreen(game));
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     // === ADD ONE CAR CARD TO HORIZONTAL ROW ===

@@ -46,6 +46,8 @@ public class MenuScreen implements Screen {
     @Override
     public void show() {
 
+
+
         if (!SupabaseAuth.isLoggedIn) {
             game.setScreen(new LoginScreen(game));
             return;
@@ -372,7 +374,20 @@ public class MenuScreen implements Screen {
                 confirmDialog.show(stage);
             }
         });
+
+        stage.addListener(new InputListener() {
+            @Override
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACKSPACE) {
+                    game.setScreen(new PlayScreen(game));
+                    return true;
+                }
+                return false;
+            }
+        });
     }
+
+
 
     private String formatCash(int cash) {
         return String.format("%,d", cash);

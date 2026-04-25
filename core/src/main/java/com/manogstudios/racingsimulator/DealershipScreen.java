@@ -361,6 +361,17 @@ public class DealershipScreen implements Screen {
             updateCenterHighlight();
             snapping = true;
         }
+
+        stage.addListener(new InputListener() {
+            @Override
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACKSPACE) {
+                    game.setScreen(new MenuScreen(game));
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     private void showPurchaseConfirmDialog(CarData car) {
