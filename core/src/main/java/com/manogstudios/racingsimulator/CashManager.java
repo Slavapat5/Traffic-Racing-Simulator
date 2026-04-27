@@ -4,13 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
-import com.manogstudios.racingsimulator.network.SupabaseAuth;
-import com.manogstudios.racingsimulator.network.SupabaseGameData;
 
 public class CashManager {
     private static String FILE_PATH = "cash_default.txt"; // fallback if no user
     private static int cash = 10000; // starting cash
     public static boolean enableSaving = true;
+    public static boolean enableCloudSync = true;
 
     // tell CashManager which user is active
     public static void setCurrentUser(String userId) {
@@ -49,29 +48,32 @@ public class CashManager {
     public static void addCash(int amount) {
         cash += amount;
         saveCash();
-        SupabaseGameData.saveCash(SupabaseAuth.userId, SupabaseAuth.accessToken, cash);
+        if (enableCloudSync) {
+            SupabaseGameData.saveCash(SupabaseAuth.userId, SupabaseAuth.accessToken, cash);
+        }
     }
 
     public static boolean subtractCash(int amount) {
         if (cash >= amount) {
             cash -= amount;
             saveCash();
-            SupabaseGameData.saveCash(SupabaseAuth.userId, SupabaseAuth.accessToken, cash);
+            if (enableCloudSync) {
+                SupabaseGameData.saveCash(SupabaseAuth.userId, SupabaseAuth.accessToken, cash);
+            }
             return true;
         }
         return false;
     }
 
     public static void addCashAndSync(int delta, String reason) {
-        // optimistic UI update
-        addCash(delta);
+        cash += delta;
         saveCash();
 
-        if (!SupabaseAuth.isLoggedIn) return;
+        if (!enableCloudSync || !SupabaseAuth.isLoggedIn) return;
 
         SupabaseGameData.adjustCash(delta, reason, newCash -> {
             if (newCash != null) {
-                setCash(newCash);
+                cash = newCash;
                 saveCash();
             } else {
                 System.out.println("addCashAndSync: server sync failed (reason=" + reason + ")");
@@ -82,7 +84,9 @@ public class CashManager {
     public static void setCash(int newCash) {
         cash = newCash;
         saveCash();
-        SupabaseGameData.saveCash(SupabaseAuth.userId, SupabaseAuth.accessToken, cash);
+        if (enableCloudSync) {
+            SupabaseGameData.saveCash(SupabaseAuth.userId, SupabaseAuth.accessToken, cash);
+        }
     }
 
 }
