@@ -65,6 +65,9 @@ public class TimeTrialScreen implements Screen {
     private Table pauseOverlay;
     private Table pauseCard;
 
+    private Table pauseSettingsOverlay;
+    private Table pauseSettingsCard;
+
     // Traffic
     private static class TrafficCar {
         Texture texture;
@@ -249,6 +252,7 @@ public class TimeTrialScreen implements Screen {
         uiStage.addActor(topBar);
 
         createPauseOverlay();
+        createPauseSettingsOverlay();
 
         pauseButton.addListener(new ClickListener() {
             @Override
@@ -271,7 +275,11 @@ public class TimeTrialScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if (!gameOver && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            setPaused(!paused);
+            if (paused && pauseSettingsOverlay != null && pauseSettingsOverlay.isVisible()) {
+                showPauseMenu();
+            } else {
+                setPaused(!paused);
+            }
         }
 
         if (!gameOver && !paused) {
@@ -611,21 +619,21 @@ public class TimeTrialScreen implements Screen {
         settingsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new SettingsScreen(game));
+                showPauseSettings();
             }
         });
 
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new TimeTrialScreen(game, timeLimitSeconds));
+                game.setScreen(new FreeRideScreen(game)); // replace per screen
             }
         });
 
         quitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Dialog confirmDialog = new Dialog("Quit Time Trial", skin) {
+                Dialog confirmDialog = new Dialog("Quit Run", skin) {
                     @Override
                     protected void result(Object object) {
                         if ((Boolean) object) {
@@ -634,12 +642,78 @@ public class TimeTrialScreen implements Screen {
                     }
                 };
 
-                confirmDialog.text("Quit this time trial and return to game modes?");
+                confirmDialog.text("Quit this run and return to game modes?");
                 confirmDialog.button("Yes", true);
                 confirmDialog.button("No", false);
                 confirmDialog.show(uiStage);
             }
         });
+    }
+
+    private void createPauseSettingsOverlay() {
+        pauseSettingsOverlay = new Table();
+        pauseSettingsOverlay.setFillParent(true);
+        pauseSettingsOverlay.setVisible(false);
+        pauseSettingsOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.55f));
+
+        pauseSettingsCard = new Table(skin);
+        pauseSettingsCard.setBackground("default-round");
+        pauseSettingsCard.pad(25);
+        pauseSettingsCard.defaults().pad(10).width(260).height(50);
+
+        Label titleLabel = new Label("Pause Settings", skin);
+        titleLabel.setFontScale(1.3f);
+        titleLabel.setAlignment(Align.center);
+
+        TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
+        TextButton backButton = new TextButton("Back", skin);
+
+        pauseSettingsCard.add(titleLabel).padBottom(15).row();
+        pauseSettingsCard.add(fullscreenButton).row();
+        pauseSettingsCard.add(backButton).row();
+
+        pauseSettingsOverlay.add(pauseSettingsCard).center();
+        uiStage.addActor(pauseSettingsOverlay);
+
+        fullscreenButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                boolean enableFullscreen = !Gdx.graphics.isFullscreen();
+
+                if (enableFullscreen) {
+                    Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+                } else {
+                    Gdx.graphics.setWindowedMode(1600, 900);
+                }
+
+                fullscreenButton.setText(getFullscreenText());
+
+
+            }
+        });
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showPauseMenu();
+            }
+        });
+    }
+
+    private void showPauseMenu() {
+        if (pauseOverlay != null) pauseOverlay.setVisible(true);
+        if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(false);
+    }
+
+    private void showPauseSettings() {
+        if (pauseOverlay != null) pauseOverlay.setVisible(false);
+        if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(true);
+    }
+
+
+
+    private String getFullscreenText() {
+        return "Fullscreen: " + (Gdx.graphics.isFullscreen() ? "ON" : "OFF");
     }
 
     private void setPaused(boolean value) {

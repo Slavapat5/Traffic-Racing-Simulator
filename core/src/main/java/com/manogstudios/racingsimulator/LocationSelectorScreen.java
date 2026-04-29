@@ -97,13 +97,6 @@ public class LocationSelectorScreen implements Screen {
             new Color(0.65f, 0.45f, 0.20f, 1f)
         );
 
-        addLocationCard(
-            locationListTable,
-            "City",
-            "Urban streets with a more built-up background style.",
-            "Location1.png",
-            new Color(0.25f, 0.25f, 0.30f, 1f)
-        );
 
         scrollPane = new ScrollPane(locationListTable, skin);
         scrollPane.setFadeScrollBars(false);

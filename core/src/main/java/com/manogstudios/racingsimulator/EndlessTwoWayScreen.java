@@ -51,6 +51,9 @@ public class EndlessTwoWayScreen implements Screen {
     private Table pauseOverlay;
     private Table pauseCard;
 
+    private Table pauseSettingsOverlay;
+    private Table pauseSettingsCard;
+
     // --- Multiplier (Endless) ---
     private static final float SPEED_THRESHOLD_MPH = 90f;
 
@@ -312,6 +315,7 @@ public class EndlessTwoWayScreen implements Screen {
         uiStage.addActor(topBar);
 
         createPauseOverlay();
+        createPauseSettingsOverlay();
 
         pauseButton.addListener(new ClickListener() {
             @Override
@@ -334,7 +338,11 @@ public class EndlessTwoWayScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if (!gameOver && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            setPaused(!paused);
+            if (paused && pauseSettingsOverlay != null && pauseSettingsOverlay.isVisible()) {
+                showPauseMenu();
+            } else {
+                setPaused(!paused);
+            }
         }
 
         if (!gameOver && !paused) {
@@ -556,14 +564,14 @@ public class EndlessTwoWayScreen implements Screen {
         settingsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new SettingsScreen(game));
+                showPauseSettings();
             }
         });
 
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new EndlessOneWayScreen(game));
+                game.setScreen(new FreeRideScreen(game)); // replace per screen
             }
         });
 
@@ -587,12 +595,82 @@ public class EndlessTwoWayScreen implements Screen {
         });
     }
 
+    private void createPauseSettingsOverlay() {
+        pauseSettingsOverlay = new Table();
+        pauseSettingsOverlay.setFillParent(true);
+        pauseSettingsOverlay.setVisible(false);
+        pauseSettingsOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.55f));
+
+        pauseSettingsCard = new Table(skin);
+        pauseSettingsCard.setBackground("default-round");
+        pauseSettingsCard.pad(25);
+        pauseSettingsCard.defaults().pad(10).width(260).height(50);
+
+        Label titleLabel = new Label("Pause Settings", skin);
+        titleLabel.setFontScale(1.3f);
+        titleLabel.setAlignment(Align.center);
+
+        TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
+        TextButton backButton = new TextButton("Back", skin);
+
+        pauseSettingsCard.add(titleLabel).padBottom(15).row();
+        pauseSettingsCard.add(fullscreenButton).row();
+        pauseSettingsCard.add(backButton).row();
+
+        pauseSettingsOverlay.add(pauseSettingsCard).center();
+        uiStage.addActor(pauseSettingsOverlay);
+
+        fullscreenButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                boolean enableFullscreen = !Gdx.graphics.isFullscreen();
+
+                if (enableFullscreen) {
+                    Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+                } else {
+                    Gdx.graphics.setWindowedMode(1600, 900);
+                }
+
+                fullscreenButton.setText(getFullscreenText());
+
+
+            }
+        });
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showPauseMenu();
+            }
+        });
+    }
+
+    private void showPauseMenu() {
+        if (pauseOverlay != null) pauseOverlay.setVisible(true);
+        if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(false);
+    }
+
+    private void showPauseSettings() {
+        if (pauseOverlay != null) pauseOverlay.setVisible(false);
+        if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(true);
+    }
+
     private void setPaused(boolean value) {
         paused = value;
-        if (pauseOverlay != null) {
-            pauseOverlay.setVisible(value);
+
+        if (!value) {
+            if (pauseOverlay != null) pauseOverlay.setVisible(false);
+            if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(false);
+        } else {
+            showPauseMenu();
         }
     }
+
+    private String getFullscreenText() {
+        return "Fullscreen: " + (Gdx.graphics.isFullscreen() ? "ON" : "OFF");
+    }
+
+
 
     private void updateLogic(float delta) {
         updateHeat(delta);

@@ -371,7 +371,7 @@ public class FreeRideScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game)); // replace per screen
+                game.setScreen(new FreeRideScreen(game));
             }
         });
 
@@ -433,8 +433,7 @@ public class FreeRideScreen implements Screen {
 
                 fullscreenButton.setText(getFullscreenText());
 
-                // Optional if you already use GameSettings in your project:
-                // GameSettings.setFullscreenEnabled(enableFullscreen);
+
             }
         });
 
