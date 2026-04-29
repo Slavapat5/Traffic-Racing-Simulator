@@ -151,6 +151,17 @@ public class LoginScreen implements Screen {
         // Add the card to the root
         root.add(card).width(480).pad(20);
 
+        TextButton quitButton = new TextButton("Quit Game", skin);
+        quitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+
+        card.add(quitButton).colspan(2).width(200).height(40).padTop(4).row();
+
+
 
 
         loginButton.addListener(new ClickListener() {

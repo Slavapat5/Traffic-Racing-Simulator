@@ -96,6 +96,8 @@ public class RegisterScreen implements Screen {
         card.row();
         card.add(passwordRow).colspan(2).row();
 
+
+
         showButton.addListener(new ClickListener() {
             private boolean showing = false;
 
@@ -134,7 +136,7 @@ public class RegisterScreen implements Screen {
         card.add(bottomRow).colspan(2).padTop(10).row();
 
         // Back button
-        TextButton backButton = new TextButton("Back to Menu", skin);
+        TextButton backButton = new TextButton("Back to Login", skin);
         card.add(backButton).colspan(2).width(200).height(40).padTop(10).row();
 
         // Add card into root
@@ -195,6 +197,16 @@ public class RegisterScreen implements Screen {
                 game.setScreen(new MenuScreen(game));
             }
         });
+
+
+        TextButton quitButton = new TextButton("Quit Game", skin);
+        quitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+        card.add(quitButton).colspan(2).width(200).height(40).padTop(10).row();
 
 
 

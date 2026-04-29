@@ -35,6 +35,9 @@ public class MenuScreen implements Screen {
     // settings button textures
     private Texture settingsUpTex, settingsDownTex, settingsOverTex;
 
+    // back button textures
+    private Texture backUpTex, backDownTex, backOverTex;
+
     public MenuScreen(Game game) {
         this.game = game;
     }
@@ -213,16 +216,41 @@ public class MenuScreen implements Screen {
         );
 
 
-        // Load textures for custom button
+        // Load textures for settings button
         settingsUpTex   = new Texture(Gdx.files.internal("settings_button_up.png"));
         settingsDownTex = new Texture(Gdx.files.internal("settings_button_down.png"));
         settingsOverTex = new Texture(Gdx.files.internal("settings_button_over.png"));
+
+        // Load textures for back button
+        backUpTex   = new Texture(Gdx.files.internal("back_up.png"));
+        backDownTex = new Texture(Gdx.files.internal("back_down.png"));
+        backOverTex = new Texture(Gdx.files.internal("back_over.png"));
 
         ImageTextButton.ImageTextButtonStyle settingsStyle = new ImageTextButton.ImageTextButtonStyle();
         settingsStyle.up   = new TextureRegionDrawable(new TextureRegion(settingsUpTex));
         settingsStyle.down = new TextureRegionDrawable(new TextureRegion(settingsDownTex));
         settingsStyle.over = new TextureRegionDrawable(new TextureRegion(settingsOverTex));
         settingsStyle.font = skin.getFont("default-font");
+
+        ImageButton.ImageButtonStyle backStyle = new ImageButton.ImageButtonStyle();
+        backStyle.up = new TextureRegionDrawable(new TextureRegion(backUpTex));
+        backStyle.down = new TextureRegionDrawable(new TextureRegion(backDownTex));
+        backStyle.over = new TextureRegionDrawable(new TextureRegion(backOverTex));
+
+        Table backAnchor = new Table();
+        backAnchor.setFillParent(true);
+        backAnchor.bottom().left().pad(20);
+        stage.addActor(backAnchor);
+
+        ImageButton backButton = new ImageButton(backStyle);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new PlayScreen(game));
+            }
+        });
+
+        backAnchor.add(backButton).size(80, 30);
 
         // Anchor table at bottom-right
         Table settingsAnchor = new Table();
@@ -449,5 +477,9 @@ public class MenuScreen implements Screen {
         if (settingsUpTex != null)   settingsUpTex.dispose();
         if (settingsDownTex != null) settingsDownTex.dispose();
         if (settingsOverTex != null) settingsOverTex.dispose();
+
+        if (backUpTex != null)   backUpTex.dispose();
+        if (backDownTex != null) backDownTex.dispose();
+        if (backOverTex != null) backOverTex.dispose();
     }
 }
