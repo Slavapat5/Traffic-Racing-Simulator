@@ -7,7 +7,7 @@
     "horsepower": 200,
     "weightKg": 1262,
     "engine": "V3, 1.5L",
-    "longDescription": "Another car"
+    "longDescription": "A small but lively hot hatch that feels quick, nimble, and easy to control. The Fiesta ST is a great choice for players who want sharp handling, decent speed, and a fun lightweight car that is easy to throw through traffic."
   },
   {
     "image": "Volkswagen Golf GTI Mk8 - 2019.png",
@@ -17,7 +17,7 @@
     "horsepower": 240,
     "weightKg": 1448,
     "engine": "i4, 2.0L",
-    "longDescription": "Another car"
+    "longDescription": "The Golf GTI is a strong all-rounder that mixes everyday usability with sporty performance. It offers more power and stability than smaller hot hatches, making it a dependable choice for players who want a fast but well-balanced car."
   },
   {
     "image": "Mazda MX-5 Miata - 2014.png",
@@ -27,7 +27,7 @@
     "horsepower": 181,
     "weightKg": 1090,
     "engine": "V4, 2.0L",
-    "longDescription": "This is the starter car."
+    "longDescription": "A lightweight rear-wheel-drive roadster that focuses on agility and driver feel rather than raw power. The MX-5 is an ideal starter car because it is predictable, fun to drive, and teaches the player how to handle corners and traffic smoothly."
   },
   {
     "image": "BMW 330i - 2025.png",
@@ -37,7 +37,7 @@
     "horsepower": 255,
     "weightKg": 1525,
     "engine": "V4, 2.0L",
-    "longDescription": "Another car"
+    "longDescription": "The BMW 330i delivers strong turbocharged performance in a more refined and premium package. It feels stable at speed, has solid acceleration, and suits players who want a comfortable but still sporty car for longer, faster runs."
   },
   {
     "image": "Mclaren 650s - 2015.png",
@@ -47,7 +47,7 @@
     "horsepower": 641,
     "weightKg": 1370,
     "engine": "V8, 3.8L",
-    "longDescription": "Another car"
+    "longDescription": "A brutal supercar built for speed, precision, and excitement. The McLaren 650S combines huge power with a relatively light body, making it a dangerous but rewarding machine for players who can handle very high speeds and rapid reactions."
   },
   {
     "image": "Lamborghini Huracan - 2015.png",
@@ -57,7 +57,7 @@
     "horsepower": 610,
     "weightKg": 1422,
     "engine": "V10, 5.2L",
-    "longDescription": "Another car"
+    "longDescription": "The Huracan is a dramatic high-performance supercar with a powerful V10 engine and aggressive character. It offers massive speed and strong presence, making it perfect for players who want a loud, flashy, and thrilling car at the top end of the garage."
   },
   {
   "image": "Ferrari 458 - 2015.png",
@@ -67,6 +67,6 @@
   "horsepower": 597,
   "weightKg": 1422,
   "engine": "V8, 4.6L",
-  "longDescription": "Another car"
+    "longDescription": "The Ferrari 458 is a sharp and responsive supercar known for its high-revving engine and precise performance. It feels fast, special, and highly rewarding, making it a top-tier choice for players who want speed with classic Italian style."
 }
 ]

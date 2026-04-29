@@ -331,7 +331,19 @@ public class MenuScreen implements Screen {
         quitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
+                Dialog confirmDialog = new Dialog("Confirm Quit", skin) {
+                    @Override
+                    protected void result(Object object) {
+                        if ((Boolean) object) {
+                            Gdx.app.exit();
+                        }
+                    }
+                };
+
+                confirmDialog.text("Are you sure you want to quit the game?");
+                confirmDialog.button("Yes", true);
+                confirmDialog.button("No", false);
+                confirmDialog.show(stage);
             }
         });
 
