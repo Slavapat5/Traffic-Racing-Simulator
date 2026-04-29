@@ -1,0 +1,4 @@
+endless_two_way=2090
+free_ride=3768
+endless_one_way=19038
+drag_sprint=66754

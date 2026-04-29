@@ -39,6 +39,7 @@ public class EndlessTwoWayScreen implements Screen {
 
     // Road
     private Texture roadTexture;
+    private Texture surroundingsTexture;
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -197,7 +198,17 @@ public class EndlessTwoWayScreen implements Screen {
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
 
-        roadTexture = new Texture(Gdx.files.internal("Segment1.png"));
+        EnvironmentTheme theme = EnvironmentThemeManager.getCurrentTheme();
+
+        roadTexture = new Texture(Gdx.files.internal(theme.roadTexturePath));
+        surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
+        roadWidth = theme.roadWidth;
+
+        System.out.println("Loaded theme:");
+        System.out.println("Location = " + EnvironmentSelectionData.getSelectedLocation());
+        System.out.println("Season = " + EnvironmentSelectionData.getSelectedSeason());
+        System.out.println("Road texture = " + theme.roadTexturePath);
+        System.out.println("Surroundings texture = " + theme.surroundingsTexturePath);
 
         // Traffic types
         addTrafficType("BMW 330i - 2025.png", 600f, 600f, 5f);
@@ -366,6 +377,13 @@ public class EndlessTwoWayScreen implements Screen {
 
         float baseY = (float) Math.floor(camera.position.y / SEGMENT_HEIGHT) * SEGMENT_HEIGHT;
         float roadX = roadCenterX - SEGMENT_WIDTH / 2f;
+
+
+        for (int i = -1; i <= 1; i++) {
+            float y = baseY + i * SEGMENT_HEIGHT;
+            batch.draw(surroundingsTexture, 0, y, VIEW_WIDTH, SEGMENT_HEIGHT);
+        }
+
 
         for (int i = -1; i <= 1; i++) {
             float y = baseY + i * SEGMENT_HEIGHT;
@@ -755,7 +773,8 @@ public class EndlessTwoWayScreen implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
-        roadTexture.dispose();
+        if (roadTexture != null) roadTexture.dispose();
+        if (surroundingsTexture != null) surroundingsTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         playerCar.dispose();

@@ -31,7 +31,7 @@ public class PlayScreen implements Screen {
     private SpriteBatch batch;
     private Texture backgroundTexture;
     private Label versionLabel;
-    private static final String GAME_VERSION = "Beta 1.3";
+    private static final String GAME_VERSION = "Beta 1.4";
 
 
 
@@ -84,7 +84,7 @@ public class PlayScreen implements Screen {
         batch = new SpriteBatch();
         stage = new Stage(new ScreenViewport());
 
-        backgroundTexture = new Texture(Gdx.files.internal("PlayScreen0.png"));
+        backgroundTexture = new Texture(Gdx.files.internal("TitleScreen1.png")); // TitleScreen1 and TitleScreen2 are both different versions
 
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
         buttonStyle.font = new BitmapFont();
