@@ -48,6 +48,10 @@ public class TestDriveScreen implements Screen {
     private float roadCenterX = VIEW_WIDTH / 2f;
     private float roadWidth = 800f;
 
+    private boolean paused = false;
+    private Table pauseOverlay;
+    private Table pauseCard;
+
     // Traffic
     private static class TrafficCar {
         Texture texture;
@@ -227,56 +231,17 @@ public class TestDriveScreen implements Screen {
         speedLabel.setAlignment(Align.left);
         topBar.add(speedLabel).left().expandX();
 
-        TextButton menuButton = new TextButton("Menu", skin);
-        topBar.add(menuButton).right().width(80f);
+        TextButton pauseButton = new TextButton("Pause", skin);
+        topBar.add(pauseButton).right().width(100f);
 
         uiStage.addActor(topBar);
 
-        // Dropdown menu
-        final Table menuTable = new Table(skin);
-        menuTable.setVisible(false);
-        menuTable.defaults().pad(5).fillX().uniformX();
-        menuTable.background("default-round");
+        createPauseOverlay();
 
-        TextButton switchCarBtn = new TextButton("Switch Car", skin);
-        TextButton modesBtn = new TextButton("Game Modes", skin);
-        TextButton homeBtn = new TextButton("Home", skin);
-
-        menuTable.add(switchCarBtn).row();
-        menuTable.add(modesBtn).row();
-        menuTable.add(homeBtn).row();
-
-        Table menuContainer = new Table();
-        menuContainer.setFillParent(true);
-        menuContainer.top().right().pad(10, 10, 0, 10);
-        menuContainer.add(menuTable);
-        uiStage.addActor(menuContainer);
-
-        menuButton.addListener(new ClickListener() {
+        pauseButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                menuTable.setVisible(!menuTable.isVisible());
-            }
-        });
-
-        switchCarBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GarageScreen(game));
-            }
-        });
-
-        modesBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameModeSelectorScreen(game));
-            }
-        });
-
-        homeBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new MenuScreen(game));
+                setPaused(true);
             }
         });
     }
@@ -285,7 +250,11 @@ public class TestDriveScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (!gameOver) {
+        if (!gameOver && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            setPaused(!paused);
+        }
+
+        if (!gameOver && !paused) {
             updateLogic(delta);
         }
 
@@ -297,12 +266,10 @@ public class TestDriveScreen implements Screen {
         float baseY = (float) Math.floor(camera.position.y / SEGMENT_HEIGHT) * SEGMENT_HEIGHT;
         float roadX = roadCenterX - SEGMENT_WIDTH / 2f;
 
-
         for (int i = -1; i <= 1; i++) {
             float y = baseY + i * SEGMENT_HEIGHT;
             batch.draw(surroundingsTexture, 0, y, VIEW_WIDTH, SEGMENT_HEIGHT);
         }
-
 
         for (int i = -1; i <= 1; i++) {
             float y = baseY + i * SEGMENT_HEIGHT;
@@ -319,11 +286,6 @@ public class TestDriveScreen implements Screen {
         // --- UI ---
         uiStage.act(delta);
         uiStage.draw();
-
-        // Keyboard shortcut
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
-            game.setScreen(new GameModeSelectorScreen(game));
-        }
     }
 
     private void updateLogic(float delta) {
@@ -441,6 +403,83 @@ public class TestDriveScreen implements Screen {
                 trafficCars.add(new TrafficCar(type.texture, x, spawnY, speed));
                 return;
             }
+        }
+    }
+
+    private void createPauseOverlay() {
+        pauseOverlay = new Table();
+        pauseOverlay.setFillParent(true);
+        pauseOverlay.setVisible(false);
+        pauseOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.55f));
+
+        pauseCard = new Table(skin);
+        pauseCard.setBackground("default-round");
+        pauseCard.pad(25);
+        pauseCard.defaults().pad(10).width(240).height(50);
+
+        Label titleLabel = new Label("Paused", skin);
+        titleLabel.setFontScale(1.4f);
+        titleLabel.setAlignment(Align.center);
+
+        TextButton continueButton = new TextButton("Continue", skin);
+        TextButton settingsButton = new TextButton("Settings", skin);
+        TextButton restartButton = new TextButton("Restart", skin);
+        TextButton quitButton = new TextButton("Quit", skin);
+
+        pauseCard.add(titleLabel).padBottom(15).row();
+        pauseCard.add(continueButton).row();
+        pauseCard.add(settingsButton).row();
+        pauseCard.add(restartButton).row();
+        pauseCard.add(quitButton).row();
+
+        pauseOverlay.add(pauseCard).center();
+        uiStage.addActor(pauseOverlay);
+
+        continueButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                setPaused(false);
+            }
+        });
+
+        settingsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new SettingsScreen(game));
+            }
+        });
+
+        restartButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new TestDriveScreen(game));
+            }
+        });
+
+        quitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Dialog confirmDialog = new Dialog("Quit Test Drive", skin) {
+                    @Override
+                    protected void result(Object object) {
+                        if ((Boolean) object) {
+                            game.setScreen(new GameModeSelectorScreen(game));
+                        }
+                    }
+                };
+
+                confirmDialog.text("Quit this test drive and return to game modes?");
+                confirmDialog.button("Yes", true);
+                confirmDialog.button("No", false);
+                confirmDialog.show(uiStage);
+            }
+        });
+    }
+
+    private void setPaused(boolean value) {
+        paused = value;
+        if (pauseOverlay != null) {
+            pauseOverlay.setVisible(value);
         }
     }
 

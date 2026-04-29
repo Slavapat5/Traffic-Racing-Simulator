@@ -61,6 +61,10 @@ public class TimeTrialScreen implements Screen {
     private final float timeLimitSeconds;   // e.g. 60, 90, 120
     private float timeRemaining;            // counts down
 
+    private boolean paused = false;
+    private Table pauseOverlay;
+    private Table pauseCard;
+
     // Traffic
     private static class TrafficCar {
         Texture texture;
@@ -239,55 +243,17 @@ public class TimeTrialScreen implements Screen {
         speedLabel.setAlignment(Align.left);
         topBar.add(speedLabel).left().expandX();
 
-        TextButton menuButton = new TextButton("Menu", skin);
-        topBar.add(menuButton).right().width(80f);
+        TextButton pauseButton = new TextButton("Pause", skin);
+        topBar.add(pauseButton).right().width(100f);
 
         uiStage.addActor(topBar);
 
-        final Table menuTable = new Table(skin);
-        menuTable.setVisible(false);
-        menuTable.defaults().pad(5).fillX().uniformX();
-        menuTable.background("default-round");
+        createPauseOverlay();
 
-        TextButton switchCarBtn = new TextButton("Switch Car", skin);
-        TextButton homeBtn = new TextButton("Home", skin);
-        TextButton quitBtn = new TextButton("Quit", skin);
-
-        menuTable.add(switchCarBtn).row();
-        menuTable.add(homeBtn).row();
-        menuTable.add(quitBtn).row();
-
-        Table menuContainer = new Table();
-        menuContainer.setFillParent(true);
-        menuContainer.top().right().pad(10, 10, 0, 10);
-        menuContainer.add(menuTable);
-        uiStage.addActor(menuContainer);
-
-        menuButton.addListener(new ClickListener() {
+        pauseButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                menuTable.setVisible(!menuTable.isVisible());
-            }
-        });
-
-        switchCarBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GarageScreen(game));
-            }
-        });
-
-        homeBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new MenuScreen(game));
-            }
-        });
-
-        quitBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new PlayScreen(game));
+                setPaused(true);
             }
         });
 
@@ -304,7 +270,11 @@ public class TimeTrialScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (!gameOver) {
+        if (!gameOver && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            setPaused(!paused);
+        }
+
+        if (!gameOver && !paused) {
             updateLogic(delta);
         }
 
@@ -600,6 +570,83 @@ public class TimeTrialScreen implements Screen {
 
     private String formatCash(int cash) {
         return String.format("%,d", cash);
+    }
+
+    private void createPauseOverlay() {
+        pauseOverlay = new Table();
+        pauseOverlay.setFillParent(true);
+        pauseOverlay.setVisible(false);
+        pauseOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.55f));
+
+        pauseCard = new Table(skin);
+        pauseCard.setBackground("default-round");
+        pauseCard.pad(25);
+        pauseCard.defaults().pad(10).width(240).height(50);
+
+        Label titleLabel = new Label("Paused", skin);
+        titleLabel.setFontScale(1.4f);
+        titleLabel.setAlignment(Align.center);
+
+        TextButton continueButton = new TextButton("Continue", skin);
+        TextButton settingsButton = new TextButton("Settings", skin);
+        TextButton restartButton = new TextButton("Restart", skin);
+        TextButton quitButton = new TextButton("Quit", skin);
+
+        pauseCard.add(titleLabel).padBottom(15).row();
+        pauseCard.add(continueButton).row();
+        pauseCard.add(settingsButton).row();
+        pauseCard.add(restartButton).row();
+        pauseCard.add(quitButton).row();
+
+        pauseOverlay.add(pauseCard).center();
+        uiStage.addActor(pauseOverlay);
+
+        continueButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                setPaused(false);
+            }
+        });
+
+        settingsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new SettingsScreen(game));
+            }
+        });
+
+        restartButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new TimeTrialScreen(game, timeLimitSeconds));
+            }
+        });
+
+        quitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Dialog confirmDialog = new Dialog("Quit Time Trial", skin) {
+                    @Override
+                    protected void result(Object object) {
+                        if ((Boolean) object) {
+                            game.setScreen(new GameModeSelectorScreen(game));
+                        }
+                    }
+                };
+
+                confirmDialog.text("Quit this time trial and return to game modes?");
+                confirmDialog.button("Yes", true);
+                confirmDialog.button("No", false);
+                confirmDialog.show(uiStage);
+            }
+        });
+    }
+
+    private void setPaused(boolean value) {
+        paused = value;
+        if (pauseOverlay != null) {
+            pauseOverlay.setVisible(value);
+        }
     }
 
     @Override

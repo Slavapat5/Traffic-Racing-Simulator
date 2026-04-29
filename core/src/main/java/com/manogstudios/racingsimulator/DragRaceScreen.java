@@ -87,6 +87,10 @@ public class DragRaceScreen implements Screen {
     private CarStats playerStats;
     private CarStats opponentStats;
 
+    private boolean paused = false;
+    private Table pauseOverlay;
+    private Table pauseCard;
+
     public DragRaceScreen(Game game) {
         this.game = game;
     }
@@ -174,51 +178,17 @@ public class DragRaceScreen implements Screen {
         statusLabel.setAlignment(Align.center);
         topBar.add(statusLabel).expandX().left();
 
-        TextButton menuBtn = new TextButton("Menu", skin);
-        topBar.add(menuBtn).right().width(90f);
+        TextButton pauseButton = new TextButton("Pause", skin);
+        topBar.add(pauseButton).right().width(100f);
 
         uiStage.addActor(topBar);
 
-        final Table menuTable = new Table(skin);
-        menuTable.setVisible(false);
-        menuTable.defaults().pad(5).fillX().uniformX();
-        menuTable.background("default-round");
+        createPauseOverlay();
 
-        TextButton retryBtn = new TextButton("Retry", skin);
-        TextButton modesBtn = new TextButton("Back to Modes", skin);
-        TextButton homeBtn = new TextButton("Home", skin);
-
-        menuTable.add(retryBtn).row();
-        menuTable.add(modesBtn).row();
-        menuTable.add(homeBtn).row();
-
-        Table menuContainer = new Table();
-        menuContainer.setFillParent(true);
-        menuContainer.top().right().pad(10, 10, 0, 10);
-        menuContainer.add(menuTable);
-        uiStage.addActor(menuContainer);
-
-        menuBtn.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                menuTable.setVisible(!menuTable.isVisible());
-            }
-        });
-
-        retryBtn.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new DragRaceScreen(game));
-            }
-        });
-
-        modesBtn.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameModeSelectorScreen(game));
-            }
-        });
-
-        homeBtn.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new MenuScreen(game));
+        pauseButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                setPaused(true);
             }
         });
 
@@ -230,7 +200,11 @@ public class DragRaceScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (!raceFinished) {
+        if (!raceFinished && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            setPaused(!paused);
+        }
+
+        if (!raceFinished && !paused) {
             updateLogic(delta);
         }
 
@@ -367,6 +341,83 @@ public class DragRaceScreen implements Screen {
 
             }
 
+        }
+    }
+
+    private void createPauseOverlay() {
+        pauseOverlay = new Table();
+        pauseOverlay.setFillParent(true);
+        pauseOverlay.setVisible(false);
+        pauseOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.55f));
+
+        pauseCard = new Table(skin);
+        pauseCard.setBackground("default-round");
+        pauseCard.pad(25);
+        pauseCard.defaults().pad(10).width(240).height(50);
+
+        Label titleLabel = new Label("Paused", skin);
+        titleLabel.setFontScale(1.4f);
+        titleLabel.setAlignment(Align.center);
+
+        TextButton continueButton = new TextButton("Continue", skin);
+        TextButton settingsButton = new TextButton("Settings", skin);
+        TextButton restartButton = new TextButton("Restart", skin);
+        TextButton quitButton = new TextButton("Quit", skin);
+
+        pauseCard.add(titleLabel).padBottom(15).row();
+        pauseCard.add(continueButton).row();
+        pauseCard.add(settingsButton).row();
+        pauseCard.add(restartButton).row();
+        pauseCard.add(quitButton).row();
+
+        pauseOverlay.add(pauseCard).center();
+        uiStage.addActor(pauseOverlay);
+
+        continueButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                setPaused(false);
+            }
+        });
+
+        settingsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new SettingsScreen(game));
+            }
+        });
+
+        restartButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new DragRaceScreen(game));
+            }
+        });
+
+        quitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Dialog confirmDialog = new Dialog("Quit Drag Race", skin) {
+                    @Override
+                    protected void result(Object object) {
+                        if ((Boolean) object) {
+                            game.setScreen(new GameModeSelectorScreen(game));
+                        }
+                    }
+                };
+
+                confirmDialog.text("Quit this drag race and return to game modes?");
+                confirmDialog.button("Yes", true);
+                confirmDialog.button("No", false);
+                confirmDialog.show(uiStage);
+            }
+        });
+    }
+
+    private void setPaused(boolean value) {
+        paused = value;
+        if (pauseOverlay != null) {
+            pauseOverlay.setVisible(value);
         }
     }
 

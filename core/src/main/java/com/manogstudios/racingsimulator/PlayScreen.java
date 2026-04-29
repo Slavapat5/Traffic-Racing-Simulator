@@ -31,7 +31,7 @@ public class PlayScreen implements Screen {
     private SpriteBatch batch;
     private Texture backgroundTexture;
     private Label versionLabel;
-    private static final String GAME_VERSION = "Beta 1.4";
+    private static final String GAME_VERSION = "Beta 1.5";
 
 
 
