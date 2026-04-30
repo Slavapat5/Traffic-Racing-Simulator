@@ -266,53 +266,92 @@ public class EndlessTwoWayScreen implements Screen {
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
         // --- UI ---
-        Table root = new Table();
-        root.setFillParent(true);
-        uiStage.addActor(root);
 
-        Table topBar = new Table();
-        topBar.top().left().pad(10);
-        topBar.setFillParent(true);
 
-        multLabel = new Label("x1.0", skin);
-        multLabel.setFontScale(1.2f);
-        multLabel.setAlignment(Align.left);
-        topBar.add(multLabel).left().padRight(14f);
-
-        opposingLabel = new Label("Opposing: +0", skin);
-        opposingLabel.setFontScale(1.0f);
-        opposingLabel.setAlignment(Align.left);
-        topBar.add(opposingLabel).left().padRight(20f);
-
-        cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
-        cashLabel.setFontScale(1.2f);
-        cashLabel.setAlignment(Align.left);
-        topBar.add(cashLabel).left().padRight(20f);
+        Table topLeftStats = new Table();
+        topLeftStats.setFillParent(true);
+        topLeftStats.top().left().padTop(18).padLeft(20);
 
         scoreLabel = new Label("Score: 0", skin);
-        scoreLabel.setFontScale(1.2f);
+        scoreLabel.setFontScale(1.35f);
         scoreLabel.setAlignment(Align.left);
-        topBar.add(scoreLabel).left().expandX();
 
-        distanceLabel = new Label("Dist: 0 m", skin);
-        distanceLabel.setFontScale(1.2f);
-        distanceLabel.setAlignment(Align.left);
-        topBar.add(distanceLabel).left().padRight(20f);
+        opposingLabel = new Label("Opposing: +0", skin);
+        opposingLabel.setFontScale(1.2f);
+        opposingLabel.setAlignment(Align.left);
+
+        multLabel = new Label("x1.0", skin);
+        multLabel.setFontScale(2.0f);
+        multLabel.setColor(1f, 0.9f, 0.2f, 1f);
+        multLabel.setAlignment(Align.left);
+
+        topLeftStats.add(scoreLabel).left().padBottom(8).row();
+        topLeftStats.add(opposingLabel).left().padBottom(8).row();
+        topLeftStats.add(multLabel).left();
+
+        uiStage.addActor(topLeftStats);
+
+
+        Table cashTable = new Table();
+        cashTable.setFillParent(true);
+        cashTable.top().left().padTop(24).padLeft(320);
+
+        cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
+        cashLabel.setFontScale(1.3f);
+        cashLabel.setAlignment(Align.left);
+
+        cashTable.add(cashLabel).left();
+        uiStage.addActor(cashTable);
+
+
+        Table timeTable = new Table();
+        timeTable.setFillParent(true);
+        timeTable.top().right().padTop(24).padRight(150);
 
         timeLabel = new Label("Time: 0.0s", skin);
         timeLabel.setFontScale(1.2f);
-        timeLabel.setAlignment(Align.left);
-        topBar.add(timeLabel).left().padRight(20f);
+        timeLabel.setAlignment(Align.right);
+
+        timeTable.add(timeLabel).right();
+        uiStage.addActor(timeTable);
+
+
+        Table bottomRightInfo = new Table();
+        bottomRightInfo.setFillParent(true);
+        bottomRightInfo.bottom().right().padRight(35).padBottom(140);
 
         speedLabel = new Label("Speed: 0 mph", skin);
-        speedLabel.setFontScale(1.2f);
-        speedLabel.setAlignment(Align.left);
-        topBar.add(speedLabel).left().expandX();
+        speedLabel.setFontScale(2.3f);
+        speedLabel.setAlignment(Align.right);
+
+        distanceLabel = new Label("Dist: 0 m", skin);
+        distanceLabel.setFontScale(1.9f);
+        distanceLabel.setAlignment(Align.right);
+
+        bottomRightInfo.add(speedLabel).right().padBottom(10).row();
+        bottomRightInfo.add(distanceLabel).right();
+
+        uiStage.addActor(bottomRightInfo);
+
+
+        Table pauseTable = new Table();
+        pauseTable.setFillParent(true);
+        pauseTable.top().right().padTop(18).padRight(20);
 
         TextButton pauseButton = new TextButton("Pause", skin);
-        topBar.add(pauseButton).right().width(100f);
+        pauseTable.add(pauseButton).width(100f).height(42f);
 
-        uiStage.addActor(topBar);
+        uiStage.addActor(pauseTable);
+
+        createPauseOverlay();
+        createPauseSettingsOverlay();
+
+        pauseButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                setPaused(true);
+            }
+        });
 
         createPauseOverlay();
         createPauseSettingsOverlay();
@@ -571,7 +610,7 @@ public class EndlessTwoWayScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game)); // replace per screen
+                game.setScreen(new EndlessTwoWayScreen(game));
             }
         });
 
@@ -611,10 +650,12 @@ public class EndlessTwoWayScreen implements Screen {
         titleLabel.setAlignment(Align.center);
 
         TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
+        TextButton controlsButton = new TextButton("Controls / Help", skin);
         TextButton backButton = new TextButton("Back", skin);
 
         pauseSettingsCard.add(titleLabel).padBottom(15).row();
         pauseSettingsCard.add(fullscreenButton).row();
+        pauseSettingsCard.add(controlsButton).row();
         pauseSettingsCard.add(backButton).row();
 
         pauseSettingsOverlay.add(pauseSettingsCard).center();
@@ -632,8 +673,13 @@ public class EndlessTwoWayScreen implements Screen {
                 }
 
                 fullscreenButton.setText(getFullscreenText());
+            }
+        });
 
-
+        controlsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showControlsDialog();
             }
         });
 
@@ -803,6 +849,31 @@ public class EndlessTwoWayScreen implements Screen {
         if (total < 0) total = 0;
 
         return total;
+    }
+
+    private void showControlsDialog() {
+        Dialog controlsDialog = new Dialog("Controls", skin);
+
+        Label controlsLabel = new Label(
+            "W = Accelerate\n" +
+                "S = Brake / Reverse\n" +
+                "A = Steer Left\n" +
+                "D = Steer Right\n" +
+                "ESC = Pause / Back\n" +
+                "Mouse = Click buttons and menus\n\n" +
+                "Notes:\n" +
+                "- In driving modes, ESC opens the pause menu.\n" +
+                "- In pause settings, use Back to return to the pause menu.\n" +
+                "- Drag Race uses W to accelerate and S to brake.",
+            skin
+        );
+
+        controlsLabel.setWrap(true);
+        controlsLabel.setAlignment(Align.left);
+
+        controlsDialog.getContentTable().add(controlsLabel).width(420).pad(20);
+        controlsDialog.button("OK");
+        controlsDialog.show(uiStage);
     }
 
     private void onCrash() {

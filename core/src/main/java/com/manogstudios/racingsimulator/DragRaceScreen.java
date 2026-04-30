@@ -156,35 +156,64 @@ public class DragRaceScreen implements Screen {
         );
 
         // --- UI ---
-        Table root = new Table();
-        root.setFillParent(true);
-        uiStage.addActor(root);
 
-        Table topBar = new Table();
-        topBar.top().left().pad(10);
-        topBar.setFillParent(true);
+
+        Table cashTable = new Table();
+        cashTable.setFillParent(true);
+        cashTable.top().left().padTop(18).padLeft(20);
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
-        cashLabel.setFontScale(1.2f);
-        topBar.add(cashLabel).left().padRight(20f);
+        cashLabel.setFontScale(1.35f);
+        cashLabel.setAlignment(Align.left);
 
-        playerInfoLabel = new Label("", skin);
-        playerInfoLabel.setFontScale(1.1f);
-        topBar.add(playerInfoLabel).left().padRight(30f);
+        cashTable.add(cashLabel).left();
+        uiStage.addActor(cashTable);
 
-        aiInfoLabel = new Label("", skin);
-        aiInfoLabel.setFontScale(1.1f);
-        topBar.add(aiInfoLabel).left().padRight(30f);
+
+        Table statusTable = new Table();
+        statusTable.setFillParent(true);
+        statusTable.top().padTop(18);
 
         statusLabel = new Label("Get ready...", skin);
-        statusLabel.setFontScale(1.6f);
+        statusLabel.setFontScale(2.2f);
         statusLabel.setAlignment(Align.center);
-        topBar.add(statusLabel).expandX().left();
+
+        statusTable.add(statusLabel).center();
+        uiStage.addActor(statusTable);
+
+        Table aiTable = new Table();
+        aiTable.setFillParent(true);
+        aiTable.bottom().left().padLeft(30).padBottom(120);
+
+        aiInfoLabel = new Label("", skin);
+        aiInfoLabel.setFontScale(1.5f);
+        aiInfoLabel.setAlignment(Align.left);
+
+        aiTable.add(aiInfoLabel).left();
+        uiStage.addActor(aiTable);
+
+
+        Table playerTable = new Table();
+        playerTable.setFillParent(true);
+        playerTable.bottom().right().padRight(30).padBottom(120);
+
+        playerInfoLabel = new Label("", skin);
+        playerInfoLabel.setFontScale(1.7f);
+        playerInfoLabel.setAlignment(Align.right);
+
+        playerTable.add(playerInfoLabel).right();
+        uiStage.addActor(playerTable);
+
+
+        Table pauseTable = new Table();
+        pauseTable.setFillParent(true);
+        pauseTable.top().right().padTop(18).padRight(20);
 
         TextButton pauseButton = new TextButton("Pause", skin);
-        topBar.add(pauseButton).right().width(100f);
+        pauseTable.add(pauseButton).width(100f).height(42f);
 
-        uiStage.addActor(topBar);
+        uiStage.addActor(pauseTable);
+
 
         createPauseOverlay();
         createPauseSettingsOverlay();
@@ -196,7 +225,7 @@ public class DragRaceScreen implements Screen {
             }
         });
 
-        // initial UI text
+// initial UI text
         updateInfoLabels();
     }
 
@@ -438,10 +467,12 @@ public class DragRaceScreen implements Screen {
         titleLabel.setAlignment(Align.center);
 
         TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
+        TextButton controlsButton = new TextButton("Controls / Help", skin);
         TextButton backButton = new TextButton("Back", skin);
 
         pauseSettingsCard.add(titleLabel).padBottom(15).row();
         pauseSettingsCard.add(fullscreenButton).row();
+        pauseSettingsCard.add(controlsButton).row();
         pauseSettingsCard.add(backButton).row();
 
         pauseSettingsOverlay.add(pauseSettingsCard).center();
@@ -459,8 +490,13 @@ public class DragRaceScreen implements Screen {
                 }
 
                 fullscreenButton.setText(getFullscreenText());
+            }
+        });
 
-
+        controlsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showControlsDialog();
             }
         });
 
@@ -495,6 +531,31 @@ public class DragRaceScreen implements Screen {
 
     private String getFullscreenText() {
         return "Fullscreen: " + (Gdx.graphics.isFullscreen() ? "ON" : "OFF");
+    }
+
+    private void showControlsDialog() {
+        Dialog controlsDialog = new Dialog("Controls", skin);
+
+        Label controlsLabel = new Label(
+            "W = Accelerate\n" +
+                "S = Brake / Reverse\n" +
+                "A = Steer Left\n" +
+                "D = Steer Right\n" +
+                "ESC = Pause / Back\n" +
+                "Mouse = Click buttons and menus\n\n" +
+                "Notes:\n" +
+                "- In driving modes, ESC opens the pause menu.\n" +
+                "- In pause settings, use Back to return to the pause menu.\n" +
+                "- Drag Race uses W to accelerate and S to brake.",
+            skin
+        );
+
+        controlsLabel.setWrap(true);
+        controlsLabel.setAlignment(Align.left);
+
+        controlsDialog.getContentTable().add(controlsLabel).width(420).pad(20);
+        controlsDialog.button("OK");
+        controlsDialog.show(uiStage);
     }
 
 

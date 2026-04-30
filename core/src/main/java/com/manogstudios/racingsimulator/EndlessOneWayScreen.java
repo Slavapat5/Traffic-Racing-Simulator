@@ -263,54 +263,82 @@ public class EndlessOneWayScreen implements Screen {
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
         // UI
-        Table root = new Table();
-        root.setFillParent(true);
-        uiStage.addActor(root);
 
-        Table topBar = new Table();
-        topBar.top().left().pad(10);
-        topBar.setFillParent(true);
 
-        multLabel = new Label("x1.0", skin);
-        multLabel.setFontScale(1.2f);
-        multLabel.setAlignment(Align.left);
-        topBar.add(multLabel).left().padRight(14f);
-
-        // fast lane indicator
-        fastLaneLabel = new Label("Fast Lane: +0", skin);
-        fastLaneLabel.setFontScale(1.0f);
-        fastLaneLabel.setAlignment(Align.left);
-        topBar.add(fastLaneLabel).left().padRight(20f);
-
-        cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
-        cashLabel.setFontScale(1.2f);
-        cashLabel.setAlignment(Align.left);
-        topBar.add(cashLabel).left().padRight(20f);
+        Table topLeftStats = new Table();
+        topLeftStats.setFillParent(true);
+        topLeftStats.top().left().padTop(18).padLeft(20);
 
         scoreLabel = new Label("Score: 0", skin);
-        scoreLabel.setFontScale(1.2f);
+        scoreLabel.setFontScale(1.35f);
         scoreLabel.setAlignment(Align.left);
-        topBar.add(scoreLabel).left().expandX();
 
-        distanceLabel = new Label("Dist: 0 m", skin);
-        distanceLabel.setFontScale(1.2f);
-        distanceLabel.setAlignment(Align.left);
-        topBar.add(distanceLabel).left().padRight(20f);
+        fastLaneLabel = new Label("Fast Lane: +0", skin);
+        fastLaneLabel.setFontScale(1.2f);
+        fastLaneLabel.setAlignment(Align.left);
+
+        multLabel = new Label("x1.0", skin);
+        multLabel.setFontScale(2.0f);
+        multLabel.setColor(1f, 0.9f, 0.2f, 1f); // yellow
+        multLabel.setAlignment(Align.left);
+
+        topLeftStats.add(scoreLabel).left().padBottom(8).row();
+        topLeftStats.add(fastLaneLabel).left().padBottom(8).row();
+        topLeftStats.add(multLabel).left();
+
+        uiStage.addActor(topLeftStats);
+
+
+        Table cashTable = new Table();
+        cashTable.setFillParent(true);
+        cashTable.top().left().padTop(24).padLeft(300);
+
+        cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
+        cashLabel.setFontScale(1.3f);
+        cashLabel.setAlignment(Align.left);
+
+        cashTable.add(cashLabel).left();
+        uiStage.addActor(cashTable);
+
+
+        Table timeTable = new Table();
+        timeTable.setFillParent(true);
+        timeTable.top().right().padTop(24).padRight(150);
 
         timeLabel = new Label("Time: 0.0s", skin);
         timeLabel.setFontScale(1.2f);
-        timeLabel.setAlignment(Align.left);
-        topBar.add(timeLabel).left().padRight(20f);
+        timeLabel.setAlignment(Align.right);
+
+        timeTable.add(timeLabel).right();
+        uiStage.addActor(timeTable);
+
+
+        Table bottomRightInfo = new Table();
+        bottomRightInfo.setFillParent(true);
+        bottomRightInfo.bottom().right().padRight(35).padBottom(140);
 
         speedLabel = new Label("Speed: 0 mph", skin);
-        speedLabel.setFontScale(1.2f);
-        speedLabel.setAlignment(Align.left);
-        topBar.add(speedLabel).left().expandX();
+        speedLabel.setFontScale(2.3f);
+        speedLabel.setAlignment(Align.right);
+
+        distanceLabel = new Label("Dist: 0 m", skin);
+        distanceLabel.setFontScale(1.9f);
+        distanceLabel.setAlignment(Align.right);
+
+        bottomRightInfo.add(speedLabel).right().padBottom(10).row();
+        bottomRightInfo.add(distanceLabel).right();
+
+        uiStage.addActor(bottomRightInfo);
+
+
+        Table pauseTable = new Table();
+        pauseTable.setFillParent(true);
+        pauseTable.top().right().padTop(18).padRight(20);
 
         TextButton pauseButton = new TextButton("Pause", skin);
-        topBar.add(pauseButton).right().width(100f);
+        pauseTable.add(pauseButton).width(100f).height(42f);
 
-        uiStage.addActor(topBar);
+        uiStage.addActor(pauseTable);
 
         createPauseOverlay();
         createPauseSettingsOverlay();

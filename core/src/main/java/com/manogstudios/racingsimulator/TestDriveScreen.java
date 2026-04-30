@@ -205,39 +205,50 @@ public class TestDriveScreen implements Screen {
     }
 
     private void setupUI() {
-        Table root = new Table();
-        root.setFillParent(true);
-        uiStage.addActor(root);
-
-        // Top bar
-        Table topBar = new Table();
-        topBar.top().left().pad(10);
-        topBar.setFillParent(true);
+        Table topLeftInfo = new Table();
+        topLeftInfo.setFillParent(true);
+        topLeftInfo.top().left().padTop(18).padLeft(20);
 
         modeLabel = new Label("TEST DRIVE", skin);
-        modeLabel.setFontScale(1.2f);
+        modeLabel.setFontScale(1.5f);
         modeLabel.setAlignment(Align.left);
-        topBar.add(modeLabel).left().padRight(20f);
-
-        distanceLabel = new Label("Dist: 0 m", skin);
-        distanceLabel.setFontScale(1.2f);
-        distanceLabel.setAlignment(Align.left);
-        topBar.add(distanceLabel).left().padRight(20f);
 
         timeLabel = new Label("Time: 0.0s", skin);
         timeLabel.setFontScale(1.2f);
         timeLabel.setAlignment(Align.left);
-        topBar.add(timeLabel).left().padRight(20f);
+
+        topLeftInfo.add(modeLabel).left().padBottom(8).row();
+        topLeftInfo.add(timeLabel).left();
+
+        uiStage.addActor(topLeftInfo);
+
+
+        Table bottomRightInfo = new Table();
+        bottomRightInfo.setFillParent(true);
+        bottomRightInfo.bottom().right().padRight(35).padBottom(140);
 
         speedLabel = new Label("Speed: 0 mph", skin);
-        speedLabel.setFontScale(1.2f);
-        speedLabel.setAlignment(Align.left);
-        topBar.add(speedLabel).left().expandX();
+        speedLabel.setFontScale(2.3f);
+        speedLabel.setAlignment(Align.right);
+
+        distanceLabel = new Label("Dist: 0 m", skin);
+        distanceLabel.setFontScale(1.9f);
+        distanceLabel.setAlignment(Align.right);
+
+        bottomRightInfo.add(speedLabel).right().padBottom(10).row();
+        bottomRightInfo.add(distanceLabel).right();
+
+        uiStage.addActor(bottomRightInfo);
+
+
+        Table pauseTable = new Table();
+        pauseTable.setFillParent(true);
+        pauseTable.top().right().padTop(18).padRight(20);
 
         TextButton pauseButton = new TextButton("Pause", skin);
-        topBar.add(pauseButton).right().width(100f);
+        pauseTable.add(pauseButton).width(100f).height(42f);
 
-        uiStage.addActor(topBar);
+        uiStage.addActor(pauseTable);
 
         createPauseOverlay();
         createPauseSettingsOverlay();
@@ -500,10 +511,12 @@ public class TestDriveScreen implements Screen {
         titleLabel.setAlignment(Align.center);
 
         TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
+        TextButton controlsButton = new TextButton("Controls / Help", skin);
         TextButton backButton = new TextButton("Back", skin);
 
         pauseSettingsCard.add(titleLabel).padBottom(15).row();
         pauseSettingsCard.add(fullscreenButton).row();
+        pauseSettingsCard.add(controlsButton).row();
         pauseSettingsCard.add(backButton).row();
 
         pauseSettingsOverlay.add(pauseSettingsCard).center();
@@ -521,8 +534,13 @@ public class TestDriveScreen implements Screen {
                 }
 
                 fullscreenButton.setText(getFullscreenText());
+            }
+        });
 
-
+        controlsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showControlsDialog();
             }
         });
 
@@ -557,6 +575,31 @@ public class TestDriveScreen implements Screen {
 
     private String getFullscreenText() {
         return "Fullscreen: " + (Gdx.graphics.isFullscreen() ? "ON" : "OFF");
+    }
+
+    private void showControlsDialog() {
+        Dialog controlsDialog = new Dialog("Controls", skin);
+
+        Label controlsLabel = new Label(
+            "W = Accelerate\n" +
+                "S = Brake / Reverse\n" +
+                "A = Steer Left\n" +
+                "D = Steer Right\n" +
+                "ESC = Pause / Back\n" +
+                "Mouse = Click buttons and menus\n\n" +
+                "Notes:\n" +
+                "- In driving modes, ESC opens the pause menu.\n" +
+                "- In pause settings, use Back to return to the pause menu.\n" +
+                "- Drag Race uses W to accelerate and S to brake.",
+            skin
+        );
+
+        controlsLabel.setWrap(true);
+        controlsLabel.setAlignment(Align.left);
+
+        controlsDialog.getContentTable().add(controlsLabel).width(420).pad(20);
+        controlsDialog.button("OK");
+        controlsDialog.show(uiStage);
     }
 
 
