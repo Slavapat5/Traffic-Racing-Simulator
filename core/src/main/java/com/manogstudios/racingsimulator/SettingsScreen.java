@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.utils.Align;
 
 public class SettingsScreen implements Screen {
 
@@ -38,6 +39,7 @@ public class SettingsScreen implements Screen {
 
         final TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
         final TextButton mfaButton = new TextButton("Two-Factor Authentication", skin);
+        TextButton controlsButton = new TextButton("Controls / Help", skin);
         TextButton logoutButton = new TextButton("Log out", skin);
         TextButton backButton = new TextButton("Back", skin);
 
@@ -62,6 +64,35 @@ public class SettingsScreen implements Screen {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.setScreen(new MfaSetupScreen(game));
+            }
+        });
+
+        controlsButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Dialog controlsDialog = new Dialog("Controls", skin);
+
+                Label controlsLabel = new Label(
+                    "W = Accelerate\n" +
+                        "S = Brake / Reverse\n" +
+                        "A = Steer Left\n" +
+                        "D = Steer Right\n" +
+                        "ESC = Pause or go back\n" +
+                        "ENTER / SPACE = Confirm on some menus\n" +
+                        "Mouse = Click buttons and menus\n\n" +
+                        "Notes:\n" +
+                        "- In gameplay, ESC opens the pause menu.\n" +
+                        "- In menus, ESC usually goes back to the previous screen.\n" +
+                        "- Drag Race uses W to accelerate and S to brake.",
+                    skin
+                );
+
+                controlsLabel.setWrap(true);
+                controlsLabel.setAlignment(Align.left);
+
+                controlsDialog.getContentTable().add(controlsLabel).width(420).pad(20);
+                controlsDialog.button("OK");
+                controlsDialog.show(stage);
             }
         });
 
@@ -104,6 +135,9 @@ public class SettingsScreen implements Screen {
         table.row();
 
         table.add(mfaButton).width(320).height(55).padBottom(20);
+        table.row();
+
+        table.add(controlsButton).width(320).height(55).padBottom(20);
         table.row();
 
         table.add(logoutButton).width(320).height(55).padBottom(20);

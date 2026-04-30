@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 
+
 public class LoginScreen implements Screen {
 
     private final Game game;
@@ -27,6 +28,8 @@ public class LoginScreen implements Screen {
     private long lockoutEndTimeMs = 0L;
     private static final int MAX_LOGIN_ATTEMPTS = 5;         // max attempts before lock
     private static final long LOCKOUT_DURATION_MS = 30_000L; // 30 seconds
+
+
 
     public LoginScreen(Game game) {
         this.game = game;

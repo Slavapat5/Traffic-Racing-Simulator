@@ -691,10 +691,12 @@ public class EndlessOneWayScreen implements Screen {
         titleLabel.setAlignment(Align.center);
 
         TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
+        TextButton controlsButton = new TextButton("Controls / Help", skin);
         TextButton backButton = new TextButton("Back", skin);
 
         pauseSettingsCard.add(titleLabel).padBottom(15).row();
         pauseSettingsCard.add(fullscreenButton).row();
+        pauseSettingsCard.add(controlsButton).row();
         pauseSettingsCard.add(backButton).row();
 
         pauseSettingsOverlay.add(pauseSettingsCard).center();
@@ -712,8 +714,13 @@ public class EndlessOneWayScreen implements Screen {
                 }
 
                 fullscreenButton.setText(getFullscreenText());
+            }
+        });
 
-
+        controlsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showControlsDialog();
             }
         });
 
@@ -748,6 +755,31 @@ public class EndlessOneWayScreen implements Screen {
 
     private String getFullscreenText() {
         return "Fullscreen: " + (Gdx.graphics.isFullscreen() ? "ON" : "OFF");
+    }
+
+    private void showControlsDialog() {
+        Dialog controlsDialog = new Dialog("Controls", skin);
+
+        Label controlsLabel = new Label(
+            "W = Accelerate\n" +
+                "S = Brake / Reverse\n" +
+                "A = Steer Left\n" +
+                "D = Steer Right\n" +
+                "ESC = Pause / Back\n" +
+                "Mouse = Click buttons and menus\n\n" +
+                "Notes:\n" +
+                "- In driving modes, ESC opens the pause menu.\n" +
+                "- In pause settings, use Back to return to the pause menu.\n" +
+                "- Drag Race uses W to accelerate and S to brake.",
+            skin
+        );
+
+        controlsLabel.setWrap(true);
+        controlsLabel.setAlignment(Align.left);
+
+        controlsDialog.getContentTable().add(controlsLabel).width(420).pad(20);
+        controlsDialog.button("OK");
+        controlsDialog.show(uiStage);
     }
 
 
