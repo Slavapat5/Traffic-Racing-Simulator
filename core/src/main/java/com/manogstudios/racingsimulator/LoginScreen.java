@@ -34,11 +34,12 @@ public class LoginScreen implements Screen {
 
     @Override
     public void show() {
+        // Setting the stage, loading skins, and sets input processor
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         Gdx.input.setInputProcessor(stage);
 
-        // Background image
+        // Background images/textures
         try {
             bgTexture = new Texture(Gdx.files.internal("login_bg.png"));
             bgImage = new Image(bgTexture);
@@ -49,7 +50,7 @@ public class LoginScreen implements Screen {
             bgTexture = null;
         }
 
-        // Root table
+        // Root table Scene2D
         Table root = new Table();
         root.setFillParent(true);
         root.center();
@@ -59,8 +60,7 @@ public class LoginScreen implements Screen {
         Table card = new Table(skin);
         card.pad(30);
         card.defaults().pad(8).fillX();
-
-        // Using the default rounded background from uiskin, and darken it a bit
+        // Using the default rounded background from uiskin, and slightly darkened
         card.setBackground("default-round");
         card.setColor(0.08f, 0.08f, 0.08f, 0.90f);
 
@@ -195,6 +195,7 @@ public class LoginScreen implements Screen {
                 feedbackLabel.setColor(Color.LIGHT_GRAY);
                 feedbackLabel.setText("Logging in...");
 
+                // calls Sypabase Auth
                 SupabaseAuth.login(email, password, success -> {
                     Gdx.app.postRunnable(() -> {
                         if (success) {
@@ -206,7 +207,7 @@ public class LoginScreen implements Screen {
 
                             SupabaseAuth.fetchMfaStatus(aalResult -> {
 
-
+                                // if 2FA fails, dont let the user get in to avoid letting anyone bypass the MFA
                                 if (!aalResult.success) {
                                     feedbackLabel.setColor(Color.RED);
                                     feedbackLabel.setText(
@@ -230,9 +231,10 @@ public class LoginScreen implements Screen {
                             });
 
                         } else {
-                            // Failure: increment attempts and maybe lock
+                            // Login Fails: increment attempts and maybe lock
                             failedAttempts++;
 
+                            // code checks supabase for the errors
                             String code = SupabaseAuth.lastErrorCode;
                             String msg  = SupabaseAuth.lastErrorMessage != null
                                 ? SupabaseAuth.lastErrorMessage.toLowerCase()
