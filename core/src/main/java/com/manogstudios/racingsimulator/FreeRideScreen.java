@@ -25,6 +25,7 @@ import java.util.List;
 import com.badlogic.gdx.utils.Array;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 
 public class FreeRideScreen implements Screen {
@@ -42,6 +43,9 @@ public class FreeRideScreen implements Screen {
     // Road
     private Texture roadTexture;
     private Texture surroundingsTexture;
+    private Texture scoreTitleTexture;
+    private Texture distanceTitleTexture;
+    private Texture speedTitleTexture;
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -149,11 +153,17 @@ public class FreeRideScreen implements Screen {
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
 
+        scoreTitleTexture = new Texture(Gdx.files.internal("Game_Label_Score.png"));
+        distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
+        speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
+
         System.out.println("Loaded theme:");
         System.out.println("Location = " + EnvironmentSelectionData.getSelectedLocation());
         System.out.println("Season = " + EnvironmentSelectionData.getSelectedSeason());
         System.out.println("Road texture = " + theme.roadTexturePath);
         System.out.println("Surroundings texture = " + theme.surroundingsTexturePath);
+
+
 
         // Traffic car types (variety + spawn chances)
         addTrafficType("BMW 330i - 2025.png",600f, 600f, 5f);  // common sedan
@@ -207,21 +217,25 @@ public class FreeRideScreen implements Screen {
         // --- UI ---
 
 
-        Table topLeftStats = new Table();
-        topLeftStats.setFillParent(true);
-        topLeftStats.top().left().padTop(18).padLeft(20);
+        Table scoreTable = new Table();
+        scoreTable.setFillParent(true);
+        scoreTable.top().left().padTop(10).padLeft(0);
 
-        scoreLabel = new Label("Score: 0", skin);
-        scoreLabel.setFontScale(1.5f);
+        Image scoreTitleImage = new Image(scoreTitleTexture);
+
+        scoreLabel = new Label("0", skin);
+        scoreLabel.setFontScale(2.0f);
         scoreLabel.setAlignment(Align.left);
 
-        topLeftStats.add(scoreLabel).left();
-        uiStage.addActor(topLeftStats);
+        scoreTable.add(scoreTitleImage).width(160).height(55).left().padBottom(4).row();
+        scoreTable.add(scoreLabel).left().padLeft(18);
+
+        uiStage.addActor(scoreTable);
 
 
         Table cashTable = new Table();
         cashTable.setFillParent(true);
-        cashTable.top().left().padTop(24).padLeft(260);
+        cashTable.top().left().padTop(18).padLeft(170);
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.25f);
@@ -233,7 +247,7 @@ public class FreeRideScreen implements Screen {
 
         Table timeTable = new Table();
         timeTable.setFillParent(true);
-        timeTable.top().right().padTop(24).padRight(150);
+        timeTable.top().right().padTop(18).padRight(130);
 
         timeLabel = new Label("Time: 0.0s", skin);
         timeLabel.setFontScale(1.2f);
@@ -245,18 +259,22 @@ public class FreeRideScreen implements Screen {
 
         Table bottomRightInfo = new Table();
         bottomRightInfo.setFillParent(true);
-        bottomRightInfo.bottom().right().padRight(35).padBottom(140);
+        bottomRightInfo.bottom().right().padRight(0).padBottom(90);
 
-        speedLabel = new Label("Speed: 0 mph", skin);
-        speedLabel.setFontScale(2.3f);
+        Image speedTitleImage = new Image(speedTitleTexture);
+        speedLabel = new Label("0 mph", skin);
+        speedLabel.setFontScale(2.0f);
         speedLabel.setAlignment(Align.right);
 
-        distanceLabel = new Label("Dist: 0 m", skin);
-        distanceLabel.setFontScale(1.9f);
+        Image distanceTitleImage = new Image(distanceTitleTexture);
+        distanceLabel = new Label("0 m", skin);
+        distanceLabel.setFontScale(1.7f);
         distanceLabel.setAlignment(Align.right);
 
-        bottomRightInfo.add(speedLabel).right().padBottom(10).row();
-        bottomRightInfo.add(distanceLabel).right();
+        bottomRightInfo.add(speedTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(speedLabel).right().padRight(22).padBottom(12).row();
+        bottomRightInfo.add(distanceTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(distanceLabel).right().padRight(22);
 
         uiStage.addActor(bottomRightInfo);
 
@@ -554,14 +572,11 @@ public class FreeRideScreen implements Screen {
         score = distancePoints + timePoints + bonusPoints;
 
         // Update labels
-        scoreLabel.setText("Score: " + score);
-        distanceLabel.setText("Dist: " + displayDistance + " m");
+        scoreLabel.setText(String.valueOf(score));
+        distanceLabel.setText(displayDistance + " m");
         timeLabel.setText(String.format("Time: %.1fs", elapsedTime));
 
-
         float rawSpeed = playerCar.getSpeed();
-
-        // Convert from "mph * 10" back to mph
         float mph = rawSpeed / 10f;
 
         if (mph > 0f) {
@@ -570,10 +585,8 @@ public class FreeRideScreen implements Screen {
             if (mph > maxSpeedMph) maxSpeedMph = mph;
         }
 
-
         int speedDisplay = (int) mph;
-
-        speedLabel.setText("Speed: " + speedDisplay + " mph");
+        speedLabel.setText(speedDisplay + " mph");
 
 
         // Update cash UI (in case they earn money from something later)
@@ -826,6 +839,9 @@ public class FreeRideScreen implements Screen {
         batch.dispose();
         if (roadTexture != null) roadTexture.dispose();
         if (surroundingsTexture != null) surroundingsTexture.dispose();
+        if (scoreTitleTexture != null) scoreTitleTexture.dispose();
+        if (distanceTitleTexture != null) distanceTitleTexture.dispose();
+        if (speedTitleTexture != null) speedTitleTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         playerCar.dispose();
