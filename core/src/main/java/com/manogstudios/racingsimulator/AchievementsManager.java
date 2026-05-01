@@ -60,6 +60,30 @@ public class AchievementsManager {
         register("free_ride_300s",
             "Survivor",
             "Survive for 300 seconds in a single Free Ride run.");
+
+        register("endless_one_way_first_run",
+            "First Endless Drive",
+            "Finish an Endless One Way run for the first time.");
+
+        register("endless_one_way_10000",
+            "Endless Scorer",
+            "Score 10,000 or more in Endless One Way.");
+
+        register("endless_one_way_50000",
+            "Endless Speed Demon",
+            "Score 50,000 or more in Endless One Way.");
+
+        register("endless_one_way_5km",
+            "Endless Long Haul",
+            "Drive at least 5,000 m in Endless One Way.");
+
+        register("endless_one_way_300s",
+            "Endless Survivor",
+            "Survive for 300 seconds in Endless One Way.");
+
+        register("endless_one_way_first_near_miss",
+            "Close Call",
+            "Get your first near miss in Endless One Way.");
     }
 
     private static void register(String id, String name, String description) {
@@ -141,6 +165,44 @@ public class AchievementsManager {
             save();
             if (onDone != null) onDone.run();
         });
+    }
+
+    public static Array<AchievementState> onEndlessOneWayLiveUpdate(
+        int score,
+        int distMeters,
+        float timeSeconds,
+        int nearMisses
+    ) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "endless_one_way_10000", score >= 10_000);
+        unlockIf(newlyUnlocked, "endless_one_way_50000", score >= 50_000);
+        unlockIf(newlyUnlocked, "endless_one_way_5km", distMeters >= 5_000);
+        unlockIf(newlyUnlocked, "endless_one_way_300s", timeSeconds >= 300f);
+        unlockIf(newlyUnlocked, "endless_one_way_first_near_miss", nearMisses >= 1);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onEndlessOneWayFinished(
+        int score,
+        int distMeters,
+        float timeSeconds,
+        int nearMisses
+    ) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "endless_one_way_first_run", true);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
     }
 
     private static void load() {

@@ -10,15 +10,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.Align;
 
@@ -31,7 +28,7 @@ public class PlayScreen implements Screen {
     private SpriteBatch batch;
     private Texture backgroundTexture;
     private Label versionLabel;
-    private static final String GAME_VERSION = "Beta 1.5";
+    private static final String GAME_VERSION = "Beta 1.6";
 
 
 
@@ -96,6 +93,16 @@ public class PlayScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         versionLabel = new Label(GAME_VERSION, skin);
         versionLabel.setFontScale(1.6f);
+
+        TextButton dailyBonusButton = new TextButton("Daily Bonus", skin);
+        dailyBonusButton.getLabel().setFontScale(1.1f);
+
+        dailyBonusButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                showDailyBonusPopup();
+            }
+        });
 
         playButton = new TextButton("Play", buttonStyle);
         playButton.setTransform(true);
@@ -207,12 +214,24 @@ public class PlayScreen implements Screen {
 
         privacyTable.add(privacyLabel).width(900).center();
 
+        Table dailyBonusTable = new Table();
+        dailyBonusTable.setFillParent(true);
+        dailyBonusTable.top().left();
+        dailyBonusTable.padTop(25);
+        dailyBonusTable.padLeft(25);
+
+        dailyBonusTable.add(dailyBonusButton).width(180).height(45);
+
+        stage.addActor(dailyBonusTable);
+
 
         stage.addActor(versionTable);
         stage.addActor(privacyTable);
         stage.addActor(table);
 
         Gdx.input.setInputProcessor(stage);
+
+
     }
 
 
@@ -226,6 +245,93 @@ public class PlayScreen implements Screen {
 
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
+    }
+
+    private void showDailyBonusPopup() {
+        Dialog dialog = new Dialog("Daily Login Bonus", skin);
+        dialog.getContentTable().pad(20);
+
+        Label infoLabel = new Label(
+            "Claim one reward per day.\n" +
+                "Log in every day to keep your streak.\n" +
+                "If you miss a day, your streak resets.",
+            skin
+        );
+
+        infoLabel.setWrap(true);
+        infoLabel.setAlignment(Align.center);
+
+        dialog.getContentTable().add(infoLabel).width(420).padBottom(15).row();
+
+        Table rewardsTable = new Table(skin);
+        rewardsTable.defaults().pad(6);
+
+        int[] rewards = {1000, 1500, 2000, 2500, 3000, 4000, 7500};
+
+        for (int i = 0; i < rewards.length; i++) {
+            Label rewardLabel = new Label(
+                "Day " + (i + 1) + ": $" + rewards[i],
+                skin
+            );
+
+            rewardsTable.add(rewardLabel).left().row();
+        }
+
+        dialog.getContentTable().add(rewardsTable).padBottom(15).row();
+
+        TextButton claimButton = new TextButton("Claim Today", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        Table buttonRow = new Table();
+        buttonRow.add(claimButton).width(180).height(45).padRight(10);
+        buttonRow.add(closeButton).width(120).height(45);
+
+        dialog.getContentTable().add(buttonRow).row();
+
+        Label feedbackLabel = new Label("", skin);
+        feedbackLabel.setWrap(true);
+        feedbackLabel.setAlignment(Align.center);
+
+        dialog.getContentTable().add(feedbackLabel).width(420).padTop(10).row();
+
+        claimButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                claimButton.setDisabled(true);
+                feedbackLabel.setText("Checking daily bonus...");
+
+                SupabaseGameData.claimDailyLogin(result -> {
+                    if (result.claimed) {
+                        feedbackLabel.setColor(Color.GREEN);
+                        feedbackLabel.setText(
+                            "Claimed $" + result.reward + "!\n" +
+                                "Current streak: " + result.streak + " day(s).\n" +
+                                "New cash balance: $" + result.cash
+                        );
+                    } else {
+                        feedbackLabel.setColor(Color.YELLOW);
+                        feedbackLabel.setText(
+                            "You already claimed today's reward.\n" +
+                                "Come back tomorrow.\n" +
+                                "Current streak: " + result.streak + " day(s)."
+                        );
+                    }
+                }, error -> {
+                    claimButton.setDisabled(false);
+                    feedbackLabel.setColor(Color.RED);
+                    feedbackLabel.setText("Could not claim daily bonus: " + error);
+                });
+            }
+        });
+
+        closeButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                dialog.hide();
+            }
+        });
+
+        dialog.show(stage);
     }
 
     @Override

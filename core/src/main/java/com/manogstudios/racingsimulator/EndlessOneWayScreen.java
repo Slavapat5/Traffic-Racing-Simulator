@@ -27,6 +27,7 @@ import java.util.List;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 
 public class EndlessOneWayScreen implements Screen {
 
@@ -53,6 +54,10 @@ public class EndlessOneWayScreen implements Screen {
     private static final float SEGMENT_HEIGHT = 1080f;
     private float roadCenterX = VIEW_WIDTH / 2f;
     private float roadWidth = 800f;
+
+    private AchievementToastManager achievementToasts;
+    private float achievementCheckTimer = 0f;
+    private static final float ACHIEVEMENT_CHECK_INTERVAL = 0.25f;
 
     private boolean paused = false;
     private Table pauseOverlay;
@@ -207,6 +212,8 @@ public class EndlessOneWayScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
+
+        achievementToasts = new AchievementToastManager(uiStage, skin);
 
         EnvironmentTheme theme = EnvironmentThemeManager.getCurrentTheme();
 
@@ -440,6 +447,20 @@ public class EndlessOneWayScreen implements Screen {
         totalTrafficWeight += weight;
     }
 
+    private void checkLiveAchievements(int distMeters) {
+        if (achievementToasts == null) return;
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onEndlessOneWayLiveUpdate(
+                score,
+                distMeters,
+                elapsedTime,
+                runNearMisses
+            );
+
+        achievementToasts.queueAll(newlyUnlocked);
+    }
+
     private void updateMultiplier(float delta, float mph) {
         boolean above = mph >= SPEED_THRESHOLD_MPH;
 
@@ -581,6 +602,13 @@ public class EndlessOneWayScreen implements Screen {
         distanceLabel.setText(displayDistance + " m");
         timeLabel.setText(String.format("Time: %.1fs", elapsedTime));
         cashLabel.setText("$" + formatCash(CashManager.getCash()));
+
+        achievementCheckTimer -= delta;
+
+        if (achievementCheckTimer <= 0f) {
+            achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
+            checkLiveAchievements(displayDistance);
+        }
 
         // Traffic spawning + update
         spawnTimer -= delta;
@@ -932,6 +960,18 @@ public class EndlessOneWayScreen implements Screen {
         // Cash
         int cashEarned = calculateCashReward();
         int distMeters = (int) (distanceScore / 10f);
+
+        Array<AchievementsManager.AchievementState> endAchievements =
+            AchievementsManager.onEndlessOneWayFinished(
+                score,
+                distMeters,
+                elapsedTime,
+                runNearMisses
+            );
+
+        if (achievementToasts != null) {
+            achievementToasts.queueAll(endAchievements);
+        }
 
         Runnable showCrashDialog = () -> {
             StringBuilder sb = new StringBuilder();

@@ -6,7 +6,6 @@ import com.manogstudios.racingsimulator.CashManager;
 import com.manogstudios.racingsimulator.HighScoreManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -492,6 +491,17 @@ public class SupabaseGameData {
         }
     }
 
+    public static class DailyLoginResult {
+        public boolean ok;
+        public boolean claimed;
+        public String message;
+        public int reward;
+        public int streak;
+        public int dayInWeek;
+        public int cash;
+        public String nextClaimDate;
+    }
+
     public static void fetchLeaderboard(String mode,
                                         int limit,
                                         String accessToken,
@@ -550,6 +560,74 @@ public class SupabaseGameData {
                 Gdx.app.postRunnable(() -> callback.accept(result));
             }
         }).start();
+    }
+
+    public static void claimDailyLogin(java.util.function.Consumer<DailyLoginResult> onSuccess,
+                                       java.util.function.Consumer<String> onFail) {
+
+        if (!SupabaseAuth.isLoggedIn) {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("not_logged_in"));
+            return;
+        }
+
+        withValidToken((token) -> {
+            new Thread(() -> {
+                try {
+                    HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(SUPABASE_URL + "/functions/v1/claim-daily-login"))
+                        .header("Content-Type", "application/json")
+                        .header("apikey", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .POST(HttpRequest.BodyPublishers.ofString("{}"))
+                        .build();
+
+                    HttpResponse<String> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    System.out.println("claimDailyLogin: " + response.statusCode() + " body=" + response.body());
+
+                    if (response.statusCode() / 100 != 2) {
+                        String msg = "daily_login_failed";
+
+                        try {
+                            JSONObject err = new JSONObject(response.body());
+                            msg = err.optString("error",
+                                err.optString("message", msg));
+                        } catch (Exception ignored) {}
+
+                        String finalMsg = msg;
+                        if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(finalMsg));
+                        return;
+                    }
+
+                    JSONObject json = new JSONObject(response.body());
+
+                    DailyLoginResult result = new DailyLoginResult();
+                    result.ok = json.optBoolean("ok", false);
+                    result.claimed = json.optBoolean("claimed", false);
+                    result.message = json.optString("message", "");
+                    result.reward = json.optInt("reward", 0);
+                    result.streak = json.optInt("streak", 0);
+                    result.dayInWeek = json.optInt("dayInWeek", 0);
+                    result.cash = json.optInt("cash", CashManager.getCash());
+                    result.nextClaimDate = json.optString("nextClaimDate", "");
+
+                    if (result.cash >= 0) {
+                        CashManager.setCash(result.cash);
+                    }
+
+                    if (onSuccess != null) {
+                        Gdx.app.postRunnable(() -> onSuccess.accept(result));
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("exception"));
+                }
+            }).start();
+        }, (err) -> {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(err));
+        });
     }
 
     public static void fetchUsername(String userId, String accessToken, Consumer<String> callback) {
