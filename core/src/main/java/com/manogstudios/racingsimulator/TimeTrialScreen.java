@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 
 import java.util.ArrayList;
@@ -50,6 +51,9 @@ public class TimeTrialScreen implements Screen {
     // Road
     private Texture roadTexture;
     private Texture surroundingsTexture;
+    private Texture scoreTitleTexture;
+    private Texture distanceTitleTexture;
+    private Texture speedTitleTexture;
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -165,6 +169,10 @@ public class TimeTrialScreen implements Screen {
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
 
+        scoreTitleTexture = new Texture(Gdx.files.internal("Game_Label_Score.png"));
+        distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
+        speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
+
         System.out.println("Loaded theme:");
         System.out.println("Location = " + EnvironmentSelectionData.getSelectedLocation());
         System.out.println("Season = " + EnvironmentSelectionData.getSelectedSeason());
@@ -212,32 +220,43 @@ public class TimeTrialScreen implements Screen {
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
-        // --- UI layout ---
+// --- UI layout ---
 
-        Table topLeftStats = new Table();
-        topLeftStats.setFillParent(true);
-        topLeftStats.top().left().padTop(18).padLeft(20);
 
-        scoreLabel = new Label("Score: 0", skin);
-        scoreLabel.setFontScale(1.5f);
+        Table scoreTable = new Table();
+        scoreTable.setFillParent(true);
+        scoreTable.top().left().padTop(10).padLeft(0);
+
+        Image scoreTitleImage = new Image(scoreTitleTexture);
+
+        scoreLabel = new Label("0", skin);
+        scoreLabel.setFontScale(2.0f);
         scoreLabel.setAlignment(Align.left);
+
+        scoreTable.add(scoreTitleImage).width(160).height(55).left().padBottom(4).row();
+        scoreTable.add(scoreLabel).left().padLeft(18);
+
+        uiStage.addActor(scoreTable);
+
+
+        Table cashTable = new Table();
+        cashTable.setFillParent(true);
+        cashTable.top().left().padTop(18).padLeft(230);
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.25f);
         cashLabel.setAlignment(Align.left);
 
-        topLeftStats.add(scoreLabel).left().padBottom(8).row();
-        topLeftStats.add(cashLabel).left();
-
-        uiStage.addActor(topLeftStats);
+        cashTable.add(cashLabel).left();
+        uiStage.addActor(cashTable);
 
 
         Table timeTable = new Table();
         timeTable.setFillParent(true);
-        timeTable.top().right().padTop(24).padRight(150);
+        timeTable.top().right().padTop(18).padRight(130);
 
         timeLabel = new Label("Time Left: " + (int) timeRemaining + "s", skin);
-        timeLabel.setFontScale(1.4f);
+        timeLabel.setFontScale(1.3f);
         timeLabel.setAlignment(Align.right);
 
         timeTable.add(timeLabel).right();
@@ -246,18 +265,22 @@ public class TimeTrialScreen implements Screen {
 
         Table bottomRightInfo = new Table();
         bottomRightInfo.setFillParent(true);
-        bottomRightInfo.bottom().right().padRight(35).padBottom(140);
+        bottomRightInfo.bottom().right().padRight(0).padBottom(100);
 
-        speedLabel = new Label("Speed: 0 mph", skin);
-        speedLabel.setFontScale(2.3f);
+        Image speedTitleImage = new Image(speedTitleTexture);
+        speedLabel = new Label("0 mph", skin);
+        speedLabel.setFontScale(2.0f);
         speedLabel.setAlignment(Align.right);
 
-        distanceLabel = new Label("Dist: 0 m", skin);
-        distanceLabel.setFontScale(1.9f);
+        Image distanceTitleImage = new Image(distanceTitleTexture);
+        distanceLabel = new Label("0 m", skin);
+        distanceLabel.setFontScale(1.7f);
         distanceLabel.setAlignment(Align.right);
 
-        bottomRightInfo.add(speedLabel).right().padBottom(10).row();
-        bottomRightInfo.add(distanceLabel).right();
+        bottomRightInfo.add(speedTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(speedLabel).right().padRight(22).padBottom(12).row();
+        bottomRightInfo.add(distanceTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(distanceLabel).right().padRight(22);
 
         uiStage.addActor(bottomRightInfo);
 
@@ -400,7 +423,7 @@ public class TimeTrialScreen implements Screen {
         float rawSpeed = playerCar.getSpeed();
         float mph = rawSpeed / 10f;
         int speedDisplay = (int) mph;
-        speedLabel.setText("Speed: " + speedDisplay + " mph");
+        speedLabel.setText(speedDisplay + " mph");
 
         speedScoreAccumulator += mph * 0.35f * delta;
 
@@ -410,9 +433,9 @@ public class TimeTrialScreen implements Screen {
         score = distancePoints + speedPoints + bonusPoints;
 
         // UI update
-        scoreLabel.setText("Score: " + score);
-        distanceLabel.setText("Dist: " + displayDistance + " m");
-        timeLabel.setText("Time Left: " + (int) Math.ceil(timeRemaining) + "s");
+        scoreLabel.setText(String.valueOf(score));
+        distanceLabel.setText(displayDistance + " m");
+        timeLabel.setText(String.format("Time Left: %.1fs", timeRemaining));
         cashLabel.setText("$" + formatCash(CashManager.getCash()));
 
         // Traffic spawn/update
@@ -803,6 +826,9 @@ public class TimeTrialScreen implements Screen {
         batch.dispose();
         if (roadTexture != null) roadTexture.dispose();
         if (surroundingsTexture != null) surroundingsTexture.dispose();
+        if (scoreTitleTexture != null) scoreTitleTexture.dispose();
+        if (distanceTitleTexture != null) distanceTitleTexture.dispose();
+        if (speedTitleTexture != null) speedTitleTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         playerCar.dispose();

@@ -160,10 +160,10 @@ public class DragRaceScreen implements Screen {
 
         Table cashTable = new Table();
         cashTable.setFillParent(true);
-        cashTable.top().left().padTop(18).padLeft(20);
+        cashTable.top().left().padTop(10).padLeft(20);
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
-        cashLabel.setFontScale(1.35f);
+        cashLabel.setFontScale(1.25f);
         cashLabel.setAlignment(Align.left);
 
         cashTable.add(cashLabel).left();
@@ -172,21 +172,22 @@ public class DragRaceScreen implements Screen {
 
         Table statusTable = new Table();
         statusTable.setFillParent(true);
-        statusTable.top().padTop(18);
+        statusTable.top().padTop(10);
 
         statusLabel = new Label("Get ready...", skin);
-        statusLabel.setFontScale(2.2f);
+        statusLabel.setFontScale(2.0f);
         statusLabel.setAlignment(Align.center);
 
         statusTable.add(statusLabel).center();
         uiStage.addActor(statusTable);
 
+
         Table aiTable = new Table();
         aiTable.setFillParent(true);
-        aiTable.bottom().left().padLeft(30).padBottom(120);
+        aiTable.bottom().left().padLeft(20).padBottom(80);
 
         aiInfoLabel = new Label("", skin);
-        aiInfoLabel.setFontScale(1.5f);
+        aiInfoLabel.setFontScale(1.2f);
         aiInfoLabel.setAlignment(Align.left);
 
         aiTable.add(aiInfoLabel).left();
@@ -195,10 +196,10 @@ public class DragRaceScreen implements Screen {
 
         Table playerTable = new Table();
         playerTable.setFillParent(true);
-        playerTable.bottom().right().padRight(30).padBottom(120);
+        playerTable.bottom().right().padRight(10).padBottom(80);
 
         playerInfoLabel = new Label("", skin);
-        playerInfoLabel.setFontScale(1.7f);
+        playerInfoLabel.setFontScale(1.35f);
         playerInfoLabel.setAlignment(Align.right);
 
         playerTable.add(playerInfoLabel).right();
@@ -207,13 +208,12 @@ public class DragRaceScreen implements Screen {
 
         Table pauseTable = new Table();
         pauseTable.setFillParent(true);
-        pauseTable.top().right().padTop(18).padRight(20);
+        pauseTable.top().right().padTop(10).padRight(10);
 
         TextButton pauseButton = new TextButton("Pause", skin);
         pauseTable.add(pauseButton).width(100f).height(42f);
 
         uiStage.addActor(pauseTable);
-
 
         createPauseOverlay();
         createPauseSettingsOverlay();
@@ -225,7 +225,6 @@ public class DragRaceScreen implements Screen {
             }
         });
 
-// initial UI text
         updateInfoLabels();
     }
 
@@ -427,7 +426,7 @@ public class DragRaceScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game)); // replace per screen
+                game.setScreen(new DragRaceScreen(game));
             }
         });
 
@@ -621,8 +620,17 @@ public class DragRaceScreen implements Screen {
         float pMph = playerCar.getSpeed() / 10f;
         float aMph = aiCar.getSpeed() / 10f;
 
-        playerInfoLabel.setText("You: " + playerStats.carClass + " " + playerStats.pi + "  |  " + (int)pMph + " mph");
-        aiInfoLabel.setText("AI: " + opponentStats.carClass + " " + opponentStats.pi + "  |  " + (int)aMph + " mph");
+        playerInfoLabel.setText(
+            "YOU\n" +
+                (int) pMph + " mph\n" +
+                playerStats.carClass + "  PI " + playerStats.pi
+        );
+
+        aiInfoLabel.setText(
+            "OPPONENT\n" +
+                (int) aMph + " mph\n" +
+                opponentStats.carClass + "  PI " + opponentStats.pi
+        );
     }
 
     /**
