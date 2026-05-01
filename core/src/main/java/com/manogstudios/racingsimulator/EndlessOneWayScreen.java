@@ -25,6 +25,8 @@ import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import java.util.ArrayList;
 import java.util.List;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class EndlessOneWayScreen implements Screen {
 
@@ -44,6 +46,7 @@ public class EndlessOneWayScreen implements Screen {
     private Texture scoreTitleTexture;
     private Texture distanceTitleTexture;
     private Texture speedTitleTexture;
+    private Texture cashBgTexture;
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -211,9 +214,11 @@ public class EndlessOneWayScreen implements Screen {
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
 
-        scoreTitleTexture = new Texture(Gdx.files.internal("score_label.png"));
-        distanceTitleTexture = new Texture(Gdx.files.internal("distance_label.png"));
-        speedTitleTexture = new Texture(Gdx.files.internal("speed_label.png"));
+        scoreTitleTexture = new Texture(Gdx.files.internal("Game_Label_Score.png"));
+        distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
+        speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
+
+        cashBgTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
 
         System.out.println("Loaded theme:");
         System.out.println("Location = " + EnvironmentSelectionData.getSelectedLocation());
@@ -305,9 +310,13 @@ public class EndlessOneWayScreen implements Screen {
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.25f);
-        cashLabel.setAlignment(Align.left);
+        cashLabel.setAlignment(Align.center);
 
-        cashTable.add(cashLabel).left();
+        Table cashBox = new Table();
+        cashBox.setBackground(new TextureRegionDrawable(new TextureRegion(cashBgTexture)));
+        cashBox.add(cashLabel).center().padLeft(22f).padRight(22f).padTop(8f).padBottom(8f);
+
+        cashTable.add(cashBox).width(180f).height(38f).left();
         uiStage.addActor(cashTable);
 
 
@@ -978,6 +987,7 @@ public class EndlessOneWayScreen implements Screen {
         batch.dispose();
         if (roadTexture != null) roadTexture.dispose();
         if (surroundingsTexture != null) surroundingsTexture.dispose();
+        if (cashBgTexture != null) cashBgTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         playerCar.dispose();

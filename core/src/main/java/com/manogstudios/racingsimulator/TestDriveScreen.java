@@ -22,9 +22,11 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
-
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import java.util.ArrayList;
 import java.util.List;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class TestDriveScreen implements Screen {
 
@@ -41,6 +43,9 @@ public class TestDriveScreen implements Screen {
     // Road
     private Texture roadTexture;
     private Texture surroundingsTexture;
+    private Texture distanceTitleTexture;
+    private Texture speedTitleTexture;
+    private Texture cashBgTexture;
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -145,6 +150,11 @@ public class TestDriveScreen implements Screen {
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
 
+        distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
+        speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
+
+        cashBgTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
+
         System.out.println("Loaded theme:");
         System.out.println("Location = " + EnvironmentSelectionData.getSelectedLocation());
         System.out.println("Season = " + EnvironmentSelectionData.getSelectedSeason());
@@ -207,7 +217,7 @@ public class TestDriveScreen implements Screen {
     private void setupUI() {
         Table topLeftInfo = new Table();
         topLeftInfo.setFillParent(true);
-        topLeftInfo.top().left().padTop(18).padLeft(20);
+        topLeftInfo.top().left().padTop(10).padLeft(10);
 
         modeLabel = new Label("TEST DRIVE", skin);
         modeLabel.setFontScale(1.5f);
@@ -225,18 +235,22 @@ public class TestDriveScreen implements Screen {
 
         Table bottomRightInfo = new Table();
         bottomRightInfo.setFillParent(true);
-        bottomRightInfo.bottom().right().padRight(35).padBottom(140);
+        bottomRightInfo.bottom().right().padRight(0).padBottom(100);
 
-        speedLabel = new Label("Speed: 0 mph", skin);
-        speedLabel.setFontScale(2.3f);
+        Image speedTitleImage = new Image(speedTitleTexture);
+        speedLabel = new Label("0 mph", skin);
+        speedLabel.setFontScale(2.0f);
         speedLabel.setAlignment(Align.right);
 
-        distanceLabel = new Label("Dist: 0 m", skin);
-        distanceLabel.setFontScale(1.9f);
+        Image distanceTitleImage = new Image(distanceTitleTexture);
+        distanceLabel = new Label("0 m", skin);
+        distanceLabel.setFontScale(1.7f);
         distanceLabel.setAlignment(Align.right);
 
-        bottomRightInfo.add(speedLabel).right().padBottom(10).row();
-        bottomRightInfo.add(distanceLabel).right();
+        bottomRightInfo.add(speedTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(speedLabel).right().padRight(22).padBottom(12).row();
+        bottomRightInfo.add(distanceTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(distanceLabel).right().padRight(22);
 
         uiStage.addActor(bottomRightInfo);
 
@@ -329,7 +343,7 @@ public class TestDriveScreen implements Screen {
         int displayDistance = (int) (distanceTravelled / 10f);
 
         timeLabel.setText(String.format("Time: %.1fs", elapsedTime));
-        distanceLabel.setText("Dist: " + displayDistance + " m");
+        distanceLabel.setText(displayDistance + " m");
 
         float rawSpeed = playerCar.getSpeed();
         int mph = (int) (rawSpeed / 10f);
@@ -341,7 +355,7 @@ public class TestDriveScreen implements Screen {
         }
 
 
-        speedLabel.setText("Speed: " + mph + " mph");
+        speedLabel.setText(mph + " mph");
 
         // Spawn traffic (fixed rate)
         spawnTimer -= delta;
@@ -471,7 +485,7 @@ public class TestDriveScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game)); // replace per screen
+                game.setScreen(new TestDriveScreen(game));
             }
         });
 
@@ -668,6 +682,8 @@ public class TestDriveScreen implements Screen {
         if (batch != null) batch.dispose();
         if (roadTexture != null) roadTexture.dispose();
         if (surroundingsTexture != null) surroundingsTexture.dispose();
+        if (distanceTitleTexture != null) distanceTitleTexture.dispose();
+        if (speedTitleTexture != null) speedTitleTexture.dispose();
         if (uiStage != null) uiStage.dispose();
         if (skin != null) skin.dispose();
         if (playerCar != null) playerCar.dispose();

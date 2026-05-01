@@ -26,6 +26,8 @@ import com.badlogic.gdx.utils.Array;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 
 public class FreeRideScreen implements Screen {
@@ -46,6 +48,7 @@ public class FreeRideScreen implements Screen {
     private Texture scoreTitleTexture;
     private Texture distanceTitleTexture;
     private Texture speedTitleTexture;
+    private Texture cashBgTexture;
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -157,6 +160,8 @@ public class FreeRideScreen implements Screen {
         distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
         speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
 
+        cashBgTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
+
         System.out.println("Loaded theme:");
         System.out.println("Location = " + EnvironmentSelectionData.getSelectedLocation());
         System.out.println("Season = " + EnvironmentSelectionData.getSelectedSeason());
@@ -239,9 +244,13 @@ public class FreeRideScreen implements Screen {
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.25f);
-        cashLabel.setAlignment(Align.left);
+        cashLabel.setAlignment(Align.center);
 
-        cashTable.add(cashLabel).left();
+        Table cashBox = new Table();
+        cashBox.setBackground(new TextureRegionDrawable(new TextureRegion(cashBgTexture)));
+        cashBox.add(cashLabel).center().padLeft(22f).padRight(22f).padTop(8f).padBottom(8f);
+
+        cashTable.add(cashBox).width(180f).height(38f).left();
         uiStage.addActor(cashTable);
 
 
@@ -842,6 +851,7 @@ public class FreeRideScreen implements Screen {
         if (scoreTitleTexture != null) scoreTitleTexture.dispose();
         if (distanceTitleTexture != null) distanceTitleTexture.dispose();
         if (speedTitleTexture != null) speedTitleTexture.dispose();
+        if (cashBgTexture != null) cashBgTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         playerCar.dispose();

@@ -24,6 +24,9 @@ import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import java.util.ArrayList;
 import java.util.List;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class EndlessTwoWayScreen implements Screen {
 
@@ -40,6 +43,11 @@ public class EndlessTwoWayScreen implements Screen {
     // Road
     private Texture roadTexture;
     private Texture surroundingsTexture;
+    private Texture scoreTitleTexture;
+    private Texture distanceTitleTexture;
+    private Texture speedTitleTexture;
+    private Texture cashBgTexture;
+
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -211,6 +219,12 @@ public class EndlessTwoWayScreen implements Screen {
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
 
+        scoreTitleTexture = new Texture(Gdx.files.internal("Game_Label_Score.png"));
+        distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
+        speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
+
+        cashBgTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
+
         System.out.println("Loaded theme:");
         System.out.println("Location = " + EnvironmentSelectionData.getSelectedLocation());
         System.out.println("Season = " + EnvironmentSelectionData.getSelectedSeason());
@@ -267,13 +281,14 @@ public class EndlessTwoWayScreen implements Screen {
 
         // --- UI ---
 
+        Table scoreStack = new Table();
+        scoreStack.setFillParent(true);
+        scoreStack.top().left().padTop(10).padLeft(0);
 
-        Table topLeftStats = new Table();
-        topLeftStats.setFillParent(true);
-        topLeftStats.top().left().padTop(18).padLeft(20);
+        Image scoreTitleImage = new Image(scoreTitleTexture);
 
-        scoreLabel = new Label("Score: 0", skin);
-        scoreLabel.setFontScale(1.35f);
+        scoreLabel = new Label("0", skin);
+        scoreLabel.setFontScale(2.0f);
         scoreLabel.setAlignment(Align.left);
 
         opposingLabel = new Label("Opposing: +0", skin);
@@ -285,28 +300,33 @@ public class EndlessTwoWayScreen implements Screen {
         multLabel.setColor(1f, 0.9f, 0.2f, 1f);
         multLabel.setAlignment(Align.left);
 
-        topLeftStats.add(scoreLabel).left().padBottom(8).row();
-        topLeftStats.add(opposingLabel).left().padBottom(8).row();
-        topLeftStats.add(multLabel).left();
+        scoreStack.add(scoreTitleImage).width(160).height(55).left().padBottom(4).row();
+        scoreStack.add(scoreLabel).left().padLeft(18).padBottom(8).row();
+        scoreStack.add(opposingLabel).left().padLeft(6).padBottom(8).row();
+        scoreStack.add(multLabel).left().padLeft(6);
 
-        uiStage.addActor(topLeftStats);
+        uiStage.addActor(scoreStack);
 
 
         Table cashTable = new Table();
         cashTable.setFillParent(true);
-        cashTable.top().left().padTop(24).padLeft(320);
+        cashTable.top().left().padTop(18).padLeft(240);
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
-        cashLabel.setFontScale(1.3f);
-        cashLabel.setAlignment(Align.left);
+        cashLabel.setFontScale(1.25f);
+        cashLabel.setAlignment(Align.center);
 
-        cashTable.add(cashLabel).left();
+        Table cashBox = new Table();
+        cashBox.setBackground(new TextureRegionDrawable(new TextureRegion(cashBgTexture)));
+        cashBox.add(cashLabel).center().padLeft(22f).padRight(22f).padTop(8f).padBottom(8f);
+
+        cashTable.add(cashBox).width(180f).height(38f).left();
         uiStage.addActor(cashTable);
 
 
         Table timeTable = new Table();
         timeTable.setFillParent(true);
-        timeTable.top().right().padTop(24).padRight(150);
+        timeTable.top().right().padTop(18).padRight(130);
 
         timeLabel = new Label("Time: 0.0s", skin);
         timeLabel.setFontScale(1.2f);
@@ -315,24 +335,26 @@ public class EndlessTwoWayScreen implements Screen {
         timeTable.add(timeLabel).right();
         uiStage.addActor(timeTable);
 
-
         Table bottomRightInfo = new Table();
         bottomRightInfo.setFillParent(true);
-        bottomRightInfo.bottom().right().padRight(35).padBottom(140);
+        bottomRightInfo.bottom().right().padRight(0).padBottom(100);
 
-        speedLabel = new Label("Speed: 0 mph", skin);
-        speedLabel.setFontScale(2.3f);
+        Image speedTitleImage = new Image(speedTitleTexture);
+        speedLabel = new Label("0 mph", skin);
+        speedLabel.setFontScale(2.0f);
         speedLabel.setAlignment(Align.right);
 
-        distanceLabel = new Label("Dist: 0 m", skin);
-        distanceLabel.setFontScale(1.9f);
+        Image distanceTitleImage = new Image(distanceTitleTexture);
+        distanceLabel = new Label("0 m", skin);
+        distanceLabel.setFontScale(1.7f);
         distanceLabel.setAlignment(Align.right);
 
-        bottomRightInfo.add(speedLabel).right().padBottom(10).row();
-        bottomRightInfo.add(distanceLabel).right();
+        bottomRightInfo.add(speedTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(speedLabel).right().padRight(22).padBottom(12).row();
+        bottomRightInfo.add(distanceTitleImage).width(160).height(55).right().padBottom(2).row();
+        bottomRightInfo.add(distanceLabel).right().padRight(22);
 
         uiStage.addActor(bottomRightInfo);
-
 
         Table pauseTable = new Table();
         pauseTable.setFillParent(true);
@@ -342,16 +364,6 @@ public class EndlessTwoWayScreen implements Screen {
         pauseTable.add(pauseButton).width(100f).height(42f);
 
         uiStage.addActor(pauseTable);
-
-        createPauseOverlay();
-        createPauseSettingsOverlay();
-
-        pauseButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                setPaused(true);
-            }
-        });
 
         createPauseOverlay();
         createPauseSettingsOverlay();
@@ -750,7 +762,7 @@ public class EndlessTwoWayScreen implements Screen {
 
 
         int speedDisplay = (int) mph;
-        speedLabel.setText("Speed: " + speedDisplay + " mph");
+        speedLabel.setText(speedDisplay + " mph");
 
         updateMultiplier(delta, mph);
         multLabel.setText(String.format("x%.1f", scoreMultiplier));
@@ -766,6 +778,7 @@ public class EndlessTwoWayScreen implements Screen {
 
         opposingLabel.setText("Opposing: +" + (int) opposingScoreAccumulator);
 
+
         int distancePoints = (int) (distanceScore / 10f);
         int timePoints = (int) (elapsedTime * 2f);
         int opposingPoints = (int) opposingScoreAccumulator;
@@ -773,8 +786,8 @@ public class EndlessTwoWayScreen implements Screen {
         int rawScore = distancePoints + timePoints + bonusPoints + opposingPoints;
         score = (int) (rawScore * scoreMultiplier);
 
-        scoreLabel.setText("Score: " + score);
-        distanceLabel.setText("Dist: " + displayDistance + " m");
+        scoreLabel.setText(String.valueOf(score));
+        distanceLabel.setText(displayDistance + " m");
         timeLabel.setText(String.format("Time: %.1fs", elapsedTime));
         cashLabel.setText("$" + formatCash(CashManager.getCash()));
 
@@ -971,6 +984,7 @@ public class EndlessTwoWayScreen implements Screen {
         batch.dispose();
         if (roadTexture != null) roadTexture.dispose();
         if (surroundingsTexture != null) surroundingsTexture.dispose();
+        if (cashBgTexture != null) cashBgTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         playerCar.dispose();

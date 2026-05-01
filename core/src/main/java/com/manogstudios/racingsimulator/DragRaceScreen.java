@@ -23,11 +23,10 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
-
-
-
 import java.util.ArrayList;
 import java.util.List;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class DragRaceScreen implements Screen {
 
@@ -39,6 +38,8 @@ public class DragRaceScreen implements Screen {
 
     // World
     private Texture roadTexture;
+
+    private Texture cashBgTexture;
 
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
@@ -111,6 +112,8 @@ public class DragRaceScreen implements Screen {
         // Reuse road segment texture
         roadTexture = new Texture(Gdx.files.internal("Segment1.png"));
 
+        cashBgTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
+
         // Lane layout
         laneWidth = STRIP_WIDTH / 2f;
         leftLaneX = STRIP_CENTER_X - laneWidth / 2f;  // opponent
@@ -164,9 +167,13 @@ public class DragRaceScreen implements Screen {
 
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.25f);
-        cashLabel.setAlignment(Align.left);
+        cashLabel.setAlignment(Align.center);
 
-        cashTable.add(cashLabel).left();
+        Table cashBox = new Table();
+        cashBox.setBackground(new TextureRegionDrawable(new TextureRegion(cashBgTexture)));
+        cashBox.add(cashLabel).center().padLeft(22f).padRight(22f).padTop(8f).padBottom(8f);
+
+        cashTable.add(cashBox).width(180f).height(38f).left();
         uiStage.addActor(cashTable);
 
 
@@ -699,6 +706,7 @@ public class DragRaceScreen implements Screen {
     public void dispose() {
         batch.dispose();
         roadTexture.dispose();
+        if (cashBgTexture != null) cashBgTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         if (playerCar != null) playerCar.dispose();
