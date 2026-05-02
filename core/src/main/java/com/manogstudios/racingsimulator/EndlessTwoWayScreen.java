@@ -28,6 +28,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.graphics.Color;
 
 public class EndlessTwoWayScreen implements Screen {
 
@@ -132,6 +133,7 @@ public class EndlessTwoWayScreen implements Screen {
     private Label timeLabel;
     private float laneWidth;
     private float[] laneX;
+    private Table gameOverOverlay;
 
     // Traffic
     private static class TrafficCar {
@@ -921,6 +923,187 @@ public class EndlessTwoWayScreen implements Screen {
         controlsDialog.show(uiStage);
     }
 
+    private Table createResultStatBox(String titleText, String valueText, Color valueColor) {
+        Table box = new Table(skin);
+        box.setBackground(skin.newDrawable("white", 0.08f, 0.08f, 0.08f, 0.95f));
+        box.pad(16);
+
+        Label title = new Label(titleText, skin);
+        title.setFontScale(1.05f);
+        title.setColor(Color.LIGHT_GRAY);
+        title.setAlignment(Align.center);
+
+        Label value = new Label(valueText, skin);
+        value.setFontScale(1.55f);
+        value.setColor(valueColor);
+        value.setAlignment(Align.center);
+
+        box.add(title).center().row();
+        box.add(value).center().padTop(6);
+
+        return box;
+    }
+
+    private void showGameOverOverlay(int cashEarned,
+                                     int distMeters,
+                                     int bestScore,
+                                     boolean newBestScore,
+                                     int opposingPoints) {
+        if (gameOverOverlay != null) {
+            gameOverOverlay.remove();
+        }
+
+        gameOverOverlay = new Table();
+        gameOverOverlay.setFillParent(true);
+
+        gameOverOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.72f));
+
+        Table panel = new Table(skin);
+        panel.setBackground("default-round");
+        panel.setColor(0.06f, 0.06f, 0.06f, 0.98f);
+        panel.pad(35);
+        panel.defaults().pad(8);
+
+        Label titleLabel = new Label("YOU CRASHED", skin);
+        titleLabel.setFontScale(3.2f);
+        titleLabel.setColor(Color.RED);
+        titleLabel.setAlignment(Align.center);
+
+        Label subtitleLabel = new Label("Endless Two Way Run Summary", skin);
+        subtitleLabel.setFontScale(1.25f);
+        subtitleLabel.setColor(Color.LIGHT_GRAY);
+        subtitleLabel.setAlignment(Align.center);
+
+        panel.add(titleLabel).center().padBottom(4).row();
+        panel.add(subtitleLabel).center().padBottom(18).row();
+
+        // Score section
+        Table scoreBox = new Table(skin);
+        scoreBox.setBackground(skin.newDrawable("white", 0.10f, 0.10f, 0.10f, 0.95f));
+        scoreBox.pad(18);
+
+        Label scoreTitle = new Label("Score", skin);
+        scoreTitle.setFontScale(1.3f);
+        scoreTitle.setColor(Color.LIGHT_GRAY);
+        scoreTitle.setAlignment(Align.center);
+
+        Label scoreValue = new Label(String.valueOf(score), skin);
+        scoreValue.setFontScale(3.0f);
+        scoreValue.setColor(Color.WHITE);
+        scoreValue.setAlignment(Align.center);
+
+        Label bestLabel = new Label(
+            newBestScore
+                ? "NEW BEST SCORE!"
+                : "Best Score: " + bestScore,
+            skin
+        );
+        bestLabel.setFontScale(1.3f);
+        bestLabel.setColor(newBestScore ? Color.GOLD : Color.LIGHT_GRAY);
+        bestLabel.setAlignment(Align.center);
+
+        scoreBox.add(scoreTitle).center().row();
+        scoreBox.add(scoreValue).center().padTop(5).row();
+        scoreBox.add(bestLabel).center().padTop(8);
+
+        panel.add(scoreBox).width(560).fillX().padBottom(15).row();
+
+        // Stats section
+        Table statsRow = new Table(skin);
+        statsRow.defaults().pad(6);
+
+        statsRow.add(createResultStatBox(
+            "Distance",
+            distMeters + " m",
+            Color.CYAN
+        )).width(210).height(105);
+
+        statsRow.add(createResultStatBox(
+            "Time",
+            String.format("%.1f s", elapsedTime),
+            Color.CYAN
+        )).width(210).height(105);
+
+        statsRow.add(createResultStatBox(
+            "Near Misses",
+            String.valueOf(runNearMisses),
+            Color.CYAN
+        )).width(210).height(105);
+
+        statsRow.add(createResultStatBox(
+            "Opposing",
+            "+" + opposingPoints,
+            Color.GOLD
+        )).width(210).height(105);
+
+        panel.add(statsRow).center().padBottom(15).row();
+
+        // Cash section
+        Table cashBox = new Table(skin);
+        cashBox.setBackground(skin.newDrawable("white", 0.08f, 0.08f, 0.08f, 0.95f));
+        cashBox.pad(16);
+        cashBox.defaults().pad(4);
+
+        Label cashEarnedLabel = new Label("Cash Earned: $" + formatCash(cashEarned), skin);
+        cashEarnedLabel.setFontScale(1.45f);
+        cashEarnedLabel.setColor(Color.GOLD);
+        cashEarnedLabel.setAlignment(Align.center);
+
+        Label totalCashLabel = new Label("Total Cash: $" + formatCash(CashManager.getCash()), skin);
+        totalCashLabel.setFontScale(1.25f);
+        totalCashLabel.setColor(Color.WHITE);
+        totalCashLabel.setAlignment(Align.center);
+
+        cashBox.add(cashEarnedLabel).center().row();
+        cashBox.add(totalCashLabel).center().padTop(4);
+
+        panel.add(cashBox).width(560).fillX().padBottom(22).row();
+
+        // Buttons
+        Table buttonRow = new Table();
+        buttonRow.defaults().pad(8);
+
+        TextButton retryButton = new TextButton("Retry", skin);
+        TextButton modesButton = new TextButton("Back to Modes", skin);
+        TextButton garageButton = new TextButton("Garage", skin);
+
+        retryButton.getLabel().setFontScale(1.25f);
+        modesButton.getLabel().setFontScale(1.25f);
+        garageButton.getLabel().setFontScale(1.25f);
+
+        retryButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new EndlessTwoWayScreen(game));
+            }
+        });
+
+        modesButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameModeSelectorScreen(game));
+            }
+        });
+
+        garageButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GarageScreen(game));
+            }
+        });
+
+        buttonRow.add(retryButton).width(210).height(65);
+        buttonRow.add(modesButton).width(260).height(65);
+        buttonRow.add(garageButton).width(210).height(65);
+
+        panel.add(buttonRow).center().row();
+
+        gameOverOverlay.add(panel).width(980).center();
+
+        uiStage.addActor(gameOverOverlay);
+        gameOverOverlay.toFront();
+    }
+
     private void onCrash() {
         gameOver = true;
         // telemetry
@@ -954,7 +1137,14 @@ public class EndlessTwoWayScreen implements Screen {
         scoreMultiplier = 1.0f;
         opposingScoreAccumulator = 0f;
 
-        // Leaderboard (server)
+        // Local leaderboard / best score
+        int previousBest = HighScoreManager.getHighScore("endless_two_way");
+        boolean newBestScore = score > previousBest;
+
+        HighScoreManager.submitScore("endless_two_way", score);
+        int bestScore = HighScoreManager.getHighScore("endless_two_way");
+
+        // Server leaderboard
         if (SupabaseAuth.isLoggedIn) {
             SupabaseGameData.submitScore("endless_two_way", score);
         }
@@ -999,39 +1189,24 @@ public class EndlessTwoWayScreen implements Screen {
             achievementToasts.queueAll(endAchievements);
         }
 
-        Runnable showCrashDialog = () -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append("You crashed!\n")
-                .append("Score: ").append(score).append("\n")
-                .append("Distance: ").append(distMeters).append(" m\n")
-                .append("Time: ").append(String.format("%.1f s", elapsedTime)).append("\n\n")
-                .append("Cash earned: $").append(cashEarned).append("\n")
-                .append("Total cash: $").append(formatCash(CashManager.getCash()));
-
-            Dialog dialog = new Dialog("Crash!", skin) {
-                @Override
-                protected void result(Object obj) {
-                    String choice = (String) obj;
-                    if ("retry".equals(choice)) {
-                        game.setScreen(new EndlessTwoWayScreen(game));
-                    } else if ("modes".equals(choice)) {
-                        game.setScreen(new GameModeSelectorScreen(game));
-                    }
-                }
-            };
-
-            dialog.text(sb.toString());
-            dialog.button("Retry", "retry");
-            dialog.button("Back to Modes", "modes");
-            dialog.show(uiStage);
+        Runnable showGameOverSummary = () -> {
+            cashLabel.setText("$" + formatCash(CashManager.getCash()));
+            showGameOverOverlay(
+                cashEarned,
+                distMeters,
+                bestScore,
+                newBestScore,
+                opposingPoints
+            );
         };
 
         if (SupabaseAuth.isLoggedIn) {
             CashManager.addCashAndSync(cashEarned, "endless_two_way_reward");
-            Gdx.app.postRunnable(showCrashDialog);
+            Gdx.app.postRunnable(showGameOverSummary);
         } else {
-            showCrashDialog.run();
-        }
+            CashManager.addCash(cashEarned);
+            showGameOverSummary.run();
+        };
     }
 
 
