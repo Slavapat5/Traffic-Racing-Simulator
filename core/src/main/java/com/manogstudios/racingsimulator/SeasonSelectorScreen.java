@@ -250,9 +250,6 @@ public class SeasonSelectorScreen implements Screen {
             case "endless_two_way":
                 game.setScreen(new EndlessTwoWayScreen(game));
                 break;
-            case "drag_sprint":
-                game.setScreen(new DragRaceScreen(game));
-                break;
             case "test_drive":
                 game.setScreen(new TestDriveScreen(game));
                 break;

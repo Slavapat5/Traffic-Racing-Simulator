@@ -180,6 +180,90 @@ public class AchievementsManager {
         register("test_drive_5_near_misses",
             "Precision Practice",
             "Get 5 near misses in one Test Drive run.");
+
+        register("time_trial_first_run",
+            "Against the Clock",
+            "Finish a Time Trial run for the first time.");
+
+        register("time_trial_5000",
+            "Quick Starter",
+            "Score 5,000 or more in Time Trial.");
+
+        register("time_trial_15000",
+            "Time Trial Contender",
+            "Score 15,000 or more in Time Trial.");
+
+        register("time_trial_30000",
+            "Time Trial Master",
+            "Score 30,000 or more in Time Trial.");
+
+        register("time_trial_2km",
+            "Timed Distance",
+            "Drive at least 2,000 m in Time Trial.");
+
+        register("time_trial_5km",
+            "Clock Chaser",
+            "Drive at least 5,000 m in Time Trial.");
+
+        register("time_trial_first_near_miss",
+            "Timed Close Call",
+            "Get your first near miss in Time Trial.");
+
+        register("time_trial_5_near_misses",
+            "Precision Under Pressure",
+            "Get 5 near misses in one Time Trial run.");
+
+        register("time_trial_100mph",
+            "Timed Triple Digits",
+            "Reach 100 mph in Time Trial.");
+
+        register("time_trial_120mph",
+            "Racing the Clock",
+            "Reach 120 mph in Time Trial.");
+
+        register("time_trial_no_crash",
+            "Clean Timer",
+            "Finish a Time Trial run with no crashes.");
+
+        register("time_trial_low_crash_15000",
+            "Controlled Rush",
+            "Score 15,000 or more in Time Trial with 1 crash or less.");
+
+        register("drag_race_first_race",
+            "First Drag",
+            "Finish a Drag Race for the first time.");
+
+        register("drag_race_first_win",
+            "First Drag Win",
+            "Win a Drag Race for the first time.");
+
+        register("drag_race_100mph",
+            "Launch Speed",
+            "Reach 100 mph in Drag Race.");
+
+        register("drag_race_120mph",
+            "Quarter Mile Rocket",
+            "Reach 120 mph in Drag Race.");
+
+        register("drag_race_sub_25",
+            "Fast Finish",
+            "Finish a Drag Race in under 25 seconds.");
+
+        register("drag_race_sub_20",
+            "Drag Specialist",
+            "Finish a Drag Race in under 20 seconds.");
+
+        register("drag_race_close_win",
+            "Photo Finish",
+            "Win a Drag Race by 0.5 seconds or less.");
+
+        register("drag_race_dominant_win",
+            "Gap Them",
+            "Win a Drag Race by at least 1 second.");
+
+        register("drag_race_underdog_win",
+            "Underdog Victory",
+            "Win a Drag Race against a car with a higher PI rating.");
     }
 
     private static void register(String id, String name, String description) {
@@ -199,6 +283,71 @@ public class AchievementsManager {
     public static boolean isUnlocked(String id) {
         AchievementState a = findById(id);
         return a != null && a.unlocked;
+    }
+
+    public static Array<AchievementState> onDragRaceLiveUpdate(float maxSpeedMph) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "drag_race_100mph", maxSpeedMph >= 100f);
+        unlockIf(newlyUnlocked, "drag_race_120mph", maxSpeedMph >= 120f);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onDragRaceFinished(
+        boolean playerWon,
+        float playerFinishTime,
+        float aiFinishTime,
+        float maxSpeedMph,
+        int playerPi,
+        int opponentPi
+    ) {
+        Array<AchievementState> newlyUnlocked =
+            onDragRaceLiveUpdate(maxSpeedMph);
+
+        unlockIf(newlyUnlocked, "drag_race_first_race", true);
+        unlockIf(newlyUnlocked, "drag_race_first_win", playerWon);
+
+        unlockIf(newlyUnlocked,
+            "drag_race_sub_25",
+            playerFinishTime > 0f && playerFinishTime <= 25f
+        );
+
+        unlockIf(newlyUnlocked,
+            "drag_race_sub_20",
+            playerFinishTime > 0f && playerFinishTime <= 20f
+        );
+
+        unlockIf(newlyUnlocked,
+            "drag_race_close_win",
+            playerWon &&
+                playerFinishTime > 0f &&
+                aiFinishTime > 0f &&
+                Math.abs(aiFinishTime - playerFinishTime) <= 0.5f
+        );
+
+        unlockIf(newlyUnlocked,
+            "drag_race_dominant_win",
+            playerWon &&
+                playerFinishTime > 0f &&
+                aiFinishTime > 0f &&
+                aiFinishTime - playerFinishTime >= 1.0f
+        );
+
+        unlockIf(newlyUnlocked,
+            "drag_race_underdog_win",
+            playerWon && playerPi < opponentPi
+        );
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
     }
 
 
@@ -276,6 +425,55 @@ public class AchievementsManager {
 
         unlockIf(newlyUnlocked, "free_ride_100mph", maxSpeedMph >= 100f);
         unlockIf(newlyUnlocked, "free_ride_120mph", maxSpeedMph >= 120f);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onTimeTrialLiveUpdate(
+        int score,
+        int distMeters,
+        int nearMisses,
+        float maxSpeedMph
+    ) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "time_trial_5000", score >= 5_000);
+        unlockIf(newlyUnlocked, "time_trial_15000", score >= 15_000);
+        unlockIf(newlyUnlocked, "time_trial_30000", score >= 30_000);
+
+        unlockIf(newlyUnlocked, "time_trial_2km", distMeters >= 2_000);
+        unlockIf(newlyUnlocked, "time_trial_5km", distMeters >= 5_000);
+
+        unlockIf(newlyUnlocked, "time_trial_first_near_miss", nearMisses >= 1);
+        unlockIf(newlyUnlocked, "time_trial_5_near_misses", nearMisses >= 5);
+
+        unlockIf(newlyUnlocked, "time_trial_100mph", maxSpeedMph >= 100f);
+        unlockIf(newlyUnlocked, "time_trial_120mph", maxSpeedMph >= 120f);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onTimeTrialFinished(
+        int score,
+        int distMeters,
+        int nearMisses,
+        int crashes,
+        float maxSpeedMph
+    ) {
+        Array<AchievementState> newlyUnlocked =
+            onTimeTrialLiveUpdate(score, distMeters, nearMisses, maxSpeedMph);
+
+        unlockIf(newlyUnlocked, "time_trial_first_run", true);
+        unlockIf(newlyUnlocked, "time_trial_no_crash", crashes == 0);
+        unlockIf(newlyUnlocked, "time_trial_low_crash_15000", score >= 15_000 && crashes <= 1);
 
         if (newlyUnlocked.size > 0) {
             save();

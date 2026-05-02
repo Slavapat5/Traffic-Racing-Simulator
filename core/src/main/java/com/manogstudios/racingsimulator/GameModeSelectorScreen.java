@@ -449,6 +449,11 @@ public class GameModeSelectorScreen implements Screen {
 
     /** Decides which screen to go to when a mode is selected */
     private void startMode(String modeKey) {
+        if ("drag_sprint".equals(modeKey)) {
+            game.setScreen(new DragRaceScreen(game));
+            return;
+        }
+
         game.setScreen(new LocationSelectorScreen(game, modeKey));
     }
 

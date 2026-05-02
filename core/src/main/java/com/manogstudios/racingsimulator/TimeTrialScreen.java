@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 
 public class TimeTrialScreen implements Screen {
 
@@ -55,6 +56,11 @@ public class TimeTrialScreen implements Screen {
     private Texture distanceTitleTexture;
     private Texture speedTitleTexture;
     private Texture cashBgTexture;
+
+    private AchievementToastManager achievementToasts;
+    private float achievementCheckTimer = 0f;
+    private static final float ACHIEVEMENT_CHECK_INTERVAL = 0.25f;
+
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -162,6 +168,8 @@ public class TimeTrialScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
+
+        achievementToasts = new AchievementToastManager(uiStage, skin);
 
         // Road texture
         EnvironmentTheme theme = EnvironmentThemeManager.getCurrentTheme();
@@ -311,16 +319,6 @@ public class TimeTrialScreen implements Screen {
             }
         });
 
-        createPauseOverlay();
-        createPauseSettingsOverlay();
-
-        pauseButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                setPaused(true);
-            }
-        });
-
         runStartMillis = System.currentTimeMillis();
         runCrashCount = 0;
         runNearMisses = 0;
@@ -391,6 +389,20 @@ public class TimeTrialScreen implements Screen {
         totalTrafficWeight += weight;
     }
 
+    private void checkLiveAchievements(int distMeters) {
+        if (achievementToasts == null) return;
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onTimeTrialLiveUpdate(
+                score,
+                distMeters,
+                runNearMisses,
+                maxSpeedMph
+            );
+
+        achievementToasts.queueAll(newlyUnlocked);
+    }
+
     private void updateLogic(float delta) {
         // Decrement crash timers
         if (crashCooldown > 0f) crashCooldown -= delta;
@@ -431,6 +443,15 @@ public class TimeTrialScreen implements Screen {
         float mph = rawSpeed / 10f;
         int speedDisplay = (int) mph;
         speedLabel.setText(speedDisplay + " mph");
+
+        if (mph > 0f) {
+            speedSumMphSeconds += mph * delta;
+            speedSampleSeconds += delta;
+
+            if (mph > maxSpeedMph) {
+                maxSpeedMph = mph;
+            }
+        }
 
         speedScoreAccumulator += mph * 0.35f * delta;
 
@@ -486,19 +507,23 @@ public class TimeTrialScreen implements Screen {
                     if (closeHorizontally && closeVertically) {
                         bonusPoints += 200;
                         t.nearMissAwarded = true;
+                        runNearMisses++;
                     }
                 }
             }
         }
+        achievementCheckTimer -= delta;
+
+        if (achievementCheckTimer <= 0f && !gameOver) {
+            achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
+            checkLiveAchievements(displayDistance);
+        }
     }
 
     private void onCrash(TrafficCar hitCar) {
-        runCrashCount++;
-
         if (invulnTimer > 0f || crashCooldown > 0f) return;
 
         crashCount++;
-
         runCrashCount++;
 
         // Penalty
@@ -607,6 +632,40 @@ public class TimeTrialScreen implements Screen {
 
         int distMeters = (int) (distanceScore / 10f);
 
+        long endMillis = System.currentTimeMillis();
+
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.submitRunTelemetry(
+                "time_trial",
+                runStartMillis,
+                endMillis,
+                elapsedTime,
+                distMeters,
+                score,
+                runCrashCount,
+                runNearMisses,
+                null,
+                maxSpeedMph > 0f ? maxSpeedMph : null,
+                CarSelectionData.getSelectedCarTexture(),
+                "0.1.0",
+                () -> System.out.println("Telemetry saved"),
+                (err) -> System.out.println("Telemetry failed: " + err)
+            );
+        }
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onTimeTrialFinished(
+                score,
+                distMeters,
+                runNearMisses,
+                crashCount,
+                maxSpeedMph
+            );
+
+        if (achievementToasts != null) {
+            achievementToasts.queueAll(newlyUnlocked);
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append("Time trial finished!\n")
             .append("Time Limit: ").append((int) timeLimitSeconds).append(" s\n")
@@ -616,6 +675,14 @@ public class TimeTrialScreen implements Screen {
             .append("Best Score: ").append(bestScore).append("\n\n")
             .append("Cash earned: $").append(cashEarned).append("\n")
             .append("Total cash: $").append(formatCash(CashManager.getCash()));
+
+        if (newlyUnlocked != null && newlyUnlocked.size > 0) {
+            sb.append("\n\nAchievements unlocked:\n");
+
+            for (AchievementsManager.AchievementState a : newlyUnlocked) {
+                sb.append("• ").append(a.def.name).append("\n");
+            }
+        }
 
 
         Dialog dialog = new Dialog("Time's up!", skin) {
@@ -686,7 +753,7 @@ public class TimeTrialScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game)); // replace per screen
+                game.setScreen(new TimeTrialScreen(game, timeLimitSeconds));
             }
         });
 

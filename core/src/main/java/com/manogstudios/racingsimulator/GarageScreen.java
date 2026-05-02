@@ -378,43 +378,7 @@ public class GarageScreen implements Screen {
         sellButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-
-                String selectedTexture = CarSelectionData.getSelectedCarTexture();
-                if (selectedTexture != null && selectedTexture.equals(car.image)) {
-                    Dialog warningDialog = new Dialog("Can't Sell Selected Car", skin) { };
-                    warningDialog.text("You can't sell the car you're currently using.");
-                    warningDialog.button("OK");
-                    warningDialog.show(stage);
-                    return;
-                }
-
-                CarData carData = CarDataBase.getCarByImage(car.image);
-                if (carData != null) {
-                    int refund = (int) (carData.price * 0.75f);
-
-                    CarOwnershipManager.removeCar(car.image);
-                    CashManager.addCash(refund);
-
-                    System.out.println("Sold car: " + car.title + " for $" + refund);
-
-                    // If no cars left, assign default
-                    if (CarOwnershipManager.getOwnedCars().isEmpty()) {
-                        String defaultImage = "Mazda MX-5 Miata - 2014.png";
-                        SelectedCar.set(defaultImage);
-                        CarOwnershipManager.addCar(defaultImage);
-                        CarOwnershipManager.saveOwnedCars();
-                    } else {
-                        if (SelectedCar.get().equals(car.image)) {
-                            String firstOwned = new ArrayList<>(CarOwnershipManager.getOwnedCars()).get(0);
-                            SelectedCar.set(firstOwned);
-                            CarSelectionData.setSelectedCarTexture(firstOwned);
-                        }
-                    }
-
-                    game.setScreen(new GarageScreen(game));
-                } else {
-                    System.err.println("Couldn't find car data for selling: " + car.image);
-                }
+                showSellConfirmation(car);
             }
         });
         carBox.add(sellButton).padTop(10).row();
@@ -476,6 +440,79 @@ public class GarageScreen implements Screen {
         pixmap.dispose();
 
         return new TextureRegionDrawable(new TextureRegion(texture));
+    }
+
+    private void showSellConfirmation(CarData car) {
+        if (car == null) return;
+
+        String selectedTexture = CarSelectionData.getSelectedCarTexture();
+
+        if (selectedTexture != null && selectedTexture.equals(car.image)) {
+            Dialog warningDialog = new Dialog("Can't Sell Selected Car", skin);
+            warningDialog.text("You can't sell the car you're currently using.\n\nSelect another car first, then try again.");
+            warningDialog.button("OK");
+            warningDialog.show(stage);
+            return;
+        }
+
+        if (CarOwnershipManager.getOwnedCars().size() <= 1) {
+            Dialog warningDialog = new Dialog("Can't Sell Last Car", skin);
+            warningDialog.text("You need to keep at least one car in your garage.");
+            warningDialog.button("OK");
+            warningDialog.show(stage);
+            return;
+        }
+
+        int refund = (int) (car.price * 0.75f);
+
+        Dialog confirmDialog = new Dialog("Sell Car?", skin) {
+            @Override
+            protected void result(Object object) {
+                if (Boolean.TRUE.equals(object)) {
+                    sellCar(car, refund);
+                }
+            }
+        };
+
+        confirmDialog.text(
+            "Are you sure you want to sell:\n\n" +
+                car.title + "\n\n" +
+                "Original price: $" + formatCash(car.price) + "\n" +
+                "Refund: $" + formatCash(refund) + "\n\n" +
+                "This will remove the car from your garage."
+        );
+
+        confirmDialog.button("Yes, Sell", true);
+        confirmDialog.button("Cancel", false);
+        confirmDialog.show(stage);
+    }
+
+    private void sellCar(CarData car, int refund) {
+        if (car == null) return;
+
+        CarData carData = CarDataBase.getCarByImage(car.image);
+
+        if (carData == null) {
+            System.err.println("Couldn't find car data for selling: " + car.image);
+            return;
+        }
+
+        CarOwnershipManager.removeCar(car.image);
+        CashManager.addCash(refund);
+
+        System.out.println("Sold car: " + car.title + " for $" + refund);
+
+        String selectedTexture = CarSelectionData.getSelectedCarTexture();
+
+        if (selectedTexture != null && selectedTexture.equals(car.image)) {
+            if (!CarOwnershipManager.getOwnedCars().isEmpty()) {
+                String firstOwned = new ArrayList<>(CarOwnershipManager.getOwnedCars()).get(0);
+                SelectedCar.set(firstOwned);
+                CarSelectionData.setSelectedCarTexture(firstOwned);
+            }
+        }
+
+        game.setScreen(new GarageScreen(game));
     }
 
     private void moveSelection(int direction) {

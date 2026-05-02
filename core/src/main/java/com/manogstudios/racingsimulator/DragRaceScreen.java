@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 
 public class DragRaceScreen implements Screen {
 
@@ -75,6 +76,13 @@ public class DragRaceScreen implements Screen {
     private float aiFinishTime = -1f;
     private float elapsedRaceTime = 0f;
 
+    private AchievementToastManager achievementToasts;
+    private float achievementCheckTimer = 0f;
+    private static final float ACHIEVEMENT_CHECK_INTERVAL = 0.15f;
+
+    private float maxPlayerMph = 0f;
+    private boolean dragScoreSubmitted = false;
+
     // UI
     private Stage uiStage;
     private Skin skin;
@@ -108,6 +116,8 @@ public class DragRaceScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
+
+        achievementToasts = new AchievementToastManager(uiStage, skin);
 
         // Reuse road segment texture
         roadTexture = new Texture(Gdx.files.internal("Segment1.png"));
@@ -233,6 +243,10 @@ public class DragRaceScreen implements Screen {
         });
 
         updateInfoLabels();
+
+        maxPlayerMph = 0f;
+        achievementCheckTimer = 0f;
+        dragScoreSubmitted = false;
     }
 
     @Override
@@ -303,6 +317,15 @@ public class DragRaceScreen implements Screen {
         );
     }
 
+    private void checkLiveAchievements() {
+        if (achievementToasts == null) return;
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onDragRaceLiveUpdate(maxPlayerMph);
+
+        achievementToasts.queueAll(newlyUnlocked);
+    }
+
 
     private void updateLogic(float delta) {
         // follow midpoint of both cars (keeps them on screen)
@@ -344,6 +367,17 @@ public class DragRaceScreen implements Screen {
 
         updateInfoLabels();
 
+        float playerMph = playerCar.getSpeed() / 10f;
+        if (playerMph > maxPlayerMph) {
+            maxPlayerMph = playerMph;
+        }
+
+        achievementCheckTimer -= delta;
+        if (achievementCheckTimer <= 0f && !raceFinished) {
+            achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
+            checkLiveAchievements();
+        }
+
         // finish checks
         float playerDist = playerCar.getY() - startY;
         float aiDist = aiCar.getY() - startY;
@@ -373,15 +407,14 @@ public class DragRaceScreen implements Screen {
             //Leaderboard submit (drag_sprint)
 
              // Faster time => higher score.
-            if (playerFinishTime > 0f) {
+            if (!dragScoreSubmitted && playerFinishTime > 0f) {
+                dragScoreSubmitted = true;
+
                 int timeScore = (int)(1_000_000f / playerFinishTime);
 
-                // Local best
-                // Server-only leaderboard submit
                 if (SupabaseAuth.isLoggedIn) {
                     SupabaseGameData.submitScore("drag_sprint", timeScore);
                 }
-
             }
 
         }
@@ -577,6 +610,20 @@ public class DragRaceScreen implements Screen {
             playerWon = (playerFinishTime >= 0f);
         }
 
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onDragRaceFinished(
+                playerWon,
+                playerFinishTime,
+                aiFinishTime,
+                maxPlayerMph,
+                playerStats.pi,
+                opponentStats.pi
+            );
+
+        if (achievementToasts != null) {
+            achievementToasts.queueAll(newlyUnlocked);
+        }
+
         String resultTitle = playerWon ? "You Win!" : "You Lose!";
         statusLabel.setText(resultTitle);
 
@@ -603,6 +650,14 @@ public class DragRaceScreen implements Screen {
 
         if (playerWon) {
             sb.append("\nCash earned: $").append(reward);
+        }
+
+        if (newlyUnlocked != null && newlyUnlocked.size > 0) {
+            sb.append("\n\nAchievements unlocked:\n");
+
+            for (AchievementsManager.AchievementState a : newlyUnlocked) {
+                sb.append("• ").append(a.def.name).append("\n");
+            }
         }
 
         Dialog dialog = new Dialog(resultTitle, skin) {
