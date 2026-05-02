@@ -27,6 +27,7 @@ import java.util.List;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 
 public class EndlessTwoWayScreen implements Screen {
 
@@ -47,6 +48,10 @@ public class EndlessTwoWayScreen implements Screen {
     private Texture distanceTitleTexture;
     private Texture speedTitleTexture;
     private Texture cashBgTexture;
+
+    private AchievementToastManager achievementToasts;
+    private float achievementCheckTimer = 0f;
+    private static final float ACHIEVEMENT_CHECK_INTERVAL = 0.25f;
 
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
@@ -212,6 +217,8 @@ public class EndlessTwoWayScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
+
+        achievementToasts = new AchievementToastManager(uiStage, skin);
 
         EnvironmentTheme theme = EnvironmentThemeManager.getCurrentTheme();
 
@@ -440,6 +447,23 @@ public class EndlessTwoWayScreen implements Screen {
         type.weight = weight;
         trafficTypes.add(type);
         totalTrafficWeight += weight;
+    }
+
+    private void checkLiveAchievements(int distMeters) {
+        if (achievementToasts == null) return;
+
+        int opposingPoints = (int) opposingScoreAccumulator;
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onEndlessTwoWayLiveUpdate(
+                score,
+                distMeters,
+                elapsedTime,
+                runNearMisses,
+                opposingPoints
+            );
+
+        achievementToasts.queueAll(newlyUnlocked);
     }
 
     private void updateMultiplier(float delta, float mph) {
@@ -829,6 +853,13 @@ public class EndlessTwoWayScreen implements Screen {
                 break;
             }
 
+            achievementCheckTimer -= delta;
+
+            if (achievementCheckTimer <= 0f && !gameOver) {
+                achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
+                checkLiveAchievements(displayDistance);
+            }
+
             // Near miss
             if (!t.nearMissAwarded && !playerRect.overlaps(t.bounds)) {
                 float playerCenterX = playerRect.x + playerRect.width / 2f;
@@ -891,10 +922,9 @@ public class EndlessTwoWayScreen implements Screen {
 
     private void onCrash() {
         gameOver = true;
+        // telemetry
         runCrashCount++;
 
-        // Telemetry
-        runCrashCount++;
         long endMillis = System.currentTimeMillis();
 
         if (SupabaseAuth.isLoggedIn) {
@@ -929,6 +959,21 @@ public class EndlessTwoWayScreen implements Screen {
         // Cash
         int cashEarned = calculateCashReward();
         int distMeters = (int) (distanceScore / 10f);
+
+        int opposingPoints = (int) opposingScoreAccumulator;
+
+        Array<AchievementsManager.AchievementState> endAchievements =
+            AchievementsManager.onEndlessTwoWayFinished(
+                score,
+                distMeters,
+                elapsedTime,
+                runNearMisses,
+                opposingPoints
+            );
+
+        if (achievementToasts != null) {
+            achievementToasts.queueAll(endAchievements);
+        }
 
         Runnable showCrashDialog = () -> {
             StringBuilder sb = new StringBuilder();

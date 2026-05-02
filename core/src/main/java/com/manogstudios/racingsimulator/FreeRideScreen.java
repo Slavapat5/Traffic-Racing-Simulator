@@ -49,6 +49,11 @@ public class FreeRideScreen implements Screen {
     private Texture distanceTitleTexture;
     private Texture speedTitleTexture;
     private Texture cashBgTexture;
+
+    private AchievementToastManager achievementToasts;
+    private float achievementCheckTimer = 0f;
+    private static final float ACHIEVEMENT_CHECK_INTERVAL = 0.25f;
+
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -148,6 +153,8 @@ public class FreeRideScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
+
+        achievementToasts = new AchievementToastManager(uiStage, skin);
 
         // Road texture
         EnvironmentTheme theme = EnvironmentThemeManager.getCurrentTheme();
@@ -499,6 +506,21 @@ public class FreeRideScreen implements Screen {
         });
     }
 
+    private void checkLiveAchievements(int distMeters) {
+        if (achievementToasts == null) return;
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onFreeRideLiveUpdate(
+                score,
+                distMeters,
+                elapsedTime,
+                runNearMisses,
+                maxSpeedMph
+            );
+
+        achievementToasts.queueAll(newlyUnlocked);
+    }
+
     private void showPauseMenu() {
         if (pauseOverlay != null) pauseOverlay.setVisible(true);
         if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(false);
@@ -648,12 +670,20 @@ public class FreeRideScreen implements Screen {
                         bonusPoints += 200;          // award near-miss bonus
                         t.nearMissAwarded = true;   // don't award twice for this car
                         runNearMisses++;
-                        System.out.println("Near miss! +50 points");
+                        System.out.println("Near miss! +200 points");
                     }
                 }
             }
         }
+
+        achievementCheckTimer -= delta;
+
+        if (achievementCheckTimer <= 0f && !gameOver) {
+            achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
+            checkLiveAchievements(displayDistance);
+        }
     }
+
 
     private boolean isLaneClearForSpawn(float laneXPos, float spawnY) {
         // Minimum vertical gap between cars in the same lane
@@ -763,7 +793,13 @@ public class FreeRideScreen implements Screen {
 
         // Achievements
         Array<AchievementsManager.AchievementState> newlyUnlocked =
-            AchievementsManager.onFreeRideFinished(score, distMeters, elapsedTime);
+            AchievementsManager.onFreeRideFinished(
+                score,
+                distMeters,
+                elapsedTime,
+                runNearMisses,
+                maxSpeedMph
+            );
 
         Runnable showCrashDialog = () -> {
             StringBuilder sb = new StringBuilder();
@@ -798,6 +834,10 @@ public class FreeRideScreen implements Screen {
             dialog.button("Retry", "retry");
             dialog.button("Back to Modes", "modes");
             dialog.show(uiStage);
+
+            if (achievementToasts != null) {
+                achievementToasts.queueAll(newlyUnlocked);
+            }
         };
 
         if (SupabaseAuth.isLoggedIn) {

@@ -61,6 +61,34 @@ public class AchievementsManager {
             "Survivor",
             "Survive for 300 seconds in a single Free Ride run.");
 
+        register("free_ride_25000",
+            "Confident Driver",
+            "Score 25,000 or more in a single Free Ride run.");
+
+        register("free_ride_10km",
+            "Road Trip",
+            "Drive at least 10,000 m in a single Free Ride run.");
+
+        register("free_ride_first_near_miss",
+            "Close Call",
+            "Get your first near miss in Free Ride.");
+
+        register("free_ride_5_near_misses",
+            "Threading the Needle",
+            "Get 5 near misses in one Free Ride run.");
+
+        register("free_ride_10_near_misses",
+            "Traffic Dancer",
+            "Get 10 near misses in one Free Ride run.");
+
+        register("free_ride_100mph",
+            "Triple Digits",
+            "Reach 100 mph in Free Ride.");
+
+        register("free_ride_120mph",
+            "Flat Out",
+            "Reach 120 mph in Free Ride.");
+
         register("endless_one_way_first_run",
             "First Endless Drive",
             "Finish an Endless One Way run for the first time.");
@@ -84,6 +112,74 @@ public class AchievementsManager {
         register("endless_one_way_first_near_miss",
             "Close Call",
             "Get your first near miss in Endless One Way.");
+
+        register("endless_two_way_first_run",
+            "Two Way Starter",
+            "Finish an Endless Two Way run for the first time.");
+
+        register("endless_two_way_10000",
+            "Two Way Scorer",
+            "Score 10,000 or more in Endless Two Way.");
+
+        register("endless_two_way_50000",
+            "Two Way Speed Demon",
+            "Score 50,000 or more in Endless Two Way.");
+
+        register("endless_two_way_5km",
+            "Two Way Long Haul",
+            "Drive at least 5,000 m in Endless Two Way.");
+
+        register("endless_two_way_300s",
+            "Two Way Survivor",
+            "Survive for 300 seconds in Endless Two Way.");
+
+        register("endless_two_way_first_near_miss",
+            "Two Way Close Call",
+            "Get your first near miss in Endless Two Way.");
+
+        register("endless_two_way_opposing_750",
+            "Wrong Side Risk",
+            "Earn 750 opposing lane bonus points in one Endless Two Way run.");
+
+        register("endless_two_way_opposing_3000",
+            "Wrong Side Expert",
+            "Earn 3,000 opposing lane bonus points in one Endless Two Way run.");
+
+        register("test_drive_first_run",
+            "First Test Drive",
+            "Finish a Test Drive run for the first time.");
+
+        register("test_drive_1km",
+            "Getting Comfortable",
+            "Drive at least 1,000 m in Test Drive.");
+
+        register("test_drive_3km",
+            "Test Route",
+            "Drive at least 3,000 m in Test Drive.");
+
+        register("test_drive_60s",
+            "One Minute Test",
+            "Survive for 60 seconds in Test Drive.");
+
+        register("test_drive_120s",
+            "Extended Test",
+            "Survive for 120 seconds in Test Drive.");
+
+        register("test_drive_90mph",
+            "Warming Up",
+            "Reach 90 mph in Test Drive.");
+
+        register("test_drive_120mph",
+            "Pushed to the Limit",
+            "Reach 120 mph in Test Drive.");
+
+        register("test_drive_first_near_miss",
+            "Practice Close Call",
+            "Get your first near miss in Test Drive.");
+
+        register("test_drive_5_near_misses",
+            "Precision Practice",
+            "Get 5 near misses in one Test Drive run.");
     }
 
     private static void register(String id, String name, String description) {
@@ -113,19 +209,150 @@ public class AchievementsManager {
         return newly;
     }
 
-    // Called after a Free Ride run ends, returns newly unlocked achievements.
-    public static Array<AchievementState> onFreeRideFinished(int score, int distMeters, float timeSeconds) {
+    public static Array<AchievementState> onEndlessTwoWayLiveUpdate(
+        int score,
+        int distMeters,
+        float timeSeconds,
+        int nearMisses,
+        int opposingPoints
+    ) {
         Array<AchievementState> newlyUnlocked = new Array<>();
 
-        unlockIf(newlyUnlocked, "free_ride_first_run", true);
-        unlockIf(newlyUnlocked, "free_ride_10000", score >= 10_000);
-        unlockIf(newlyUnlocked, "free_ride_50000", score >= 50_000);
-        unlockIf(newlyUnlocked, "free_ride_5km", distMeters >= 5_000);
-        unlockIf(newlyUnlocked, "free_ride_300s", timeSeconds >= 300f);
+        unlockIf(newlyUnlocked, "endless_two_way_10000", score >= 10_000);
+        unlockIf(newlyUnlocked, "endless_two_way_50000", score >= 50_000);
+        unlockIf(newlyUnlocked, "endless_two_way_5km", distMeters >= 5_000);
+        unlockIf(newlyUnlocked, "endless_two_way_300s", timeSeconds >= 300f);
+        unlockIf(newlyUnlocked, "endless_two_way_first_near_miss", nearMisses >= 1);
+        unlockIf(newlyUnlocked, "endless_two_way_opposing_750", opposingPoints >= 750);
+        unlockIf(newlyUnlocked, "endless_two_way_opposing_3000", opposingPoints >= 3000);
 
         if (newlyUnlocked.size > 0) {
             save();
         }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onEndlessTwoWayFinished(
+        int score,
+        int distMeters,
+        float timeSeconds,
+        int nearMisses,
+        int opposingPoints
+    ) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "endless_two_way_first_run", true);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    // Called after a Free Ride run ends, returns newly unlocked achievements.
+    public static Array<AchievementState> onFreeRideLiveUpdate(
+        int score,
+        int distMeters,
+        float timeSeconds,
+        int nearMisses,
+        float maxSpeedMph
+    ) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "free_ride_10000", score >= 10_000);
+        unlockIf(newlyUnlocked, "free_ride_25000", score >= 25_000);
+        unlockIf(newlyUnlocked, "free_ride_50000", score >= 50_000);
+
+        unlockIf(newlyUnlocked, "free_ride_5km", distMeters >= 5_000);
+        unlockIf(newlyUnlocked, "free_ride_10km", distMeters >= 10_000);
+
+        unlockIf(newlyUnlocked, "free_ride_300s", timeSeconds >= 300f);
+
+        unlockIf(newlyUnlocked, "free_ride_first_near_miss", nearMisses >= 1);
+        unlockIf(newlyUnlocked, "free_ride_5_near_misses", nearMisses >= 5);
+        unlockIf(newlyUnlocked, "free_ride_10_near_misses", nearMisses >= 10);
+
+        unlockIf(newlyUnlocked, "free_ride_100mph", maxSpeedMph >= 100f);
+        unlockIf(newlyUnlocked, "free_ride_120mph", maxSpeedMph >= 120f);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onFreeRideFinished(
+        int score,
+        int distMeters,
+        float timeSeconds,
+        int nearMisses,
+        float maxSpeedMph
+    ) {
+        Array<AchievementState> newlyUnlocked =
+            onFreeRideLiveUpdate(score, distMeters, timeSeconds, nearMisses, maxSpeedMph);
+
+        unlockIf(newlyUnlocked, "free_ride_first_run", true);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onFreeRideFinished(
+        int score,
+        int distMeters,
+        float timeSeconds
+    ) {
+        return onFreeRideFinished(score, distMeters, timeSeconds, 0, 0f);
+    }
+
+    public static Array<AchievementState> onTestDriveLiveUpdate(
+        int distMeters,
+        float timeSeconds,
+        int nearMisses,
+        float maxSpeedMph
+    ) {
+        Array<AchievementState> newlyUnlocked = new Array<>();
+
+        unlockIf(newlyUnlocked, "test_drive_1km", distMeters >= 1_000);
+        unlockIf(newlyUnlocked, "test_drive_3km", distMeters >= 3_000);
+
+        unlockIf(newlyUnlocked, "test_drive_60s", timeSeconds >= 60f);
+        unlockIf(newlyUnlocked, "test_drive_120s", timeSeconds >= 120f);
+
+        unlockIf(newlyUnlocked, "test_drive_90mph", maxSpeedMph >= 90f);
+        unlockIf(newlyUnlocked, "test_drive_120mph", maxSpeedMph >= 120f);
+
+        unlockIf(newlyUnlocked, "test_drive_first_near_miss", nearMisses >= 1);
+        unlockIf(newlyUnlocked, "test_drive_5_near_misses", nearMisses >= 5);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
+        return newlyUnlocked;
+    }
+
+    public static Array<AchievementState> onTestDriveFinished(
+        int distMeters,
+        float timeSeconds,
+        int nearMisses,
+        float maxSpeedMph
+    ) {
+        Array<AchievementState> newlyUnlocked =
+            onTestDriveLiveUpdate(distMeters, timeSeconds, nearMisses, maxSpeedMph);
+
+        unlockIf(newlyUnlocked, "test_drive_first_run", true);
+
+        if (newlyUnlocked.size > 0) {
+            save();
+        }
+
         return newlyUnlocked;
     }
 

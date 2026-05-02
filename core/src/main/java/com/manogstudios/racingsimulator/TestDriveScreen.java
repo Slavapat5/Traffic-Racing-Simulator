@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 
 public class TestDriveScreen implements Screen {
 
@@ -46,6 +47,11 @@ public class TestDriveScreen implements Screen {
     private Texture distanceTitleTexture;
     private Texture speedTitleTexture;
     private Texture cashBgTexture;
+
+    private AchievementToastManager achievementToasts;
+    private float achievementCheckTimer = 0f;
+    private static final float ACHIEVEMENT_CHECK_INTERVAL = 0.25f;
+
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
     private static final float SEGMENT_WIDTH = 1920f;
@@ -66,6 +72,7 @@ public class TestDriveScreen implements Screen {
         float x, y;
         float speed;
         Rectangle bounds;
+        boolean nearMissAwarded = false;
 
         TrafficCar(Texture texture, float x, float y, float speed) {
             this.texture = texture;
@@ -142,6 +149,8 @@ public class TestDriveScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
+
+        achievementToasts = new AchievementToastManager(uiStage, skin);
 
         // Road texture
         EnvironmentTheme theme = EnvironmentThemeManager.getCurrentTheme();
@@ -380,6 +389,32 @@ public class TestDriveScreen implements Screen {
                 onCrash();
                 break;
             }
+
+            // Near miss detection for Test Drive achievements
+            if (!t.nearMissAwarded && !playerRect.overlaps(t.bounds)) {
+                float playerCenterX = playerRect.x + playerRect.width / 2f;
+                float playerCenterY = playerRect.y + playerRect.height / 2f;
+                float carCenterX = t.bounds.x + t.bounds.width / 2f;
+                float carCenterY = t.bounds.y + t.bounds.height / 2f;
+
+                float dx = Math.abs(playerCenterX - carCenterX);
+                float dyCenter = Math.abs(playerCenterY - carCenterY);
+
+                boolean closeHorizontally = dx < playerRect.width * 1f;
+                boolean closeVertically = dyCenter < playerRect.height;
+
+                if (closeHorizontally && closeVertically) {
+                    t.nearMissAwarded = true;
+                    runNearMisses++;
+                    System.out.println("Test Drive near miss!");
+                }
+            }
+        }
+        achievementCheckTimer -= delta;
+
+        if (achievementCheckTimer <= 0f && !gameOver) {
+            achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
+            checkLiveAchievements(displayDistance);
         }
     }
 
@@ -566,6 +601,20 @@ public class TestDriveScreen implements Screen {
         });
     }
 
+    private void checkLiveAchievements(int distMeters) {
+        if (achievementToasts == null) return;
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onTestDriveLiveUpdate(
+                distMeters,
+                elapsedTime,
+                runNearMisses,
+                maxSpeedMph
+            );
+
+        achievementToasts.queueAll(newlyUnlocked);
+    }
+
     private void showPauseMenu() {
         if (pauseOverlay != null) pauseOverlay.setVisible(true);
         if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(false);
@@ -622,8 +671,6 @@ public class TestDriveScreen implements Screen {
         gameOver = true;
         runCrashCount++;
 
-        // Telemetry
-        runCrashCount++;
         long endMillis = System.currentTimeMillis();
         if (SupabaseAuth.isLoggedIn) {
             SupabaseGameData.submitRunTelemetry(
@@ -632,9 +679,9 @@ public class TestDriveScreen implements Screen {
                 endMillis,
                 elapsedTime,
                 (int) (distanceTravelled / 10f),
-                0,              // score = 0 for test drive
+                0,
                 runCrashCount,
-                0,              // near misses not tracked here
+                runNearMisses,
                 null,
                 null,
                 CarSelectionData.getSelectedCarTexture(),
@@ -645,6 +692,18 @@ public class TestDriveScreen implements Screen {
         }
 
         int distMeters = (int) (distanceTravelled / 10f);
+
+        Array<AchievementsManager.AchievementState> newlyUnlocked =
+            AchievementsManager.onTestDriveFinished(
+                distMeters,
+                elapsedTime,
+                runNearMisses,
+                maxSpeedMph
+            );
+
+        if (achievementToasts != null) {
+            achievementToasts.queueAll(newlyUnlocked);
+        }
 
         Dialog dialog = new Dialog("Crash!", skin) {
             @Override
@@ -658,10 +717,22 @@ public class TestDriveScreen implements Screen {
             }
         };
 
-        dialog.text("You crashed!\n\n"
-            + "Distance: " + distMeters + " m\n"
-            + "Time: " + String.format("%.1f s", elapsedTime) + "\n\n"
-            + "No cash or scores are awarded in Test Drive.");
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("You crashed!\n\n")
+            .append("Distance: ").append(distMeters).append(" m\n")
+            .append("Time: ").append(String.format("%.1f s", elapsedTime)).append("\n")
+            .append("Near misses: ").append(runNearMisses).append("\n\n")
+            .append("No cash or scores are awarded in Test Drive.");
+
+        if (newlyUnlocked != null && newlyUnlocked.size > 0) {
+            sb.append("\n\nAchievements unlocked:\n");
+            for (AchievementsManager.AchievementState a : newlyUnlocked) {
+                sb.append("• ").append(a.def.name).append("\n");
+            }
+        }
+
+        dialog.text(sb.toString());
         dialog.button("Restart", "retry");
         dialog.button("Back to Modes", "modes");
         dialog.show(uiStage);
