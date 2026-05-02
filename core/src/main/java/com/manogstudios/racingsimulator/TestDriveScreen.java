@@ -693,6 +693,25 @@ public class TestDriveScreen implements Screen {
 
         int distMeters = (int) (distanceTravelled / 10f);
 
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.updateDailyQuests(
+                "test_drive",
+                distMeters,
+                0,
+                elapsedTime,
+                runCrashCount,
+                runNearMisses,
+                maxSpeedMph,
+                false,
+                result -> {
+                    if (result.rewardCash > 0) {
+                        System.out.println("Daily quest reward earned: $" + result.rewardCash);
+                    }
+                },
+                err -> System.out.println("Daily quest update failed: " + err)
+            );
+        }
+
         Array<AchievementsManager.AchievementState> newlyUnlocked =
             AchievementsManager.onTestDriveFinished(
                 distMeters,
@@ -723,7 +742,8 @@ public class TestDriveScreen implements Screen {
             .append("Distance: ").append(distMeters).append(" m\n")
             .append("Time: ").append(String.format("%.1f s", elapsedTime)).append("\n")
             .append("Near misses: ").append(runNearMisses).append("\n\n")
-            .append("No cash or scores are awarded in Test Drive.");
+            .append("No normal cash or scores are awarded in Test Drive.\n")
+            .append("Daily quest rewards may still apply.");
 
         if (newlyUnlocked != null && newlyUnlocked.size > 0) {
             sb.append("\n\nAchievements unlocked:\n");

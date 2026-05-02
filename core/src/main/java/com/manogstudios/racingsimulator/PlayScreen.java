@@ -28,7 +28,7 @@ public class PlayScreen implements Screen {
     private SpriteBatch batch;
     private Texture backgroundTexture;
     private Label versionLabel;
-    private static final String GAME_VERSION = "Beta 1.6";
+    private static final String GAME_VERSION = "Beta 1.7";
 
 
 
@@ -101,6 +101,16 @@ public class PlayScreen implements Screen {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 showDailyBonusPopup();
+            }
+        });
+
+        TextButton dailyQuestsButton = new TextButton("Daily Quests", skin);
+        dailyQuestsButton.getLabel().setFontScale(1.1f);
+
+        dailyQuestsButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                showDailyQuestsPopup();
             }
         });
 
@@ -221,6 +231,7 @@ public class PlayScreen implements Screen {
         dailyBonusTable.padLeft(25);
 
         dailyBonusTable.add(dailyBonusButton).width(180).height(45);
+        dailyBonusTable.add(dailyQuestsButton).width(180).height(45);
 
         stage.addActor(dailyBonusTable);
 
@@ -245,6 +256,132 @@ public class PlayScreen implements Screen {
 
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
+    }
+
+    private void showDailyQuestsPopup() {
+        Dialog dialog = new Dialog("Daily Quests", skin);
+        dialog.getContentTable().pad(25);
+
+        Label loadingLabel = new Label("Loading daily quests...", skin);
+        loadingLabel.setAlignment(Align.center);
+
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                dialog.hide();
+            }
+        });
+
+        dialog.getContentTable().add(loadingLabel).width(720).padBottom(20).row();
+        dialog.getContentTable().add(closeButton).width(160).height(45).padTop(10).row();
+
+        dialog.show(stage);
+        resizeDailyQuestDialog(dialog);
+
+        SupabaseGameData.fetchDailyQuests(quests -> {
+            dialog.getContentTable().clear();
+            dialog.getContentTable().pad(25);
+
+            Label infoLabel = new Label(
+                "Complete these challenges before tomorrow to earn extra cash.",
+                skin
+            );
+            infoLabel.setWrap(true);
+            infoLabel.setAlignment(Align.center);
+            infoLabel.setColor(Color.LIGHT_GRAY);
+
+            dialog.getContentTable().add(infoLabel).width(720).padBottom(18).row();
+
+            if (quests == null || quests.isEmpty()) {
+                Label none = new Label("No daily quests available.", skin);
+                none.setAlignment(Align.center);
+
+                dialog.getContentTable().add(none).width(720).height(420).pad(10).row();
+                dialog.getContentTable().add(closeButton).width(160).height(45).padTop(12).row();
+
+                resizeDailyQuestDialog(dialog);
+                return;
+            }
+
+            Table questList = new Table(skin);
+            questList.defaults().pad(10).left();
+
+            for (SupabaseGameData.DailyQuest q : quests) {
+                Table card = new Table(skin);
+                card.setBackground("default-round");
+                card.setColor(0.12f, 0.12f, 0.12f, 0.95f);
+                card.pad(15);
+                card.defaults().left().padBottom(6);
+
+                Label title = new Label(q.title, skin);
+                title.setFontScale(1.2f);
+                title.setColor(q.completed ? Color.GREEN : Color.WHITE);
+
+                Label desc = new Label(q.description, skin);
+                desc.setWrap(true);
+                desc.setColor(Color.LIGHT_GRAY);
+
+                int shownProgress = Math.min(q.progress, q.target);
+
+                Label progress = new Label(
+                    "Progress: " + shownProgress + " / " + q.target,
+                    skin
+                );
+
+                Label reward = new Label(
+                    q.completed
+                        ? "Completed - Reward paid: $" + formatCash(q.rewardCash)
+                        : "Reward: $" + formatCash(q.rewardCash),
+                    skin
+                );
+
+                reward.setColor(q.completed ? Color.GREEN : Color.GOLD);
+
+                card.add(title).left().row();
+                card.add(desc).width(640).left().row();
+                card.add(progress).left().row();
+                card.add(reward).left().row();
+
+                questList.add(card).width(690).fillX().padBottom(10).row();
+            }
+
+            ScrollPane scrollPane = new ScrollPane(questList, skin);
+            scrollPane.setFadeScrollBars(false);
+            scrollPane.setScrollingDisabled(true, false);
+            scrollPane.setForceScroll(false, true);
+            scrollPane.setSmoothScrolling(true);
+
+            dialog.getContentTable().add(scrollPane).width(740).height(520).row();
+            dialog.getContentTable().add(closeButton).width(160).height(45).padTop(14).row();
+
+            resizeDailyQuestDialog(dialog);
+
+        }, error -> {
+            dialog.getContentTable().clear();
+            dialog.getContentTable().pad(25);
+
+            Label errorLabel = new Label("Could not load daily quests: " + error, skin);
+            errorLabel.setWrap(true);
+            errorLabel.setAlignment(Align.center);
+            errorLabel.setColor(Color.RED);
+
+            dialog.getContentTable().add(errorLabel).width(720).height(420).padBottom(15).row();
+            dialog.getContentTable().add(closeButton).width(160).height(45).padTop(10).row();
+
+            resizeDailyQuestDialog(dialog);
+        });
+    }
+
+    private void resizeDailyQuestDialog(Dialog dialog) {
+        float dialogWidth = Math.min(820f, stage.getWidth() - 80f);
+        float dialogHeight = Math.min(700f, stage.getHeight() - 80f);
+
+        dialog.setSize(dialogWidth, dialogHeight);
+        dialog.setPosition(
+            (stage.getWidth() - dialogWidth) / 2f,
+            (stage.getHeight() - dialogHeight) / 2f
+        );
     }
 
     private void showDailyBonusPopup() {
@@ -332,6 +469,10 @@ public class PlayScreen implements Screen {
         });
 
         dialog.show(stage);
+    }
+
+    private String formatCash(int cash) {
+        return String.format("%,d", cash);
     }
 
     @Override

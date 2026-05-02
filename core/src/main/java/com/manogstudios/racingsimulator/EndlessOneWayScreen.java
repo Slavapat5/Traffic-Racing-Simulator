@@ -961,6 +961,25 @@ public class EndlessOneWayScreen implements Screen {
         int cashEarned = calculateCashReward();
         int distMeters = (int) (distanceScore / 10f);
 
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.updateDailyQuests(
+                "free_ride",
+                distMeters,
+                score,
+                elapsedTime,
+                runCrashCount,
+                runNearMisses,
+                maxSpeedMph,
+                false,
+                result -> {
+                    if (result.rewardCash > 0) {
+                        System.out.println("Daily quest reward earned: $" + result.rewardCash);
+                    }
+                },
+                err -> System.out.println("Daily quest update failed: " + err)
+            );
+        }
+
         Array<AchievementsManager.AchievementState> endAchievements =
             AchievementsManager.onEndlessOneWayFinished(
                 score,

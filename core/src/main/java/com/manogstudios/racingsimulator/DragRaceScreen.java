@@ -652,6 +652,36 @@ public class DragRaceScreen implements Screen {
             sb.append("\nCash earned: $").append(reward);
         }
 
+        int playerDistMeters = (int) Math.max(0, (playerCar.getY() - startY) / 10f);
+        int dragScore = 0;
+
+        if (playerFinishTime > 0f) {
+            dragScore = (int) (1_000_000f / playerFinishTime);
+        }
+
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.updateDailyQuests(
+                "drag_sprint",
+                playerDistMeters,
+                dragScore,
+                elapsedRaceTime,
+                0,
+                0,
+                maxPlayerMph,
+                playerWon,
+                result -> {
+                    if (result.cash != null) {
+                        cashLabel.setText("$" + formatCash(CashManager.getCash()));
+                    }
+
+                    if (result.rewardCash > 0) {
+                        System.out.println("Daily quest reward earned: $" + result.rewardCash);
+                    }
+                },
+                err -> System.out.println("Daily quest update failed: " + err)
+            );
+        }
+
         if (newlyUnlocked != null && newlyUnlocked.size > 0) {
             sb.append("\n\nAchievements unlocked:\n");
 

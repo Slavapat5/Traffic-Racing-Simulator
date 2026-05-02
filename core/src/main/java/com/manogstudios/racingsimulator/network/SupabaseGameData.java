@@ -479,6 +479,27 @@ public class SupabaseGameData {
         }).start();
     }
 
+    public static class DailyQuest {
+        public String id;
+        public int slot;
+        public String questId;
+        public String questType;
+        public String mode;
+        public String title;
+        public String description;
+        public int target;
+        public int progress;
+        public int rewardCash;
+        public boolean completed;
+        public boolean paid;
+    }
+
+    public static class DailyQuestUpdateResult {
+        public java.util.List<DailyQuest> quests = new ArrayList<>();
+        public int rewardCash;
+        public Integer cash;
+    }
+
     public static class LeaderboardEntry {
         public final String userId;
         public final String username;
@@ -614,6 +635,189 @@ public class SupabaseGameData {
 
                     if (result.cash >= 0) {
                         CashManager.setCash(result.cash);
+                    }
+
+                    if (onSuccess != null) {
+                        Gdx.app.postRunnable(() -> onSuccess.accept(result));
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("exception"));
+                }
+            }).start();
+        }, (err) -> {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(err));
+        });
+    }
+
+    public static void updateDailyQuests(String mode,
+                                         int distanceMeters,
+                                         int score,
+                                         float durationSec,
+                                         int crashes,
+                                         int nearMisses,
+                                         Float maxSpeedMph,
+                                         boolean playerWon,
+                                         java.util.function.Consumer<DailyQuestUpdateResult> onSuccess,
+                                         java.util.function.Consumer<String> onFail) {
+
+        if (!SupabaseAuth.isLoggedIn) {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("not_logged_in"));
+            return;
+        }
+
+        withValidToken((token) -> {
+            new Thread(() -> {
+                try {
+                    JSONObject body = new JSONObject();
+                    body.put("mode", mode);
+                    body.put("distance_m", distanceMeters);
+                    body.put("score", score);
+                    body.put("duration_sec", durationSec);
+                    body.put("crashes", crashes);
+                    body.put("near_misses", nearMisses);
+                    body.put("player_won", playerWon);
+
+                    if (maxSpeedMph != null) {
+                        body.put("max_speed_mph", maxSpeedMph);
+                    }
+
+                    HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(SUPABASE_URL + "/functions/v1/update-daily-quests"))
+                        .header("Content-Type", "application/json")
+                        .header("apikey", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
+                        .build();
+
+                    HttpResponse<String> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    System.out.println("updateDailyQuests: " + response.statusCode() + " body=" + response.body());
+
+                    if (response.statusCode() / 100 != 2) {
+                        String msg = "daily_quest_update_failed";
+
+                        try {
+                            JSONObject err = new JSONObject(response.body());
+                            msg = err.optString("error", err.optString("message", msg));
+                        } catch (Exception ignored) {}
+
+                        String finalMsg = msg;
+                        if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(finalMsg));
+                        return;
+                    }
+
+                    JSONObject json = new JSONObject(response.body());
+
+                    DailyQuestUpdateResult result = new DailyQuestUpdateResult();
+                    result.rewardCash = json.optInt("rewardCash", 0);
+
+                    if (json.has("cash") && !json.isNull("cash")) {
+                        result.cash = json.getInt("cash");
+                        CashManager.setCash(result.cash);
+                    }
+
+                    JSONArray arr = json.optJSONArray("quests");
+
+                    if (arr != null) {
+                        for (int i = 0; i < arr.length(); i++) {
+                            JSONObject q = arr.getJSONObject(i);
+
+                            DailyQuest quest = new DailyQuest();
+                            quest.id = q.optString("id", "");
+                            quest.slot = q.optInt("slot", 0);
+                            quest.questId = q.optString("quest_id", "");
+                            quest.questType = q.optString("quest_type", "");
+                            quest.mode = q.optString("mode", "");
+                            quest.title = q.optString("title", "");
+                            quest.description = q.optString("description", "");
+                            quest.target = q.optInt("target", 0);
+                            quest.progress = q.optInt("progress", 0);
+                            quest.rewardCash = q.optInt("reward_cash", 0);
+                            quest.completed = q.optBoolean("completed", false);
+                            quest.paid = q.optBoolean("paid", false);
+
+                            result.quests.add(quest);
+                        }
+                    }
+
+                    if (onSuccess != null) {
+                        Gdx.app.postRunnable(() -> onSuccess.accept(result));
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("exception"));
+                }
+            }).start();
+        }, (err) -> {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(err));
+        });
+    }
+
+    public static void fetchDailyQuests(java.util.function.Consumer<java.util.List<DailyQuest>> onSuccess,
+                                        java.util.function.Consumer<String> onFail) {
+
+        if (!SupabaseAuth.isLoggedIn) {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("not_logged_in"));
+            return;
+        }
+
+        withValidToken((token) -> {
+            new Thread(() -> {
+                try {
+                    HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(SUPABASE_URL + "/functions/v1/get-daily-quests"))
+                        .header("Content-Type", "application/json")
+                        .header("apikey", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .POST(HttpRequest.BodyPublishers.ofString("{}"))
+                        .build();
+
+                    HttpResponse<String> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    System.out.println("fetchDailyQuests: " + response.statusCode() + " body=" + response.body());
+
+                    if (response.statusCode() / 100 != 2) {
+                        String msg = "daily_quests_failed";
+                        try {
+                            JSONObject err = new JSONObject(response.body());
+                            msg = err.optString("error", err.optString("message", msg));
+                        } catch (Exception ignored) {}
+
+                        String finalMsg = msg;
+                        if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(finalMsg));
+                        return;
+                    }
+
+                    JSONObject json = new JSONObject(response.body());
+                    JSONArray arr = json.optJSONArray("quests");
+
+                    java.util.List<DailyQuest> result = new ArrayList<>();
+
+                    if (arr != null) {
+                        for (int i = 0; i < arr.length(); i++) {
+                            JSONObject q = arr.getJSONObject(i);
+
+                            DailyQuest quest = new DailyQuest();
+                            quest.id = q.optString("id", "");
+                            quest.slot = q.optInt("slot", 0);
+                            quest.questId = q.optString("quest_id", "");
+                            quest.questType = q.optString("quest_type", "");
+                            quest.mode = q.optString("mode", "");
+                            quest.title = q.optString("title", "");
+                            quest.description = q.optString("description", "");
+                            quest.target = q.optInt("target", 0);
+                            quest.progress = q.optInt("progress", 0);
+                            quest.rewardCash = q.optInt("reward_cash", 0);
+                            quest.completed = q.optBoolean("completed", false);
+                            quest.paid = q.optBoolean("paid", false);
+
+                            result.add(quest);
+                        }
                     }
 
                     if (onSuccess != null) {

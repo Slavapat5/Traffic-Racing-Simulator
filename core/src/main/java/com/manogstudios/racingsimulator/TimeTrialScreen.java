@@ -632,6 +632,29 @@ public class TimeTrialScreen implements Screen {
 
         int distMeters = (int) (distanceScore / 10f);
 
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.updateDailyQuests(
+                "time_trial",
+                distMeters,
+                score,
+                elapsedTime,
+                runCrashCount,
+                runNearMisses,
+                maxSpeedMph,
+                false,
+                result -> {
+                    if (result.cash != null) {
+                        cashLabel.setText("$" + formatCash(CashManager.getCash()));
+                    }
+
+                    if (result.rewardCash > 0) {
+                        System.out.println("Daily quest reward earned: $" + result.rewardCash);
+                    }
+                },
+                err -> System.out.println("Daily quest update failed: " + err)
+            );
+        }
+
         long endMillis = System.currentTimeMillis();
 
         if (SupabaseAuth.isLoggedIn) {

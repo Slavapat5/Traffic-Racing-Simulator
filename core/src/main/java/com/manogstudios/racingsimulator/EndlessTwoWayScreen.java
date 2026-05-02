@@ -860,6 +860,7 @@ public class EndlessTwoWayScreen implements Screen {
                 checkLiveAchievements(displayDistance);
             }
 
+
             // Near miss
             if (!t.nearMissAwarded && !playerRect.overlaps(t.bounds)) {
                 float playerCenterX = playerRect.x + playerRect.width / 2f;
@@ -946,6 +947,8 @@ public class EndlessTwoWayScreen implements Screen {
             );
         }
 
+        int opposingPoints = (int) opposingScoreAccumulator;
+
         // Reset meters
         multiplierMeter = 0f;
         scoreMultiplier = 1.0f;
@@ -960,7 +963,28 @@ public class EndlessTwoWayScreen implements Screen {
         int cashEarned = calculateCashReward();
         int distMeters = (int) (distanceScore / 10f);
 
-        int opposingPoints = (int) opposingScoreAccumulator;
+        if (SupabaseAuth.isLoggedIn) {
+            SupabaseGameData.updateDailyQuests(
+                "endless_two_way",
+                distMeters,
+                score,
+                elapsedTime,
+                runCrashCount,
+                runNearMisses,
+                maxSpeedMph,
+                false,
+                result -> {
+                    if (result.cash != null) {
+                        cashLabel.setText("$" + formatCash(CashManager.getCash()));
+                    }
+
+                    if (result.rewardCash > 0) {
+                        System.out.println("Daily quest reward earned: $" + result.rewardCash);
+                    }
+                },
+                err -> System.out.println("Daily quest update failed: " + err)
+            );
+        }
 
         Array<AchievementsManager.AchievementState> endAchievements =
             AchievementsManager.onEndlessTwoWayFinished(
