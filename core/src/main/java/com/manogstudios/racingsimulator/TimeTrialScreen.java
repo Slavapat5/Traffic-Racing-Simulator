@@ -597,14 +597,57 @@ public class TimeTrialScreen implements Screen {
         return trafficTypes.get(trafficTypes.size() - 1);
     }
 
+    private int getSelectedCarBonusPerMile() {
+        String selectedCarTexture = CarSelectionData.getSelectedCarTexture();
+
+        if (selectedCarTexture == null || selectedCarTexture.isEmpty()) {
+            return 100;
+        }
+
+        CarDataBase.load();
+
+        CarData car = CarDataBase.getCarByImage(selectedCarTexture);
+
+        if (car == null) {
+            return 100;
+        }
+
+        // $20,000 car = around $100 per mile
+        // $200,000 car = around $500 per mile
+        float basePrice = 20000f;
+        float targetPrice = 200000f;
+
+        float progress = (car.price - basePrice) / (targetPrice - basePrice);
+
+        int bonusPerMile = Math.round(100 + (progress * 400f));
+
+        return MathUtils.clamp(bonusPerMile, 100, 800);
+    }
+
+    private int calculateSelectedCarDistanceBonus(int distMeters) {
+        float miles = distMeters / 1609.34f;
+        int bonusPerMile = getSelectedCarBonusPerMile();
+
+        return Math.round(miles * bonusPerMile);
+    }
+
     private int calculateCashReward() {
         int distMeters = (int) (distanceScore / 10f);
 
         int distanceCash = distMeters / 25;
         int scoreCash = score / 25;
 
-        int total = distanceCash + scoreCash;
+        int carDistanceBonus = calculateSelectedCarDistanceBonus(distMeters);
+
+        int total = distanceCash + scoreCash + carDistanceBonus;
+
         if (total < 0) total = 0;
+
+        System.out.println("Base distance cash: $" + distanceCash);
+        System.out.println("Score cash: $" + scoreCash);
+        System.out.println("Selected car bonus: $" + carDistanceBonus);
+        System.out.println("Total cash earned: $" + total);
+
         return total;
     }
 

@@ -68,5 +68,15 @@
   "weightKg": 1422,
   "engine": "V8, 4.6L",
     "longDescription": "The Ferrari 458 is a sharp and responsive supercar known for its high-revving engine and precise performance. It feels fast, special, and highly rewarding, making it a top-tier choice for players who want speed with classic Italian style."
-}
+},
+  {
+    "image": "Ferrari SF90 Stradale - 2024.png",
+    "title": "2024 Ferrari SF90 Stradale",
+    "description": "Other Car",
+    "price": 525383,
+    "horsepower": 986,
+    "weightKg": 1570,
+    "engine": "V8, 4.0L",
+    "longDescription": "Let's see how good this thing is."
+  }
 ]

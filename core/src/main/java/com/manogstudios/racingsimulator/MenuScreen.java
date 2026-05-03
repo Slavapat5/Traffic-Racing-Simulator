@@ -390,7 +390,7 @@ public class MenuScreen implements Screen {
                             }
 
                             com.manogstudios.racingsimulator.network.SupabaseGameData.adjustCash(
-                                10000,
+                                100000,
                                 newCash -> {
                                     // update local cache + UI
                                     CashManager.setCash(newCash);

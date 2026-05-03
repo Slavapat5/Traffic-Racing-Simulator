@@ -885,6 +885,38 @@ public class EndlessTwoWayScreen implements Screen {
         }
     }
 
+    private int getSelectedCarBonusPerMile() {
+        String selectedCarTexture = CarSelectionData.getSelectedCarTexture();
+
+        if (selectedCarTexture == null || selectedCarTexture.isEmpty()) {
+            return 100;
+        }
+
+        CarDataBase.load();
+
+        CarData car = CarDataBase.getCarByImage(selectedCarTexture);
+
+        if (car == null) {
+            return 100;
+        }
+
+        float basePrice = 20000f;
+        float targetPrice = 200000f;
+
+        float progress = (car.price - basePrice) / (targetPrice - basePrice);
+
+        int bonusPerMile = Math.round(100 + (progress * 400f));
+
+        return MathUtils.clamp(bonusPerMile, 100, 800);
+    }
+
+    private int calculateSelectedCarDistanceBonus(int distMeters) {
+        float miles = distMeters / 1609.34f;
+        int bonusPerMile = getSelectedCarBonusPerMile();
+
+        return Math.round(miles * bonusPerMile);
+    }
+
     private int calculateCashReward() {
         int distMeters = (int) (distanceScore / 10f);
 
@@ -892,8 +924,17 @@ public class EndlessTwoWayScreen implements Screen {
         int scoreCash = score / 15;
         int timeCash = (int) (elapsedTime / 5f);
 
-        int total = distanceCash + scoreCash + timeCash;
+        int carDistanceBonus = calculateSelectedCarDistanceBonus(distMeters);
+
+        int total = distanceCash + scoreCash + timeCash + carDistanceBonus;
+
         if (total < 0) total = 0;
+
+        System.out.println("Base distance cash: $" + distanceCash);
+        System.out.println("Score cash: $" + scoreCash);
+        System.out.println("Time cash: $" + timeCash);
+        System.out.println("Selected car bonus: $" + carDistanceBonus);
+        System.out.println("Total cash earned: $" + total);
 
         return total;
     }

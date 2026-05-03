@@ -29,6 +29,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 public class DragRaceScreen implements Screen {
 
@@ -42,6 +43,9 @@ public class DragRaceScreen implements Screen {
     private Texture roadTexture;
 
     private Texture cashBgTexture;
+    private Texture raceTitleTexture;
+    private Texture youTitleTexture;
+    private Texture opponentTitleTexture;
 
     private static final float VIEW_WIDTH = 1920f;
     private static final float VIEW_HEIGHT = 1080f;
@@ -87,10 +91,18 @@ public class DragRaceScreen implements Screen {
     // UI
     private Stage uiStage;
     private Skin skin;
-    private Label playerInfoLabel;
-    private Label aiInfoLabel;
+
+    private Label playerSpeedLabel;
+    private Label playerClassLabel;
+    private Label playerPiLabel;
+
+    private Label aiSpeedLabel;
+    private Label aiClassLabel;
+    private Label aiPiLabel;
+
     private Label statusLabel;
     private Label cashLabel;
+
     private Table raceResultOverlay;
 
     // Opponent selection results
@@ -125,6 +137,10 @@ public class DragRaceScreen implements Screen {
         roadTexture = new Texture(Gdx.files.internal("Segment1.png"));
 
         cashBgTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
+
+        raceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Race.png"));
+        youTitleTexture = new Texture(Gdx.files.internal("Game_Label_You.png"));
+        opponentTitleTexture = new Texture(Gdx.files.internal("Game_Label_Opponent.png"));
 
         // Lane layout
         laneWidth = STRIP_WIDTH / 2f;
@@ -193,37 +209,85 @@ public class DragRaceScreen implements Screen {
         statusTable.setFillParent(true);
         statusTable.top().padTop(10);
 
+        Image raceTitleImage = new Image(raceTitleTexture);
+
         statusLabel = new Label("Get ready...", skin);
         statusLabel.setFontScale(2.0f);
         statusLabel.setAlignment(Align.center);
 
+        statusTable.add(raceTitleImage).width(220).height(60).center().padBottom(4).row();
         statusTable.add(statusLabel).center();
+
         uiStage.addActor(statusTable);
 
 
         Table aiTable = new Table();
         aiTable.setFillParent(true);
-        aiTable.bottom().left().padLeft(20).padBottom(80);
+        aiTable.bottom().left().padLeft(0).padBottom(80);
 
-        aiInfoLabel = new Label("", skin);
-        aiInfoLabel.setFontScale(1.2f);
-        aiInfoLabel.setAlignment(Align.left);
+        Image opponentTitleImage = new Image(opponentTitleTexture);
 
-        aiTable.add(aiInfoLabel).left();
+        aiSpeedLabel = new Label("0 mph", skin);
+        aiSpeedLabel.setFontScale(2.2f);
+        aiSpeedLabel.setAlignment(Align.left);
+        aiSpeedLabel.setColor(Color.WHITE);
+
+        aiClassLabel = new Label("", skin);
+        aiClassLabel.setFontScale(1.45f);
+        aiClassLabel.setAlignment(Align.left);
+
+        aiPiLabel = new Label("", skin);
+        aiPiLabel.setFontScale(1.15f);
+        aiPiLabel.setAlignment(Align.left);
+        aiPiLabel.setColor(Color.LIGHT_GRAY);
+
+        Table aiInfoCard = new Table(skin);
+        aiInfoCard.setBackground(skin.newDrawable("white", 0.04f, 0.04f, 0.04f, 0.75f));
+        aiInfoCard.pad(12);
+        aiInfoCard.defaults().left().padBottom(4);
+
+        aiInfoCard.add(aiSpeedLabel).left().row();
+        aiInfoCard.add(aiClassLabel).left().row();
+        aiInfoCard.add(aiPiLabel).left().row();
+
+        aiTable.add(opponentTitleImage).width(260).height(65).left().padBottom(4).row();
+        aiTable.add(aiInfoCard).width(250).left();
+
         uiStage.addActor(aiTable);
-
 
         Table playerTable = new Table();
         playerTable.setFillParent(true);
-        playerTable.bottom().right().padRight(10).padBottom(80);
+        playerTable.bottom().right().padRight(0).padBottom(80);
 
-        playerInfoLabel = new Label("", skin);
-        playerInfoLabel.setFontScale(1.35f);
-        playerInfoLabel.setAlignment(Align.right);
+        Image youTitleImage = new Image(youTitleTexture);
 
-        playerTable.add(playerInfoLabel).right();
+        playerSpeedLabel = new Label("0 mph", skin);
+        playerSpeedLabel.setFontScale(2.4f);
+        playerSpeedLabel.setAlignment(Align.right);
+        playerSpeedLabel.setColor(Color.WHITE);
+
+        playerClassLabel = new Label("", skin);
+        playerClassLabel.setFontScale(1.55f);
+        playerClassLabel.setAlignment(Align.right);
+
+        playerPiLabel = new Label("", skin);
+        playerPiLabel.setFontScale(1.2f);
+        playerPiLabel.setAlignment(Align.right);
+        playerPiLabel.setColor(Color.LIGHT_GRAY);
+
+        Table playerInfoCard = new Table(skin);
+        playerInfoCard.setBackground(skin.newDrawable("white", 0.04f, 0.04f, 0.04f, 0.75f));
+        playerInfoCard.pad(12);
+        playerInfoCard.defaults().right().padBottom(4);
+
+        playerInfoCard.add(playerSpeedLabel).right().row();
+        playerInfoCard.add(playerClassLabel).right().row();
+        playerInfoCard.add(playerPiLabel).right().row();
+
+        playerTable.add(youTitleImage).width(200).height(65).right().padBottom(4).row();
+        playerTable.add(playerInfoCard).width(250).right();
+
         uiStage.addActor(playerTable);
-
 
         Table pauseTable = new Table();
         pauseTable.setFillParent(true);
@@ -719,17 +783,38 @@ public class DragRaceScreen implements Screen {
         float pMph = playerCar.getSpeed() / 10f;
         float aMph = aiCar.getSpeed() / 10f;
 
-        playerInfoLabel.setText(
-            "YOU\n" +
-                (int) pMph + " mph\n" +
-                playerStats.carClass + "  PI " + playerStats.pi
-        );
+        playerSpeedLabel.setText((int) pMph + " mph");
+        playerClassLabel.setText("Class " + playerStats.carClass);
+        playerClassLabel.setColor(getClassColor(playerStats.carClass));
+        playerPiLabel.setText("PI " + playerStats.pi);
 
-        aiInfoLabel.setText(
-            "OPPONENT\n" +
-                (int) aMph + " mph\n" +
-                opponentStats.carClass + "  PI " + opponentStats.pi
-        );
+        aiSpeedLabel.setText((int) aMph + " mph");
+        aiClassLabel.setText("Class " + opponentStats.carClass);
+        aiClassLabel.setColor(getClassColor(opponentStats.carClass));
+        aiPiLabel.setText("PI " + opponentStats.pi);
+    }
+
+    private Color getClassColor(CarClass carClass) {
+        String c = String.valueOf(carClass);
+
+        switch (c) {
+            case "D":
+                return Color.LIGHT_GRAY;
+            case "C":
+                return Color.GREEN;
+            case "B":
+                return Color.CYAN;
+            case "A":
+                return Color.BLUE;
+            case "S1":
+                return Color.PURPLE;
+            case "S2":
+                return Color.ORANGE;
+            case "X":
+                return Color.GOLD;
+            default:
+                return Color.WHITE;
+        }
     }
 
     private void showRaceResultOverlay(boolean playerWon,
@@ -992,6 +1077,9 @@ public class DragRaceScreen implements Screen {
         batch.dispose();
         roadTexture.dispose();
         if (cashBgTexture != null) cashBgTexture.dispose();
+        if (raceTitleTexture != null) raceTitleTexture.dispose();
+        if (youTitleTexture != null) youTitleTexture.dispose();
+        if (opponentTitleTexture != null) opponentTitleTexture.dispose();
         uiStage.dispose();
         skin.dispose();
         if (playerCar != null) playerCar.dispose();
