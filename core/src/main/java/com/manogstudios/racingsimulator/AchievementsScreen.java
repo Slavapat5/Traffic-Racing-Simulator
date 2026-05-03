@@ -44,7 +44,7 @@ public class AchievementsScreen implements Screen {
 
         // Description
         Label subtitle = new Label(
-            "Complete challenges while playing to unlock achievements.",
+            "Complete challenges while playing to unlock achievements and earn cash rewards.",
             skin
         );
         subtitle.setAlignment(Align.center);
@@ -77,6 +77,12 @@ public class AchievementsScreen implements Screen {
             Label statusLabel = new Label(unlocked ? "Unlocked" : "Locked", skin);
             statusLabel.setColor(unlocked ? Color.GREEN : Color.GRAY);
 
+            Label rewardLabel = new Label(
+                "Reward: $" + formatCash(a.def.rewardCash),
+                skin
+            );
+            rewardLabel.setColor(unlocked ? Color.GOLD : Color.DARK_GRAY);
+
             if (!unlocked) {
                 nameLabel.setColor(Color.LIGHT_GRAY);
                 descLabel.setColor(Color.DARK_GRAY);
@@ -91,6 +97,7 @@ public class AchievementsScreen implements Screen {
 
             card.add(nameLabel).left().expandX().row();
             card.add(descLabel).left().width(500).row();
+            card.add(rewardLabel).left().row();
             card.add(statusLabel).left();
 
             // Add card to main list with spacing around it
@@ -123,6 +130,10 @@ public class AchievementsScreen implements Screen {
                 return false;
             }
         });
+    }
+
+    private String formatCash(int cash) {
+        return String.format("%,d", cash);
     }
 
     @Override

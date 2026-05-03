@@ -28,6 +28,7 @@ import java.util.List;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.graphics.Color;
 
 public class TestDriveScreen implements Screen {
 
@@ -131,6 +132,8 @@ public class TestDriveScreen implements Screen {
     private Label speedLabel;
     private Label distanceLabel;
     private Label timeLabel;
+
+    private Table gameOverOverlay;
 
     private float laneWidth;
     private float[] laneX;
@@ -601,6 +604,150 @@ public class TestDriveScreen implements Screen {
         });
     }
 
+    private void showGameOverOverlay(int distMeters) {
+        if (gameOverOverlay != null) {
+            gameOverOverlay.remove();
+        }
+
+        gameOverOverlay = new Table();
+        gameOverOverlay.setFillParent(true);
+
+        // Full-screen dim background.
+        gameOverOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.72f));
+
+        Table panel = new Table(skin);
+        panel.setBackground("default-round");
+        panel.setColor(0.06f, 0.06f, 0.06f, 0.98f);
+        panel.pad(35);
+        panel.defaults().pad(8);
+
+        Label titleLabel = new Label("YOU CRASHED", skin);
+        titleLabel.setFontScale(3.2f);
+        titleLabel.setColor(Color.RED);
+        titleLabel.setAlignment(Align.center);
+
+        Label subtitleLabel = new Label("Test Drive Summary", skin);
+        subtitleLabel.setFontScale(1.25f);
+        subtitleLabel.setColor(Color.LIGHT_GRAY);
+        subtitleLabel.setAlignment(Align.center);
+
+        panel.add(titleLabel).center().padBottom(4).row();
+        panel.add(subtitleLabel).center().padBottom(18).row();
+
+        // Practice mode info section
+        Table modeBox = new Table(skin);
+        modeBox.setBackground(skin.newDrawable("white", 0.10f, 0.10f, 0.10f, 0.95f));
+        modeBox.pad(18);
+
+        Label modeTitle = new Label("Practice Mode", skin);
+        modeTitle.setFontScale(1.3f);
+        modeTitle.setColor(Color.LIGHT_GRAY);
+        modeTitle.setAlignment(Align.center);
+
+        Label modeText = new Label("No score is recorded in Test Drive.", skin);
+        modeText.setFontScale(1.45f);
+        modeText.setColor(Color.WHITE);
+        modeText.setAlignment(Align.center);
+
+        modeBox.add(modeTitle).center().row();
+        modeBox.add(modeText).center().padTop(6);
+
+        panel.add(modeBox).width(560).fillX().padBottom(15).row();
+
+        // Stats section
+        Table statsRow = new Table(skin);
+        statsRow.defaults().pad(6);
+
+        statsRow.add(createResultStatBox(
+            "Distance",
+            distMeters + " m",
+            Color.CYAN
+        )).width(210).height(105);
+
+        statsRow.add(createResultStatBox(
+            "Time",
+            String.format("%.1f s", elapsedTime),
+            Color.CYAN
+        )).width(210).height(105);
+
+        statsRow.add(createResultStatBox(
+            "Near Misses",
+            String.valueOf(runNearMisses),
+            Color.CYAN
+        )).width(210).height(105);
+
+        statsRow.add(createResultStatBox(
+            "Max Speed",
+            String.format("%.0f mph", maxSpeedMph),
+            Color.GOLD
+        )).width(210).height(105);
+
+        panel.add(statsRow).center().padBottom(15).row();
+
+        // Note section
+        Table noteBox = new Table(skin);
+        noteBox.setBackground(skin.newDrawable("white", 0.08f, 0.08f, 0.08f, 0.95f));
+        noteBox.pad(16);
+
+        Label noteLabel = new Label(
+            "No normal cash or scores are awarded in Test Drive.\n" +
+                "Daily quest rewards may still apply.",
+            skin
+        );
+        noteLabel.setFontScale(1.2f);
+        noteLabel.setColor(Color.LIGHT_GRAY);
+        noteLabel.setAlignment(Align.center);
+        noteLabel.setWrap(true);
+
+        noteBox.add(noteLabel).width(520).center();
+
+        panel.add(noteBox).width(560).fillX().padBottom(22).row();
+
+        // Buttons
+        Table buttonRow = new Table();
+        buttonRow.defaults().pad(8);
+
+        TextButton restartButton = new TextButton("Restart", skin);
+        TextButton modesButton = new TextButton("Back to Modes", skin);
+        TextButton garageButton = new TextButton("Garage", skin);
+
+        restartButton.getLabel().setFontScale(1.25f);
+        modesButton.getLabel().setFontScale(1.25f);
+        garageButton.getLabel().setFontScale(1.25f);
+
+        restartButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new TestDriveScreen(game));
+            }
+        });
+
+        modesButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameModeSelectorScreen(game));
+            }
+        });
+
+        garageButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GarageScreen(game));
+            }
+        });
+
+        buttonRow.add(restartButton).width(210).height(65);
+        buttonRow.add(modesButton).width(260).height(65);
+        buttonRow.add(garageButton).width(210).height(65);
+
+        panel.add(buttonRow).center().row();
+
+        gameOverOverlay.add(panel).width(980).center();
+
+        uiStage.addActor(gameOverOverlay);
+        gameOverOverlay.toFront();
+    }
+
     private void checkLiveAchievements(int distMeters) {
         if (achievementToasts == null) return;
 
@@ -665,33 +812,56 @@ public class TestDriveScreen implements Screen {
         controlsDialog.show(uiStage);
     }
 
+    private Table createResultStatBox(String titleText, String valueText, Color valueColor) {
+        Table box = new Table(skin);
+        box.setBackground(skin.newDrawable("white", 0.08f, 0.08f, 0.08f, 0.95f));
+        box.pad(16);
 
+        Label title = new Label(titleText, skin);
+        title.setFontScale(1.05f);
+        title.setColor(Color.LIGHT_GRAY);
+        title.setAlignment(Align.center);
+
+        Label value = new Label(valueText, skin);
+        value.setFontScale(1.55f);
+        value.setColor(valueColor);
+        value.setAlignment(Align.center);
+
+        box.add(title).center().row();
+        box.add(value).center().padTop(6);
+
+        return box;
+    }
 
     private void onCrash() {
         gameOver = true;
         runCrashCount++;
 
         long endMillis = System.currentTimeMillis();
+
+        int distMeters = (int) (distanceTravelled / 10f);
+
+        Float avgSpeed = (speedSampleSeconds > 0f) ? (speedSumMphSeconds / speedSampleSeconds) : null;
+        Float maxSpeed = (maxSpeedMph > 0f) ? maxSpeedMph : null;
+
         if (SupabaseAuth.isLoggedIn) {
             SupabaseGameData.submitRunTelemetry(
                 "test_drive",
                 runStartMillis,
                 endMillis,
                 elapsedTime,
-                (int) (distanceTravelled / 10f),
+                distMeters,
                 0,
                 runCrashCount,
                 runNearMisses,
-                null,
-                null,
+                avgSpeed,
+                maxSpeed,
                 CarSelectionData.getSelectedCarTexture(),
                 "0.1.0",
                 () -> System.out.println("Telemetry saved"),
                 (err) -> System.out.println("Telemetry failed: " + err)
             );
         }
-
-        int distMeters = (int) (distanceTravelled / 10f);
 
         if (SupabaseAuth.isLoggedIn) {
             SupabaseGameData.updateDailyQuests(
@@ -724,38 +894,7 @@ public class TestDriveScreen implements Screen {
             achievementToasts.queueAll(newlyUnlocked);
         }
 
-        Dialog dialog = new Dialog("Crash!", skin) {
-            @Override
-            protected void result(Object obj) {
-                String choice = (String) obj;
-                if ("retry".equals(choice)) {
-                    game.setScreen(new TestDriveScreen(game));
-                } else if ("modes".equals(choice)) {
-                    game.setScreen(new GameModeSelectorScreen(game));
-                }
-            }
-        };
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("You crashed!\n\n")
-            .append("Distance: ").append(distMeters).append(" m\n")
-            .append("Time: ").append(String.format("%.1f s", elapsedTime)).append("\n")
-            .append("Near misses: ").append(runNearMisses).append("\n\n")
-            .append("No normal cash or scores are awarded in Test Drive.\n")
-            .append("Daily quest rewards may still apply.");
-
-        if (newlyUnlocked != null && newlyUnlocked.size > 0) {
-            sb.append("\n\nAchievements unlocked:\n");
-            for (AchievementsManager.AchievementState a : newlyUnlocked) {
-                sb.append("• ").append(a.def.name).append("\n");
-            }
-        }
-
-        dialog.text(sb.toString());
-        dialog.button("Restart", "retry");
-        dialog.button("Back to Modes", "modes");
-        dialog.show(uiStage);
+        showGameOverOverlay(distMeters);
     }
 
 

@@ -130,11 +130,24 @@ public class SupabaseGameData {
     public static void unlockAchievement(String achievementId,
                                          Runnable onSuccess,
                                          java.util.function.Consumer<String> onFail) {
+        unlockAchievementRewarded(
+            achievementId,
+            result -> {
+                if (onSuccess != null) onSuccess.run();
+            },
+            onFail
+        );
+    }
+
+    public static void unlockAchievementRewarded(String achievementId,
+                                                 java.util.function.Consumer<AchievementUnlockResult> onSuccess,
+                                                 java.util.function.Consumer<String> onFail) {
 
         if (!SupabaseAuth.isLoggedIn) {
             if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("not_logged_in"));
             return;
         }
+
         if (achievementId == null || achievementId.isEmpty()) {
             if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("invalid_achievement"));
             return;
@@ -161,26 +174,35 @@ public class SupabaseGameData {
 
                     if (response.statusCode() / 100 != 2) {
                         String msg = "unlock_failed";
+
                         try {
                             JSONObject err = new JSONObject(response.body());
                             msg = err.optString("error",
                                 err.optString("message",
                                     err.optString("details", msg)));
                         } catch (Exception ignored) {}
+
                         String finalMsg = msg;
                         if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(finalMsg));
                         return;
                     }
 
                     JSONObject json = new JSONObject(response.body());
-                    boolean ok = json.optBoolean("ok", true);
-                    if (!ok) {
-                        String msg = json.optString("error", "unlock_failed");
-                        if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(msg));
-                        return;
+
+                    AchievementUnlockResult result = new AchievementUnlockResult();
+                    result.ok = json.optBoolean("ok", true);
+                    result.newlyUnlocked = json.optBoolean("newlyUnlocked", false);
+                    result.rewardCash = json.optInt("rewardCash", 0);
+
+                    if (json.has("cash") && !json.isNull("cash")) {
+                        result.cash = json.getInt("cash");
+                        CashManager.setCash(result.cash);
+                        CashManager.saveCash();
                     }
 
-                    if (onSuccess != null) Gdx.app.postRunnable(onSuccess);
+                    if (onSuccess != null) {
+                        Gdx.app.postRunnable(() -> onSuccess.accept(result));
+                    }
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -510,6 +532,13 @@ public class SupabaseGameData {
             this.username = username;
             this.score = score;
         }
+    }
+
+    public static class AchievementUnlockResult {
+        public boolean ok;
+        public boolean newlyUnlocked;
+        public int rewardCash;
+        public Integer cash;
     }
 
     public static class DailyLoginResult {

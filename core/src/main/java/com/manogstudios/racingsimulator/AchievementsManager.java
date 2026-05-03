@@ -17,11 +17,13 @@ public class AchievementsManager {
         public final String id;
         public final String name;
         public final String description;
+        public final int rewardCash;
 
-        public AchievementDef(String id, String name, String description) {
+        public AchievementDef(String id, String name, String description, int rewardCash) {
             this.id = id;
             this.name = name;
             this.description = description;
+            this.rewardCash = rewardCash;
         }
     }
 
@@ -267,7 +269,67 @@ public class AchievementsManager {
     }
 
     private static void register(String id, String name, String description) {
-        achievements.add(new AchievementState(new AchievementDef(id, name, description)));
+        register(id, name, description, getDefaultRewardForAchievement(id));
+    }
+
+    private static void register(String id, String name, String description, int rewardCash) {
+        achievements.add(new AchievementState(
+            new AchievementDef(id, name, description, rewardCash)
+        ));
+    }
+
+    private static int getDefaultRewardForAchievement(String id) {
+        if (id == null) return 0;
+
+        // Easy starter achievements
+        if (id.contains("first_run") ||
+            id.contains("first_race") ||
+            id.contains("first_near_miss")) {
+            return 500;
+        }
+
+        // Basic progress achievements
+        if (id.contains("_5000") ||
+            id.contains("_10000") ||
+            id.contains("_1km") ||
+            id.contains("_2km") ||
+            id.contains("_60s") ||
+            id.contains("_90mph") ||
+            id.contains("_100mph") ||
+            id.contains("opposing_750") ||
+            id.contains("sub_25")) {
+            return 1000;
+        }
+
+        // Medium achievements
+        if (id.contains("_15000") ||
+            id.contains("_25000") ||
+            id.contains("_3km") ||
+            id.contains("_5km") ||
+            id.contains("_120s") ||
+            id.contains("_5_near") ||
+            id.contains("_120mph") ||
+            id.contains("first_win") ||
+            id.contains("close_win") ||
+            id.contains("dominant_win")) {
+            return 2500;
+        }
+
+        // Hard achievements
+        if (id.contains("_30000") ||
+            id.contains("_50000") ||
+            id.contains("_10km") ||
+            id.contains("_300s") ||
+            id.contains("_10_near") ||
+            id.contains("opposing_3000") ||
+            id.contains("sub_20") ||
+            id.contains("underdog") ||
+            id.contains("no_crash") ||
+            id.contains("low_crash")) {
+            return 5000;
+        }
+
+        return 1000;
     }
 
     public static void setCurrentUser(String userId) {
@@ -659,10 +721,19 @@ public class AchievementsManager {
 
         // Push to cloud using Edge Function
         if (SupabaseAuth.isLoggedIn) {
-            SupabaseGameData.unlockAchievement(
+            SupabaseGameData.unlockAchievementRewarded(
                 a.def.id,
-                () -> System.out.println("Achievement unlocked in cloud: " + a.def.id),
-                (err) -> System.out.println("unlockAchievement failed (" + a.def.id + "): " + err)
+                result -> {
+                    if (result.rewardCash > 0) {
+                        System.out.println(
+                            "Achievement reward paid: " + a.def.id +
+                                " +$" + result.rewardCash
+                        );
+                    } else {
+                        System.out.println("Achievement already unlocked in cloud: " + a.def.id);
+                    }
+                },
+                err -> System.out.println("unlockAchievement failed (" + a.def.id + "): " + err)
             );
         }
     }

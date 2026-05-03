@@ -37,6 +37,10 @@ public class AchievementToastManager {
         }
     }
 
+    private String formatCash(int cash) {
+        return String.format("%,d", cash);
+    }
+
     private void showNext() {
         AchievementsManager.AchievementState achievement = queue.poll();
 
@@ -67,11 +71,23 @@ public class AchievementToastManager {
         descLabel.setWrap(true);
         descLabel.setAlignment(Align.left);
 
+        Label rewardLabel = new Label(
+            "Reward: $" + formatCash(achievement.def.rewardCash),
+            skin
+        );
+
+        toast.add(titleLabel).left().row();
+        toast.add(nameLabel).left().padTop(4).row();
+        toast.add(descLabel).width(360).left().padTop(4).row();
+        toast.add(rewardLabel).left().padTop(6).row();
+
         toast.add(titleLabel).left().row();
         toast.add(nameLabel).left().padTop(4).row();
         toast.add(descLabel).width(360).left().padTop(4).row();
 
         toast.pack();
+
+
 
         float targetX = stage.getWidth() - toast.getWidth() - 25f;
         float targetY = stage.getHeight() - toast.getHeight() - 85f;
