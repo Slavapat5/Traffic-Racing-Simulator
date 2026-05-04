@@ -68,6 +68,7 @@ public class TimeTrialScreen implements Screen {
     private static final float SEGMENT_HEIGHT = 1080f;
     private float roadCenterX = VIEW_WIDTH / 2f;
     private float roadWidth = 800f;
+    private static final float ROAD_BOUNDARY_OFFSET_X = 40f;
 
     // --- Time Trial config ---
     private final float timeLimitSeconds;   // e.g. 60, 90, 120
@@ -181,6 +182,8 @@ public class TimeTrialScreen implements Screen {
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
 
+        float boundaryRoadCenterX = roadCenterX + ROAD_BOUNDARY_OFFSET_X;
+
         scoreTitleTexture = new Texture(Gdx.files.internal("Game_Label_Score.png"));
         distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
         speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
@@ -229,12 +232,14 @@ public class TimeTrialScreen implements Screen {
 
         // Borders
         borderRectangles = new ArrayList<>();
-        float leftEdge = roadCenterX - roadWidth / 2f;
-        float rightEdge = roadCenterX + roadWidth / 2f;
+
+        float leftEdge = boundaryRoadCenterX - roadWidth / 2f;
+        float rightEdge = boundaryRoadCenterX + roadWidth / 2f;
+
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
-// --- UI layout ---
+        // --- UI layout ---
 
 
         Table scoreTable = new Table();

@@ -60,6 +60,8 @@ public class TestDriveScreen implements Screen {
     private float roadCenterX = VIEW_WIDTH / 2f;
     private float roadWidth = 800f;
 
+    private static final float ROAD_BOUNDARY_OFFSET_X = 40f;
+
     private boolean paused = false;
     private Table pauseOverlay;
     private Table pauseCard;
@@ -162,6 +164,8 @@ public class TestDriveScreen implements Screen {
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
 
+        float boundaryRoadCenterX = roadCenterX + ROAD_BOUNDARY_OFFSET_X;
+
         distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
         speedTitleTexture = new Texture(Gdx.files.internal("Game_Label_Speed.png"));
 
@@ -210,8 +214,10 @@ public class TestDriveScreen implements Screen {
 
         // Borders (keep car on road)
         borderRectangles = new ArrayList<>();
-        float leftEdge = roadCenterX - roadWidth / 2f;
-        float rightEdge = roadCenterX + roadWidth / 2f;
+
+        float leftEdge = boundaryRoadCenterX - roadWidth / 2f;
+        float rightEdge = boundaryRoadCenterX + roadWidth / 2f;
+
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
