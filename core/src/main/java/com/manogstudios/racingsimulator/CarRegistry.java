@@ -33,7 +33,7 @@ public class CarRegistry {
         float hp = accel * 2f;
 
         // Caps
-        final float MPH_CAP = 500f;     // ~Chiron-level top speed
+        final float MPH_CAP = 350f;     // ~Chiron-level top speed
         final float HP_CAP  = 1500f;    // hypercar ceiling
         final float HANDLING_CAP = 4.0f; //  handling at 2.0..3.5-ish
 
