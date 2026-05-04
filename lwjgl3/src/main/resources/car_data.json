@@ -40,10 +40,20 @@
     "longDescription": "The BMW 330i delivers strong turbocharged performance in a more refined and premium package. It feels stable at speed, has solid acceleration, and suits players who want a comfortable but still sporty car for longer, faster runs."
   },
   {
+    "image": "Dodge Challenger SRT Hellcat - 2023.png",
+    "title": "2023 Dodge Challenger SRT Hellcat",
+    "description": "Other Car",
+    "price": 90000,
+    "horsepower": 986,
+    "weightKg": 1570,
+    "engine": "V8, 4.0L",
+    "longDescription": "Let's see how good this thing is."
+  },
+  {
     "image": "Mclaren 650s - 2015.png",
     "title": "2015 Mclaren 650s",
     "description": "Other Car",
-    "price": 98852,
+    "price": 140473,
     "horsepower": 641,
     "weightKg": 1370,
     "engine": "V8, 3.8L",

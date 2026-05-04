@@ -11,13 +11,14 @@ public class CarRegistry {
         // Speed = mph*10, acceleration = hp/2
         // PI + Class are computed automatically by CarStats(speed, accel, handling)
         statsMap.put("Mazda MX-5 Miata - 2014.png", new CarStats(1340f, 84f, 3f));
-        statsMap.put("Ford Fiesta ST - 2019.png", new CarStats(1440f, 100f, 3f));
-        statsMap.put("Volkswagen Golf GTI Mk8 - 2019.png", new CarStats(1550f, 121f, 3f));
-        statsMap.put("BMW 330i - 2025.png", new CarStats(1300f, 128f, 2.5f));
-        statsMap.put("Ferrari 458 - 2015.png", new CarStats(2020f, 281f, 2f));
-        statsMap.put("Lamborghini Huracan - 2015.png", new CarStats(2020f, 305f, 2.2f));
-        statsMap.put("Mclaren 650s - 2015.png", new CarStats(2070f, 321f, 2.1f));
-        statsMap.put("Ferrari SF90 Stradale - 2024.png", new CarStats(2110f, 493f, 2.0f));
+        statsMap.put("Ford Fiesta ST - 2019.png", new CarStats(1440f, 100f, 2.8f));
+        statsMap.put("Volkswagen Golf GTI Mk8 - 2019.png", new CarStats(1550f, 121f, 2.1f));
+        statsMap.put("BMW 330i - 2025.png", new CarStats(1300f, 128f, 2.0f));
+        statsMap.put("Ferrari 458 - 2015.png", new CarStats(2020f, 281f, 3.4f));
+        statsMap.put("Lamborghini Huracan - 2015.png", new CarStats(2020f, 305f, 3.0f));
+        statsMap.put("Mclaren 650s - 2015.png", new CarStats(2070f, 321f, 3.2f));
+        statsMap.put("Ferrari SF90 Stradale - 2024.png", new CarStats(2110f, 493f, 3.4f));
+        statsMap.put("Dodge Challenger SRT Hellcat - 2023.png", new CarStats(1990f, 359f, 1.6f));
     }
 
     public static CarStats getStats(String carImageName) {
@@ -35,7 +36,7 @@ public class CarRegistry {
         // Caps
         final float MPH_CAP = 350f;     // ~Chiron-level top speed
         final float HP_CAP  = 1500f;    // hypercar ceiling
-        final float HANDLING_CAP = 4.0f; //  handling at 2.0..3.5-ish
+        final float HANDLING_CAP = 5.0f; //  handling at 2.0..3.5-ish
 
         // Normalise to 0..1 with clamp
         float s = com.badlogic.gdx.math.MathUtils.clamp(mph / MPH_CAP, 0f, 1f);
