@@ -118,6 +118,14 @@ public class FreeRideScreen implements Screen {
     private int bonusPoints = 0;   // near misses, etc.
     private boolean gameOver = false;
 
+    // --- Anti-AFK ---
+    private static final float AFK_GRACE_SECONDS = 8f;              // gives player time at start
+    private static final float AFK_LOW_SPEED_LIMIT_MPH = 35f;       // below this counts as slow rolling
+    private static final float AFK_MAX_LOW_ACTIVITY_SECONDS = 20f;  // allowed idle time
+
+    private float lowActivityTimer = 0f;
+    private boolean endedByAfk = false;
+
     // --- Telemetry (run session) ---
     private long runStartMillis = 0L;
     private int runCrashCount = 0;
@@ -545,12 +553,21 @@ public class FreeRideScreen implements Screen {
         panel.pad(35);
         panel.defaults().pad(8);
 
-        Label titleLabel = new Label("YOU CRASHED", skin);
+        Label titleLabel = new Label(
+            endedByAfk ? "RUN ENDED" : "YOU CRASHED",
+            skin
+        );
+
         titleLabel.setFontScale(3.2f);
-        titleLabel.setColor(Color.RED);
+        titleLabel.setColor(endedByAfk ? Color.GOLD : Color.RED);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Free Ride Run Summary", skin);
+        Label subtitleLabel = new Label(
+            endedByAfk
+                ? "Free Ride ended because no active driving was detected."
+                : "Free Ride Run Summary",
+            skin
+        );
         subtitleLabel.setFontScale(1.25f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -783,6 +800,12 @@ public class FreeRideScreen implements Screen {
         int speedDisplay = (int) mph;
         speedLabel.setText(speedDisplay + " mph");
 
+        updateAntiAfk(delta, mph, moveForward, brake, turnLeft, turnRight);
+
+        if (gameOver) {
+            return;
+        }
+
 
         // Update cash UI (in case they earn money from something later)
         cashLabel.setText("$" + formatCash(CashManager.getCash()));
@@ -848,6 +871,30 @@ public class FreeRideScreen implements Screen {
         }
     }
 
+    private void updateAntiAfk(float delta,
+                               float mph,
+                               boolean moveForward,
+                               boolean brake,
+                               boolean turnLeft,
+                               boolean turnRight) {
+
+        if (gameOver) return;
+
+        boolean pressingControls = moveForward || brake || turnLeft || turnRight;
+
+        boolean pastGracePeriod = elapsedTime >= AFK_GRACE_SECONDS;
+        boolean movingTooSlow = mph < AFK_LOW_SPEED_LIMIT_MPH;
+
+        if (pastGracePeriod && movingTooSlow && !pressingControls) {
+            lowActivityTimer += delta;
+        } else {
+            lowActivityTimer = 0f;
+        }
+
+        if (lowActivityTimer >= AFK_MAX_LOW_ACTIVITY_SECONDS) {
+            onAfkTimeout();
+        }
+    }
 
     private boolean isLaneClearForSpawn(float laneXPos, float spawnY) {
         // Minimum vertical gap between cars in the same lane
@@ -931,7 +978,6 @@ public class FreeRideScreen implements Screen {
     }
 
     /** How much cash to award for this Free Ride run */
-    /** How much cash to award for this Free Ride run */
     private int calculateCashReward() {
         int distMeters = (int) (distanceScore / 10f);
 
@@ -975,9 +1021,12 @@ public class FreeRideScreen implements Screen {
         return box;
     }
 
-    private void onCrash() {
+    private void finishRun(boolean countedAsCrash) {
         gameOver = true;
-        runCrashCount++;
+
+        if (countedAsCrash) {
+            runCrashCount++;
+        }
 
         Float avgSpeed = (speedSampleSeconds > 0f) ? (speedSumMphSeconds / speedSampleSeconds) : null;
         Float maxSpeed = (maxSpeedMph > 0f) ? maxSpeedMph : null;
@@ -1066,8 +1115,16 @@ public class FreeRideScreen implements Screen {
         }
     }
 
+    private void onCrash() {
+        finishRun(true);
+    }
 
+    private void onAfkTimeout() {
+        if (gameOver) return;
 
+        endedByAfk = true;
+        finishRun(false);
+    }
 
     private TrafficCarType pickRandomTrafficType() {
         if (trafficTypes.isEmpty()) return null;

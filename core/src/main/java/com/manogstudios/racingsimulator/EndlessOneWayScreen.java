@@ -190,6 +190,14 @@ public class EndlessOneWayScreen implements Screen {
     private int bonusPoints = 0;
     private boolean gameOver = false;
 
+    // --- Anti-AFK ---
+    private static final float AFK_GRACE_SECONDS = 8f;
+    private static final float AFK_LOW_SPEED_LIMIT_MPH = 35f;
+    private static final float AFK_MAX_LOW_ACTIVITY_SECONDS = 20f;
+
+    private float lowActivityTimer = 0f;
+    private boolean endedByAfk = false;
+
 
     // Telemetry
     private long runStartMillis = 0L;
@@ -568,6 +576,12 @@ public class EndlessOneWayScreen implements Screen {
         int speedDisplay = (int) mph;
         speedLabel.setText("Speed: " + speedDisplay + " mph");
 
+        updateAntiAfk(delta, mph, moveForward, brake, turnLeft, turnRight);
+
+        if (gameOver) {
+            return;
+        }
+
         updateMultiplier(delta, mph);
 
         if (multLabel != null) {
@@ -656,6 +670,31 @@ public class EndlessOneWayScreen implements Screen {
                     }
                 }
             }
+        }
+    }
+
+    private void updateAntiAfk(float delta,
+                               float mph,
+                               boolean moveForward,
+                               boolean brake,
+                               boolean turnLeft,
+                               boolean turnRight) {
+
+        if (gameOver) return;
+
+        boolean pressingControls = moveForward || brake || turnLeft || turnRight;
+
+        boolean pastGracePeriod = elapsedTime >= AFK_GRACE_SECONDS;
+        boolean movingTooSlow = mph < AFK_LOW_SPEED_LIMIT_MPH;
+
+        if (pastGracePeriod && movingTooSlow && !pressingControls) {
+            lowActivityTimer += delta;
+        } else {
+            lowActivityTimer = 0f;
+        }
+
+        if (lowActivityTimer >= AFK_MAX_LOW_ACTIVITY_SECONDS) {
+            onAfkTimeout();
         }
     }
 
@@ -1006,12 +1045,21 @@ public class EndlessOneWayScreen implements Screen {
         panel.pad(35);
         panel.defaults().pad(8);
 
-        Label titleLabel = new Label("YOU CRASHED", skin);
+        Label titleLabel = new Label(
+            endedByAfk ? "RUN ENDED" : "YOU CRASHED",
+            skin
+        );
+
         titleLabel.setFontScale(3.2f);
-        titleLabel.setColor(Color.RED);
+        titleLabel.setColor(endedByAfk ? Color.GOLD : Color.RED);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Endless One Way Run Summary", skin);
+        Label subtitleLabel = new Label(
+            endedByAfk
+                ? "Endless One Way ended because no active driving was detected."
+                : "Endless One Way Run Summary",
+            skin
+        );
         subtitleLabel.setFontScale(1.25f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -1146,9 +1194,12 @@ public class EndlessOneWayScreen implements Screen {
         gameOverOverlay.toFront();
     }
 
-    private void onCrash() {
+    private void finishRun(boolean countedAsCrash) {
         gameOver = true;
-        runCrashCount++;
+
+        if (countedAsCrash) {
+            runCrashCount++;
+        }
 
         Float avgSpeed = (speedSampleSeconds > 0f) ? (speedSumMphSeconds / speedSampleSeconds) : null;
         Float maxSpeed = (maxSpeedMph > 0f) ? maxSpeedMph : null;
@@ -1240,6 +1291,17 @@ public class EndlessOneWayScreen implements Screen {
             CashManager.addCash(cashEarned);
             showGameOverSummary.run();
         }
+    }
+
+    private void onCrash() {
+        finishRun(true);
+    }
+
+    private void onAfkTimeout() {
+        if (gameOver) return;
+
+        endedByAfk = true;
+        finishRun(false);
     }
 
 

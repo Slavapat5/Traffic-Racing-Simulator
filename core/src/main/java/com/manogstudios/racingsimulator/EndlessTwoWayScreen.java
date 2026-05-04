@@ -196,6 +196,14 @@ public class EndlessTwoWayScreen implements Screen {
     private int bonusPoints = 0;
     private boolean gameOver = false;
 
+    // --- Anti-AFK ---
+    private static final float AFK_GRACE_SECONDS = 8f;
+    private static final float AFK_LOW_SPEED_LIMIT_MPH = 35f;
+    private static final float AFK_MAX_LOW_ACTIVITY_SECONDS = 20f;
+
+    private float lowActivityTimer = 0f;
+    private boolean endedByAfk = false;
+
     // --- Telemetry (run session) ---
     private long runStartMillis = 0L;
     private int runCrashCount = 0;
@@ -790,6 +798,12 @@ public class EndlessTwoWayScreen implements Screen {
         int speedDisplay = (int) mph;
         speedLabel.setText(speedDisplay + " mph");
 
+        updateAntiAfk(delta, mph, moveForward, brake, turnLeft, turnRight);
+
+        if (gameOver) {
+            return;
+        }
+
         updateMultiplier(delta, mph);
         multLabel.setText(String.format("x%.1f", scoreMultiplier));
 
@@ -882,6 +896,31 @@ public class EndlessTwoWayScreen implements Screen {
                     runNearMisses++; // telemetry
                 }
             }
+        }
+    }
+
+    private void updateAntiAfk(float delta,
+                               float mph,
+                               boolean moveForward,
+                               boolean brake,
+                               boolean turnLeft,
+                               boolean turnRight) {
+
+        if (gameOver) return;
+
+        boolean pressingControls = moveForward || brake || turnLeft || turnRight;
+
+        boolean pastGracePeriod = elapsedTime >= AFK_GRACE_SECONDS;
+        boolean movingTooSlow = mph < AFK_LOW_SPEED_LIMIT_MPH;
+
+        if (pastGracePeriod && movingTooSlow && !pressingControls) {
+            lowActivityTimer += delta;
+        } else {
+            lowActivityTimer = 0f;
+        }
+
+        if (lowActivityTimer >= AFK_MAX_LOW_ACTIVITY_SECONDS) {
+            onAfkTimeout();
         }
     }
 
@@ -1005,12 +1044,21 @@ public class EndlessTwoWayScreen implements Screen {
         panel.pad(35);
         panel.defaults().pad(8);
 
-        Label titleLabel = new Label("YOU CRASHED", skin);
+        Label titleLabel = new Label(
+            endedByAfk ? "RUN ENDED" : "YOU CRASHED",
+            skin
+        );
+
         titleLabel.setFontScale(3.2f);
-        titleLabel.setColor(Color.RED);
+        titleLabel.setColor(endedByAfk ? Color.GOLD : Color.RED);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Endless Two Way Run Summary", skin);
+        Label subtitleLabel = new Label(
+            endedByAfk
+                ? "Endless Two Way ended because no active driving was detected."
+                : "Endless Two Way Run Summary",
+            skin
+        );
         subtitleLabel.setFontScale(1.25f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -1145,10 +1193,12 @@ public class EndlessTwoWayScreen implements Screen {
         gameOverOverlay.toFront();
     }
 
-    private void onCrash() {
+    private void finishRun(boolean countedAsCrash) {
         gameOver = true;
-        // telemetry
-        runCrashCount++;
+
+        if (countedAsCrash) {
+            runCrashCount++;
+        }
 
         long endMillis = System.currentTimeMillis();
 
@@ -1248,6 +1298,18 @@ public class EndlessTwoWayScreen implements Screen {
             CashManager.addCash(cashEarned);
             showGameOverSummary.run();
         };
+    }
+
+    private void onCrash() {
+        finishRun(true);
+    }
+
+
+    private void onAfkTimeout() {
+        if (gameOver) return;
+
+        endedByAfk = true;
+        finishRun(false);
     }
 
 
