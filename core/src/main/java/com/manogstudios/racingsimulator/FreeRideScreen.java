@@ -61,6 +61,7 @@ public class FreeRideScreen implements Screen {
     private static final float SEGMENT_HEIGHT = 1080f;
     private float roadCenterX = VIEW_WIDTH / 2f;
     private float roadWidth = 800f;
+    private static final float ROAD_BOUNDARY_OFFSET_X = 40f;
 
     private boolean paused = false;
     private Table pauseOverlay;
@@ -174,6 +175,7 @@ public class FreeRideScreen implements Screen {
         roadTexture = new Texture(Gdx.files.internal(theme.roadTexturePath));
         surroundingsTexture = new Texture(Gdx.files.internal(theme.surroundingsTexturePath));
         roadWidth = theme.roadWidth;
+        float boundaryRoadCenterX = roadCenterX + ROAD_BOUNDARY_OFFSET_X;
 
         scoreTitleTexture = new Texture(Gdx.files.internal("Game_Label_Score.png"));
         distanceTitleTexture = new Texture(Gdx.files.internal("Game_Label_Distance.png"));
@@ -199,7 +201,7 @@ public class FreeRideScreen implements Screen {
         // Player car
         String selectedCarTexture = CarSelectionData.getSelectedCarTexture();
         CarStats stats = CarRegistry.getStats(selectedCarTexture);
-        float startX = roadCenterX;   // roughly center lane
+        float startX = roadCenterX;       // roughly center lane
         float startYWorld = 0f;
 
         float MIN_SPEED = 150f;
@@ -218,21 +220,20 @@ public class FreeRideScreen implements Screen {
 
 
 
-// Simple lane setup: 4 lanes across the road
+        // Simple lane setup: 4 lanes across the road
         laneWidth = roadWidth / 4f;
 
         // positions at: center - 1.5w, center - 0.5w, center + 0.5w, center + 1.5w
         laneX = new float[] {
-            roadCenterX - laneWidth * 1.5f,  // lane 0 (far left)
-            roadCenterX - laneWidth * 0.5f,  // lane 1
-            roadCenterX + laneWidth * 0.5f,  // lane 2
-            roadCenterX + laneWidth * 1.5f   // lane 3 (far right)
+            roadCenterX - laneWidth * 1.5f,
+            roadCenterX - laneWidth * 0.5f,
+            roadCenterX + laneWidth * 0.5f,
+            roadCenterX + laneWidth * 1.5f
         };
-
         // Borders (so car can't leave road)
         borderRectangles = new ArrayList<>();
-        float leftEdge = roadCenterX - roadWidth / 2f;
-        float rightEdge = roadCenterX + roadWidth / 2f;
+        float leftEdge = boundaryRoadCenterX - roadWidth / 2f;
+        float rightEdge = boundaryRoadCenterX + roadWidth / 2f;
 
         // Tall vertical rectangles as invisible walls
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
