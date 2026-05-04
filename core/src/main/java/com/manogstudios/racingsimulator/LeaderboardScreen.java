@@ -16,6 +16,8 @@ import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,11 @@ public class LeaderboardScreen implements Screen {
     private Texture bgTexture;
     private Image bgImage;
 
+    private Texture settingsButtonTexture;
+    private Texture settingsButtonDownTexture;
+    private Texture settingsButtonOverTexture;
+    private TextButton.TextButtonStyle modeButtonStyle;
+
     public LeaderboardScreen(Game game) {
         this.game = game;
     }
@@ -50,6 +57,21 @@ public class LeaderboardScreen implements Screen {
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         Gdx.input.setInputProcessor(stage);
+
+        settingsButtonTexture = new Texture(Gdx.files.internal("Settings_Button.png"));
+        settingsButtonDownTexture = new Texture(Gdx.files.internal("Settings_Button_Down.png"));
+        settingsButtonOverTexture = new Texture(Gdx.files.internal("Settings_Button_Over.png"));
+
+        modeButtonStyle = new TextButton.TextButtonStyle();
+        modeButtonStyle.font = skin.getFont("default-font");
+
+        modeButtonStyle.up = new TextureRegionDrawable(new TextureRegion(settingsButtonTexture));
+        modeButtonStyle.down = new TextureRegionDrawable(new TextureRegion(settingsButtonDownTexture));
+        modeButtonStyle.over = new TextureRegionDrawable(new TextureRegion(settingsButtonOverTexture));
+
+        modeButtonStyle.fontColor = Color.WHITE;
+        modeButtonStyle.downFontColor = Color.LIGHT_GRAY;
+        modeButtonStyle.overFontColor = Color.GOLD;
 
         // Background image
         try {
@@ -90,7 +112,8 @@ public class LeaderboardScreen implements Screen {
 
         // Mode buttons row
         Table modeRow = new Table();
-        modeRow.defaults().pad(4).width(150).height(40);
+        modeRow.defaults().pad(4).width(155).height(48);
+
 
         addModeButton(modeRow, "Free Ride",       "free_ride");
         addModeButton(modeRow, "Time Trial",      "time_trial");
@@ -151,11 +174,9 @@ public class LeaderboardScreen implements Screen {
     }
 
     private void addModeButton(Table parent, String label, final String modeKey) {
-        TextButton button = new TextButton(label, skin);
+        TextButton button = new TextButton(label, modeButtonStyle);
         button.getLabel().setAlignment(Align.center);
-
-        // Make it look a bit like a tab
-        button.getLabel().setColor(Color.LIGHT_GRAY);
+        button.getLabel().setFontScale(0.85f);
 
         button.addListener(new ClickListener() {
             @Override
@@ -167,7 +188,6 @@ public class LeaderboardScreen implements Screen {
 
         parent.add(button);
     }
-
 
      // Load leaderboard for a given mode using Supabase global leaderboard.
 
@@ -306,5 +326,9 @@ public class LeaderboardScreen implements Screen {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
         if (bgTexture != null) bgTexture.dispose();
+
+        if (settingsButtonTexture != null) settingsButtonTexture.dispose();
+        if (settingsButtonDownTexture != null) settingsButtonDownTexture.dispose();
+        if (settingsButtonOverTexture != null) settingsButtonOverTexture.dispose();
     }
 }

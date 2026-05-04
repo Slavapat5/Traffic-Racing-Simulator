@@ -140,6 +140,9 @@ public class TestDriveScreen implements Screen {
     private float laneWidth;
     private float[] laneX;
 
+    private float furthestPlayerY = 0f;
+    private static final float MAX_BACKWARD_DISTANCE = 120f;
+
     public TestDriveScreen(Game game) {
         this.game = game;
     }
@@ -202,6 +205,7 @@ public class TestDriveScreen implements Screen {
         );
 
         this.startY = startYWorld;
+        furthestPlayerY = playerCar.getY();
 
         // Lane setup: 4 lanes
         laneWidth = roadWidth / 4f;
@@ -347,6 +351,7 @@ public class TestDriveScreen implements Screen {
         boolean turnRight = Gdx.input.isKeyPressed(Input.Keys.D);
 
         playerCar.update(delta, moveForward, brake, turnLeft, turnRight, borderRectangles);
+        preventDrivingBackwards();
 
         // Camera follows the car
         float camY = playerCar.getY() + 300f;
@@ -424,6 +429,24 @@ public class TestDriveScreen implements Screen {
         if (achievementCheckTimer <= 0f && !gameOver) {
             achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
             checkLiveAchievements(displayDistance);
+        }
+    }
+
+    private void preventDrivingBackwards() {
+        float currentY = playerCar.getY();
+
+        if (currentY > furthestPlayerY) {
+            furthestPlayerY = currentY;
+        }
+
+        float minimumAllowedY = furthestPlayerY - MAX_BACKWARD_DISTANCE;
+
+        if (currentY < minimumAllowedY) {
+            playerCar.setPosition(playerCar.getX(), minimumAllowedY);
+
+            if (playerCar.getSpeed() < 0f) {
+                playerCar.setSpeed(0f);
+            }
         }
     }
 

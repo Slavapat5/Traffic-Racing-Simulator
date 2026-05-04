@@ -152,6 +152,9 @@ public class TimeTrialScreen implements Screen {
 
     private Table gameOverOverlay;
 
+    private float furthestPlayerY = 0f;
+    private static final float MAX_BACKWARD_DISTANCE = 120f;
+
     public TimeTrialScreen(Game game) {
         this(game, 60f); // default 60 seconds
     }
@@ -220,6 +223,7 @@ public class TimeTrialScreen implements Screen {
         );
 
         this.startY = startYWorld;
+        furthestPlayerY = playerCar.getY();
 
         // Lanes (4 lanes)
         laneWidth = roadWidth / 4f;
@@ -431,6 +435,7 @@ public class TimeTrialScreen implements Screen {
         boolean turnRight = Gdx.input.isKeyPressed(Input.Keys.D);
 
         playerCar.update(delta, moveForward, brake, turnLeft, turnRight, borderRectangles);
+        preventDrivingBackwards();
 
         // Camera follow
         float camY = playerCar.getY() + 300f;
@@ -525,6 +530,24 @@ public class TimeTrialScreen implements Screen {
         if (achievementCheckTimer <= 0f && !gameOver) {
             achievementCheckTimer = ACHIEVEMENT_CHECK_INTERVAL;
             checkLiveAchievements(displayDistance);
+        }
+    }
+
+    private void preventDrivingBackwards() {
+        float currentY = playerCar.getY();
+
+        if (currentY > furthestPlayerY) {
+            furthestPlayerY = currentY;
+        }
+
+        float minimumAllowedY = furthestPlayerY - MAX_BACKWARD_DISTANCE;
+
+        if (currentY < minimumAllowedY) {
+            playerCar.setPosition(playerCar.getX(), minimumAllowedY);
+
+            if (playerCar.getSpeed() < 0f) {
+                playerCar.setSpeed(0f);
+            }
         }
     }
 

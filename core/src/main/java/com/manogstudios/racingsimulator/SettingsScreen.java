@@ -18,12 +18,19 @@ import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.graphics.Color;
 
 public class SettingsScreen implements Screen {
 
     private final Game game;
     private Stage stage;
     private Skin skin;
+    private Texture settingsButtonTexture;
+    private Texture settingsButtonDownTexture;
+    private Texture settingsButtonOverTexture;
 
     public SettingsScreen(Game game) {
         this.game = game;
@@ -34,14 +41,30 @@ public class SettingsScreen implements Screen {
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
+        settingsButtonTexture = new Texture(Gdx.files.internal("Settings_Button.png"));
+        settingsButtonDownTexture = new Texture(Gdx.files.internal("Settings_Button_Down.png"));
+        settingsButtonOverTexture = new Texture(Gdx.files.internal("Settings_Button_Over.png"));
+
+        TextButton.TextButtonStyle settingsButtonStyle = new TextButton.TextButtonStyle();
+        settingsButtonStyle.font = skin.getFont("default-font");
+
+        settingsButtonStyle.up = new TextureRegionDrawable(new TextureRegion(settingsButtonTexture));
+        settingsButtonStyle.down = new TextureRegionDrawable(new TextureRegion(settingsButtonDownTexture));
+        settingsButtonStyle.over = new TextureRegionDrawable(new TextureRegion(settingsButtonOverTexture));
+
+        settingsButtonStyle.fontColor = Color.WHITE;
+        settingsButtonStyle.downFontColor = Color.LIGHT_GRAY;
+        settingsButtonStyle.overFontColor = Color.GOLD;
+
         Label titleLabel = new Label("Settings", skin);
         titleLabel.setFontScale(2.0f);
 
-        final TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
-        final TextButton mfaButton = new TextButton("Two-Factor Authentication", skin);
-        TextButton controlsButton = new TextButton("Controls / Help", skin);
-        TextButton logoutButton = new TextButton("Log out", skin);
-        TextButton backButton = new TextButton("Back", skin);
+        final TextButton fullscreenButton = new TextButton(getFullscreenText(), settingsButtonStyle);
+        final TextButton mfaButton = new TextButton("Two-Factor Authentication", settingsButtonStyle);
+        TextButton controlsButton = new TextButton("Controls / Help", settingsButtonStyle);
+        TextButton logoutButton = new TextButton("Log out", settingsButtonStyle);
+        TextButton backButton = new TextButton("Back", settingsButtonStyle);
+
 
         fullscreenButton.addListener(new ChangeListener() {
             @Override
@@ -190,5 +213,9 @@ public class SettingsScreen implements Screen {
     public void dispose() {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
+
+        if (settingsButtonTexture != null) settingsButtonTexture.dispose();
+        if (settingsButtonDownTexture != null) settingsButtonDownTexture.dispose();
+        if (settingsButtonOverTexture != null) settingsButtonOverTexture.dispose();
     }
 }

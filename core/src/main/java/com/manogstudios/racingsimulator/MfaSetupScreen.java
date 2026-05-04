@@ -20,12 +20,19 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class MfaSetupScreen implements Screen {
 
     private final Game game;
     private Stage stage;
     private Skin skin;
+
+    private Texture settingsButtonTexture;
+    private Texture settingsButtonDownTexture;
+    private Texture settingsButtonOverTexture;
 
     private Label statusLabel;
     private Label currentFactorLabel;
@@ -46,6 +53,21 @@ public class MfaSetupScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         Gdx.input.setInputProcessor(stage);
 
+        settingsButtonTexture = new Texture(Gdx.files.internal("Settings_Button.png"));
+        settingsButtonDownTexture = new Texture(Gdx.files.internal("Settings_Button_Down.png"));
+        settingsButtonOverTexture = new Texture(Gdx.files.internal("Settings_Button_Over.png"));
+
+        TextButton.TextButtonStyle settingsButtonStyle = new TextButton.TextButtonStyle();
+        settingsButtonStyle.font = skin.getFont("default-font");
+
+        settingsButtonStyle.up = new TextureRegionDrawable(new TextureRegion(settingsButtonTexture));
+        settingsButtonStyle.down = new TextureRegionDrawable(new TextureRegion(settingsButtonDownTexture));
+        settingsButtonStyle.over = new TextureRegionDrawable(new TextureRegion(settingsButtonOverTexture));
+
+        settingsButtonStyle.fontColor = Color.WHITE;
+        settingsButtonStyle.downFontColor = Color.LIGHT_GRAY;
+        settingsButtonStyle.overFontColor = Color.GOLD;
+
         Label titleLabel = new Label("Two-Factor Authentication", skin);
         titleLabel.setFontScale(1.7f);
         titleLabel.setAlignment(Align.center);
@@ -64,11 +86,11 @@ public class MfaSetupScreen implements Screen {
         codeField = new TextField("", skin);
         codeField.setMessageText("Enter 6-digit authenticator code");
 
-        TextButton refreshButton = new TextButton("Refresh Status", skin);
-        TextButton enableButton = new TextButton("Enable 2FA", skin);
-        TextButton verifyButton = new TextButton("Verify Code", skin);
-        TextButton disableButton = new TextButton("Disable 2FA", skin);
-        TextButton backButton = new TextButton("Back", skin);
+        TextButton refreshButton = new TextButton("Refresh Status", settingsButtonStyle);
+        TextButton enableButton = new TextButton("Enable 2FA", settingsButtonStyle);
+        TextButton verifyButton = new TextButton("Verify Code", settingsButtonStyle);
+        TextButton disableButton = new TextButton("Disable 2FA", settingsButtonStyle);
+        TextButton backButton = new TextButton("Back", settingsButtonStyle);
 
         refreshButton.addListener(new ChangeListener() {
             @Override
@@ -321,5 +343,9 @@ public class MfaSetupScreen implements Screen {
     public void dispose() {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
+
+        if (settingsButtonTexture != null) settingsButtonTexture.dispose();
+        if (settingsButtonDownTexture != null) settingsButtonDownTexture.dispose();
+        if (settingsButtonOverTexture != null) settingsButtonOverTexture.dispose();
     }
 }

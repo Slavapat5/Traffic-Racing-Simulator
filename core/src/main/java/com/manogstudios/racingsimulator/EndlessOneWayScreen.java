@@ -143,6 +143,9 @@ public class EndlessOneWayScreen implements Screen {
     private float[] laneX;
     private Table gameOverOverlay;
 
+    private float furthestPlayerY = 0f;
+    private static final float MAX_BACKWARD_DISTANCE = 120f;
+
     // Traffic
     private static class TrafficCar {
         Texture texture;
@@ -270,6 +273,7 @@ public class EndlessOneWayScreen implements Screen {
         );
 
         this.startY = startYWorld;
+        furthestPlayerY = playerCar.getY();
 
         runStartMillis = System.currentTimeMillis();
         runCrashCount = 0;
@@ -555,6 +559,7 @@ public class EndlessOneWayScreen implements Screen {
         boolean turnRight = Gdx.input.isKeyPressed(Input.Keys.D);
 
         playerCar.update(delta, moveForward, brake, turnLeft, turnRight, borderRectangles);
+        preventDrivingBackwards();
 
         float camY = playerCar.getY() + 300f;
         camera.position.set(roadCenterX, camY, 0);
@@ -673,6 +678,24 @@ public class EndlessOneWayScreen implements Screen {
                         runNearMisses++; // telemetry
                     }
                 }
+            }
+        }
+    }
+
+    private void preventDrivingBackwards() {
+        float currentY = playerCar.getY();
+
+        if (currentY > furthestPlayerY) {
+            furthestPlayerY = currentY;
+        }
+
+        float minimumAllowedY = furthestPlayerY - MAX_BACKWARD_DISTANCE;
+
+        if (currentY < minimumAllowedY) {
+            playerCar.setPosition(playerCar.getX(), minimumAllowedY);
+
+            if (playerCar.getSpeed() < 0f) {
+                playerCar.setSpeed(0f);
             }
         }
     }
@@ -1243,10 +1266,7 @@ public class EndlessOneWayScreen implements Screen {
         HighScoreManager.submitScore("endless_one_way", score);
         int bestScore = HighScoreManager.getHighScore("endless_one_way");
 
-        // Server leaderboard
-        if (SupabaseAuth.isLoggedIn) {
-            SupabaseGameData.submitScore("endless_one_way", score);
-        }
+
 
         // Cash
         int cashEarned = calculateCashReward();

@@ -27,8 +27,11 @@ public class PlayScreen implements Screen {
     private TextButton playButton;
     private SpriteBatch batch;
     private Texture backgroundTexture;
+    private Texture dailyBonusIconTexture;
+    private Texture dailyQuestIconTexture;
+
     private Label versionLabel;
-    private static final String GAME_VERSION = "Beta 1.7";
+    private static final String GAME_VERSION = "Beta 1.8";
 
 
 
@@ -94,8 +97,12 @@ public class PlayScreen implements Screen {
         versionLabel = new Label(GAME_VERSION, skin);
         versionLabel.setFontScale(1.6f);
 
-        TextButton dailyBonusButton = new TextButton("Daily Bonus", skin);
-        dailyBonusButton.getLabel().setFontScale(1.1f);
+        dailyBonusIconTexture = new Texture(Gdx.files.internal("PlayScreen_Gift.png"));
+        dailyQuestIconTexture = new Texture(Gdx.files.internal("PlayScreen_Quest.png"));
+
+        ImageButton dailyBonusButton = new ImageButton(
+            new TextureRegionDrawable(new TextureRegion(dailyBonusIconTexture))
+        );
 
         dailyBonusButton.addListener(new ChangeListener() {
             @Override
@@ -104,8 +111,9 @@ public class PlayScreen implements Screen {
             }
         });
 
-        TextButton dailyQuestsButton = new TextButton("Daily Quests", skin);
-        dailyQuestsButton.getLabel().setFontScale(1.1f);
+        ImageButton dailyQuestsButton = new ImageButton(
+            new TextureRegionDrawable(new TextureRegion(dailyQuestIconTexture))
+        );
 
         dailyQuestsButton.addListener(new ChangeListener() {
             @Override
@@ -230,8 +238,8 @@ public class PlayScreen implements Screen {
         dailyBonusTable.padTop(25);
         dailyBonusTable.padLeft(25);
 
-        dailyBonusTable.add(dailyBonusButton).width(180).height(45);
-        dailyBonusTable.add(dailyQuestsButton).width(180).height(45);
+        dailyBonusTable.add(dailyBonusButton).width(90).height(90).padRight(15);
+        dailyBonusTable.add(dailyQuestsButton).width(90).height(90);
 
         stage.addActor(dailyBonusTable);
 
@@ -489,7 +497,11 @@ public class PlayScreen implements Screen {
     @Override
     public void hide() {
         batch.dispose();
-        backgroundTexture.dispose();
+
+        if (backgroundTexture != null) backgroundTexture.dispose();
+        if (dailyBonusIconTexture != null) dailyBonusIconTexture.dispose();
+        if (dailyQuestIconTexture != null) dailyQuestIconTexture.dispose();
+
         skin.dispose();
         stage.dispose();
     }

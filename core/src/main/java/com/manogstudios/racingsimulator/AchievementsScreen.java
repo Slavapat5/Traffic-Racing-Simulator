@@ -14,12 +14,19 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class AchievementsScreen implements Screen {
 
     private final Game game;
     private Stage stage;
     private Skin skin;
+
+    private Texture backUpTexture;
+    private Texture backDownTexture;
+    private Texture backOverTexture;
 
     public AchievementsScreen(Game game) {
         this.game = game;
@@ -30,6 +37,15 @@ public class AchievementsScreen implements Screen {
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         Gdx.input.setInputProcessor(stage);
+
+        backUpTexture = new Texture(Gdx.files.internal("back_up.png"));
+        backDownTexture = new Texture(Gdx.files.internal("back_down.png"));
+        backOverTexture = new Texture(Gdx.files.internal("back_over.png"));
+
+        ImageButton.ImageButtonStyle backButtonStyle = new ImageButton.ImageButtonStyle();
+        backButtonStyle.up = new TextureRegionDrawable(new TextureRegion(backUpTexture));
+        backButtonStyle.down = new TextureRegionDrawable(new TextureRegion(backDownTexture));
+        backButtonStyle.over = new TextureRegionDrawable(new TextureRegion(backOverTexture));
 
         Table root = new Table();
         root.setFillParent(true);
@@ -110,7 +126,9 @@ public class AchievementsScreen implements Screen {
         }
 
         // Back button
-        TextButton backButton = new TextButton("Back", skin);
+
+        ImageButton backButton = new ImageButton(backButtonStyle);
+
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
@@ -118,7 +136,7 @@ public class AchievementsScreen implements Screen {
             }
         });
 
-        root.add(backButton).left().width(150);
+        root.add(backButton).left().width(80).height(30);
 
         stage.addListener(new InputListener() {
             @Override
@@ -154,5 +172,9 @@ public class AchievementsScreen implements Screen {
     public void dispose() {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
+
+        if (backUpTexture != null) backUpTexture.dispose();
+        if (backDownTexture != null) backDownTexture.dispose();
+        if (backOverTexture != null) backOverTexture.dispose();
     }
 }

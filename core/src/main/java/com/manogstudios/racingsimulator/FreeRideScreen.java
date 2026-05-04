@@ -70,6 +70,9 @@ public class FreeRideScreen implements Screen {
     private Table pauseSettingsOverlay;
     private Table pauseSettingsCard;
 
+    private float furthestPlayerY = 0f;
+    private static final float MAX_BACKWARD_DISTANCE = 120f;
+
 
     private static class TrafficCar {
         Texture texture;
@@ -218,7 +221,7 @@ public class FreeRideScreen implements Screen {
         // measures distance travelled
         this.startY = startYWorld;
 
-
+        furthestPlayerY = playerCar.getY();
 
         // Simple lane setup: 4 lanes across the road
         laneWidth = roadWidth / 4f;
@@ -460,6 +463,24 @@ public class FreeRideScreen implements Screen {
                 confirmDialog.show(uiStage);
             }
         });
+    }
+
+    private void preventDrivingBackwards() {
+        float currentY = playerCar.getY();
+
+        if (currentY > furthestPlayerY) {
+            furthestPlayerY = currentY;
+        }
+
+        float minimumAllowedY = furthestPlayerY - MAX_BACKWARD_DISTANCE;
+
+        if (currentY < minimumAllowedY) {
+            playerCar.setPosition(playerCar.getX(), minimumAllowedY);
+
+            if (playerCar.getSpeed() < 0f) {
+                playerCar.setSpeed(0f);
+            }
+        }
     }
 
     private void createPauseSettingsOverlay() {
@@ -762,6 +783,8 @@ public class FreeRideScreen implements Screen {
         boolean turnRight = Gdx.input.isKeyPressed(Input.Keys.D);
 
         playerCar.update(delta, moveForward, brake, turnLeft, turnRight, borderRectangles);
+
+        preventDrivingBackwards();
 
         // follow the car in X and Y
         float camY = playerCar.getY() + 300f;   // keeps the car a bit lower on the screen

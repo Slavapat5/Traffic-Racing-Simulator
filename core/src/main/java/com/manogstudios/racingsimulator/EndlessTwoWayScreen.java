@@ -82,6 +82,9 @@ public class EndlessTwoWayScreen implements Screen {
 
     private Label multLabel;
 
+    private float furthestPlayerY = 0f;
+    private static final float MAX_BACKWARD_DISTANCE = 120f;
+
     // --- Two-way config ---
     // Lanes 0 and 1 are "opposing traffic" (coming toward the player).
     private static final int[] OPPOSING_LANES = {0, 1};
@@ -276,6 +279,8 @@ public class EndlessTwoWayScreen implements Screen {
         );
 
         this.startY = startYWorld;
+        furthestPlayerY = playerCar.getY();
+
 
         runStartMillis = System.currentTimeMillis();
         runCrashCount = 0;
@@ -778,6 +783,7 @@ public class EndlessTwoWayScreen implements Screen {
         boolean turnRight = Gdx.input.isKeyPressed(Input.Keys.D);
 
         playerCar.update(delta, moveForward, brake, turnLeft, turnRight, borderRectangles);
+        preventDrivingBackwards();
 
         float camY = playerCar.getY() + 300f;
         camera.position.set(roadCenterX, camY, 0);
@@ -900,6 +906,24 @@ public class EndlessTwoWayScreen implements Screen {
                     t.nearMissAwarded = true;
                     runNearMisses++; // telemetry
                 }
+            }
+        }
+    }
+
+    private void preventDrivingBackwards() {
+        float currentY = playerCar.getY();
+
+        if (currentY > furthestPlayerY) {
+            furthestPlayerY = currentY;
+        }
+
+        float minimumAllowedY = furthestPlayerY - MAX_BACKWARD_DISTANCE;
+
+        if (currentY < minimumAllowedY) {
+            playerCar.setPosition(playerCar.getX(), minimumAllowedY);
+
+            if (playerCar.getSpeed() < 0f) {
+                playerCar.setSpeed(0f);
             }
         }
     }

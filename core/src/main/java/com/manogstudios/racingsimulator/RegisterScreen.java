@@ -135,9 +135,7 @@ public class RegisterScreen implements Screen {
 
         card.add(bottomRow).colspan(2).padTop(10).row();
 
-        // Back button
-        TextButton backButton = new TextButton("Back to Login", skin);
-        card.add(backButton).colspan(2).width(200).height(40).padTop(10).row();
+
 
         // Add card into root
         root.add(card).width(480).pad(20);
@@ -191,12 +189,7 @@ public class RegisterScreen implements Screen {
             }
         });
 
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new LoginScreen(game));
-            }
-        });
+
 
 
         TextButton quitButton = new TextButton("Quit Game", skin);
