@@ -1,92 +1,92 @@
 [
   {
     "image": "Ford Fiesta ST - 2019.png",
-    "title": "2019 Ford Fiesta ST",
-    "description": "Other Car",
+    "title": "2019 Nord Sesta SV",
+    "description": "Hatchback",
     "price": 14950,
     "horsepower": 200,
     "weightKg": 1262,
     "engine": "V3, 1.5L",
-    "longDescription": "A small but lively hot hatch that feels quick, nimble, and easy to control. The Fiesta ST is a great choice for players who want sharp handling, decent speed, and a fun lightweight car that is easy to throw through traffic."
+    "longDescription": "A small but lively hot hatch that feels quick, nimble, and easy to control. The Sesta SV is a great choice for players who want sharp handling, decent speed, and a fun lightweight car that is easy to throw through traffic."
   },
   {
     "image": "Volkswagen Golf GTI Mk8 - 2019.png",
-    "title": "2019 Volkswagen Golf GTI Mk8",
-    "description": "Other Car",
+    "title": "2019 Slovagen Ball GTR V8",
+    "description": "Hatchback",
     "price": 15821,
     "horsepower": 240,
     "weightKg": 1448,
     "engine": "i4, 2.0L",
-    "longDescription": "The Golf GTI is a strong all-rounder that mixes everyday usability with sporty performance. It offers more power and stability than smaller hot hatches, making it a dependable choice for players who want a fast but well-balanced car."
+    "longDescription": "The Slovagen GTR is a strong all-rounder that mixes everyday usability with sporty performance. It offers more power and stability than smaller hot hatches, making it a dependable choice for players who want a fast but well-balanced car."
   },
   {
     "image": "Mazda MX-5 Miata - 2014.png",
-    "title": "2014 Mazda MX-5 Miata",
-    "description": "Starter Car",
+    "title": "2014 Sazda FX5 Shiatto",
+    "description": "Roadster",
     "price": 21845,
     "horsepower": 181,
     "weightKg": 1090,
     "engine": "V4, 2.0L",
-    "longDescription": "A lightweight rear-wheel-drive roadster that focuses on agility and driver feel rather than raw power. The MX-5 is an ideal starter car because it is predictable, fun to drive, and teaches the player how to handle corners and traffic smoothly."
+    "longDescription": "A lightweight rear-wheel-drive roadster that focuses on agility and driver feel rather than raw power. The FX5 is an ideal starter car because it is predictable, fun to drive, and teaches the player how to handle corners and traffic smoothly."
   },
   {
     "image": "BMW 330i - 2025.png",
-    "title": "2025 BMW 330i",
-    "description": "Other Car",
+    "title": "2025 DMV 365e",
+    "description": "Sedan",
     "price": 47125,
     "horsepower": 255,
     "weightKg": 1525,
     "engine": "V4, 2.0L",
-    "longDescription": "The BMW 330i delivers strong turbocharged performance in a more refined and premium package. It feels stable at speed, has solid acceleration, and suits players who want a comfortable but still sporty car for longer, faster runs."
+    "longDescription": "The DMV 365e delivers strong turbocharged performance in a more refined and premium package. It feels stable at speed, has solid acceleration, and suits players who want a comfortable but still sporty car for longer, faster runs."
   },
   {
-    "image": "Dodge Challenger SRT Hellcat - 2023.png",
-    "title": "2023 Dodge Challenger SRT Hellcat",
-    "description": "Other Car",
+    "image": "DOJ Challenge RST Hellbunny - 2023.png",
+    "title": "2023 DOJ Challenge RST Hellbunny",
+    "description": "Sports Car",
     "price": 90000,
     "horsepower": 986,
     "weightKg": 1570,
     "engine": "V8, 4.0L",
-    "longDescription": "Let's see how good this thing is."
+    "longDescription": "The DOJ Challenge RST Hellbunny is a loud and aggressive muscle car built around raw power and straight-line speed. It feels heavy, wild, and intimidating, making it a great choice for players who want a car that launches hard and dominates with brute force."
   },
   {
     "image": "Mclaren 650s - 2015.png",
-    "title": "2015 Mclaren 650s",
-    "description": "Other Car",
+    "title": "2015 Solaren 660z",
+    "description": "Supercar",
     "price": 140473,
     "horsepower": 641,
     "weightKg": 1370,
     "engine": "V8, 3.8L",
-    "longDescription": "A brutal supercar built for speed, precision, and excitement. The McLaren 650S combines huge power with a relatively light body, making it a dangerous but rewarding machine for players who can handle very high speeds and rapid reactions."
+    "longDescription": "A brutal supercar built for speed, precision, and excitement. The Solaren 660z combines huge power with a relatively light body, making it a dangerous but rewarding machine for players who can handle very high speeds and rapid reactions."
   },
   {
     "image": "Lamborghini Huracan - 2015.png",
-    "title": "2015 Lamborghini Huracan",
-    "description": "Other Car",
+    "title": "2015 Lambini Uragan",
+    "description": "Supercar",
     "price": 237250,
     "horsepower": 610,
     "weightKg": 1422,
     "engine": "V10, 5.2L",
-    "longDescription": "The Huracan is a dramatic high-performance supercar with a powerful V10 engine and aggressive character. It offers massive speed and strong presence, making it perfect for players who want a loud, flashy, and thrilling car at the top end of the garage."
+    "longDescription": "The Uragan is a dramatic high-performance supercar with a powerful V10 engine and aggressive character. It offers massive speed and strong presence, making it perfect for players who want a loud, flashy, and thrilling car at the top end of the garage."
   },
   {
   "image": "Ferrari 458 - 2015.png",
-  "title": "2015 Ferrari 458",
-  "description": "Other Car",
+  "title": "2015 Ferrati 460",
+  "description": "Supercar",
   "price": 243090,
   "horsepower": 597,
   "weightKg": 1422,
   "engine": "V8, 4.6L",
-    "longDescription": "The Ferrari 458 is a sharp and responsive supercar known for its high-revving engine and precise performance. It feels fast, special, and highly rewarding, making it a top-tier choice for players who want speed with classic Italian style."
+    "longDescription": "The Ferrati 460 is a sharp and responsive supercar known for its high-revving engine and precise performance. It feels fast, special, and highly rewarding, making it a top-tier choice for players who want speed with classic Italian style."
 },
   {
     "image": "Ferrari SF90 Stradale - 2024.png",
-    "title": "2024 Ferrari SF90 Stradale",
-    "description": "Other Car",
+    "title": "2024 Ferrati SFX900 Strattalius",
+    "description": "Supercar",
     "price": 525383,
     "horsepower": 986,
     "weightKg": 1570,
     "engine": "V8, 4.0L",
-    "longDescription": "Let's see how good this thing is."
+    "longDescription": "The Ferrati SFX900 Strattalius is an elite hybrid supercar built for extreme speed and instant acceleration. Its advanced power delivery makes it feel sharp, futuristic, and brutally quick, making it a premium choice for players who want top-level performance and a high-tech driving feel."
   }
 ]

@@ -18,7 +18,7 @@ public class CarRegistry {
         statsMap.put("Lamborghini Huracan - 2015.png", new CarStats(2020f, 305f, 3.0f));
         statsMap.put("Mclaren 650s - 2015.png", new CarStats(2070f, 321f, 3.2f));
         statsMap.put("Ferrari SF90 Stradale - 2024.png", new CarStats(2110f, 493f, 3.4f));
-        statsMap.put("Dodge Challenger SRT Hellcat - 2023.png", new CarStats(1990f, 359f, 1.6f));
+        statsMap.put("DOJ Challenge RST Hellbunny - 2023.png", new CarStats(1990f, 359f, 1.6f));
     }
 
     public static CarStats getStats(String carImageName) {
