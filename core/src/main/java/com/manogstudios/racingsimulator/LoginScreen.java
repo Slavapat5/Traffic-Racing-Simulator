@@ -14,6 +14,8 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 
 public class LoginScreen implements Screen {
@@ -29,7 +31,13 @@ public class LoginScreen implements Screen {
     private static final int MAX_LOGIN_ATTEMPTS = 5;         // max attempts before lock
     private static final long LOCKOUT_DURATION_MS = 30_000L; // 30 seconds
 
+    private Texture buttonUpTexture;
+    private Texture buttonDownTexture;
+    private Texture buttonOverTexture;
+    private TextButton.TextButtonStyle defaultButtonStyle;
 
+    private Texture extraButtonTexture;
+    private TextButton.TextButtonStyle extraButtonStyle;
 
     public LoginScreen(Game game) {
         this.game = game;
@@ -52,6 +60,9 @@ public class LoginScreen implements Screen {
             // If the texture is missing, just skip the background
             bgTexture = null;
         }
+
+        defaultButtonStyle = createDefaultButtonStyle();
+        extraButtonStyle = createExtraButtonStyle();
 
         // Root table Scene2D
         Table root = new Table();
@@ -96,12 +107,12 @@ public class LoginScreen implements Screen {
         passwordField.setMessageText("••••••••");
 
         // little "Show" button
-        TextButton showButton = new TextButton("Show", skin);
+        TextButton showButton = new TextButton("Show", defaultButtonStyle);
 
         // password field + show button
         Table passwordRow = new Table();
         passwordRow.add(passwordField).width(300).padRight(6);
-        passwordRow.add(showButton).width(70);
+        passwordRow.add(showButton).width(70).height(35);
 
         card.add(passwordLabel).colspan(2).left().padTop(10);
         card.row();
@@ -128,15 +139,14 @@ public class LoginScreen implements Screen {
         card.add(feedbackLabel).colspan(2).width(380).padTop(8).row();
 
         //  Forgot password link
-        TextButton forgotPasswordButton = new TextButton("Forgot password?", skin);
-        forgotPasswordButton.getLabel().setColor(Color.SKY);
+        TextButton forgotPasswordButton = new TextButton("Forgot password?", extraButtonStyle);
         forgotPasswordButton.getLabel().setAlignment(Align.center);
         forgotPasswordButton.getLabel().setFontScale(0.9f);
 
-        card.add(forgotPasswordButton).colspan(2).width(200).height(30).padTop(4).row();
+        card.add(forgotPasswordButton).colspan(2).width(240).height(38).padTop(4).row();
 
         // Login button
-        TextButton loginButton = new TextButton("Login", skin);
+        TextButton loginButton = new TextButton("Login", defaultButtonStyle);
         loginButton.getLabel().setAlignment(Align.center);
         card.add(loginButton).colspan(2).width(380).height(45).padTop(10).row();
 
@@ -147,14 +157,14 @@ public class LoginScreen implements Screen {
         card.add(orLabel).colspan(2).padTop(10).row();
 
         // Register button
-        TextButton toRegisterButton = new TextButton("Create account", skin);
+        TextButton toRegisterButton = new TextButton("Create account", defaultButtonStyle);
         toRegisterButton.getLabel().setColor(Color.SKY);
         card.add(toRegisterButton).colspan(2).width(200).height(40).padTop(4).row();
 
         // Add the card to the root
         root.add(card).width(480).pad(20);
 
-        TextButton quitButton = new TextButton("Quit Game", skin);
+        TextButton quitButton = new TextButton("Quit Game", defaultButtonStyle);
         quitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -341,6 +351,51 @@ public class LoginScreen implements Screen {
         });
     }
 
+    private TextButton.TextButtonStyle createDefaultButtonStyle() {
+        buttonUpTexture = new Texture(Gdx.files.internal("Default_Button.png"));
+        buttonDownTexture = new Texture(Gdx.files.internal("Default_Button_Down.png"));
+        buttonOverTexture = new Texture(Gdx.files.internal("Default_Button_Over.png"));
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = new TextureRegionDrawable(new TextureRegion(buttonUpTexture));
+        style.down = new TextureRegionDrawable(new TextureRegion(buttonDownTexture));
+        style.over = new TextureRegionDrawable(new TextureRegion(buttonOverTexture));
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
+    private TextButton.TextButtonStyle createExtraButtonStyle() {
+        extraButtonTexture = new Texture(Gdx.files.internal("ExtraButton1.png"));
+
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(extraButtonTexture));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(extraButtonTexture));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(extraButtonTexture));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -363,5 +418,10 @@ public class LoginScreen implements Screen {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
         if (bgTexture != null) bgTexture.dispose();
+
+        if (buttonUpTexture != null) buttonUpTexture.dispose();
+        if (buttonDownTexture != null) buttonDownTexture.dispose();
+        if (buttonOverTexture != null) buttonOverTexture.dispose();
+        if (extraButtonTexture != null) extraButtonTexture.dispose();
     }
 }

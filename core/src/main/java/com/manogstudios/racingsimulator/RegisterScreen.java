@@ -14,7 +14,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
-import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 
 public class RegisterScreen implements Screen {
@@ -25,6 +26,14 @@ public class RegisterScreen implements Screen {
     private Texture bgTexture;
     private Image bgImage;
 
+    private Texture buttonUpTexture;
+    private Texture buttonDownTexture;
+    private Texture buttonOverTexture;
+    private TextButton.TextButtonStyle defaultButtonStyle;
+
+    private Texture extraButtonTexture;
+    private TextButton.TextButtonStyle extraButtonStyle;
+
     public RegisterScreen(Game game) {
         this.game = game;
     }
@@ -34,6 +43,9 @@ public class RegisterScreen implements Screen {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        defaultButtonStyle = createDefaultButtonStyle();
+        extraButtonStyle = createExtraButtonStyle();
 
         //  background image
         try {
@@ -87,10 +99,10 @@ public class RegisterScreen implements Screen {
         passwordField.setPasswordCharacter('*');
         passwordField.setMessageText("••••••••");
 
-        TextButton showButton = new TextButton("Show", skin);
+        TextButton showButton = new TextButton("Show", defaultButtonStyle);
         Table passwordRow = new Table();
         passwordRow.add(passwordField).width(300).padRight(6);
-        passwordRow.add(showButton).width(70);
+        passwordRow.add(showButton).width(70).height(35);
 
         card.add(passwordLabel).colspan(2).left().padTop(6);
         card.row();
@@ -118,27 +130,24 @@ public class RegisterScreen implements Screen {
         card.add(statusLabel).colspan(2).width(380).padTop(8).row();
 
         // Sign Up button
-        TextButton registerButton = new TextButton("Sign Up", skin);
+        TextButton registerButton = new TextButton("Sign Up", defaultButtonStyle);
         registerButton.getLabel().setAlignment(Align.center);
         card.add(registerButton).colspan(2).width(380).height(45).padTop(10).row();
 
-        // "Already have an account?" + Log in
+        // Already have account button
         Label haveAccountLabel = new Label("Already have an account?", skin);
         haveAccountLabel.setColor(Color.LIGHT_GRAY);
 
-        TextButton loginButton = new TextButton("Log in", skin);
-        loginButton.getLabel().setColor(Color.SKY);
+        TextButton loginButton = new TextButton("Log in", extraButtonStyle);
+        loginButton.getLabel().setColor(Color.WHITE);
+        loginButton.getLabel().setFontScale(0.9f);
 
         Table bottomRow = new Table();
-        bottomRow.add(haveAccountLabel).padRight(6);
-        bottomRow.add(loginButton);
+        bottomRow.add(haveAccountLabel).padRight(8);
+        bottomRow.add(loginButton).width(100).height(35);
 
         card.add(bottomRow).colspan(2).padTop(10).row();
 
-
-
-        // Add card into root
-        root.add(card).width(480).pad(20);
 
         //  Button logic
         registerButton.addListener(new ClickListener() {
@@ -192,7 +201,7 @@ public class RegisterScreen implements Screen {
 
 
 
-        TextButton quitButton = new TextButton("Quit Game", skin);
+        TextButton quitButton = new TextButton("Quit Game", defaultButtonStyle);
         quitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -201,8 +210,63 @@ public class RegisterScreen implements Screen {
         });
         card.add(quitButton).colspan(2).width(200).height(40).padTop(10).row();
 
+        root.add(card).width(480).pad(20);
+    }
 
+    private TextButton.TextButtonStyle createDefaultButtonStyle() {
+        buttonUpTexture = new Texture(Gdx.files.internal("Default_Button.png"));
+        buttonDownTexture = new Texture(Gdx.files.internal("Default_Button_Down.png"));
+        buttonOverTexture = new Texture(Gdx.files.internal("Default_Button_Over.png"));
 
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(buttonUpTexture));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(buttonDownTexture));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(buttonOverTexture));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
+    private TextButton.TextButtonStyle createExtraButtonStyle() {
+        extraButtonTexture = new Texture(Gdx.files.internal("ExtraButton1.png"));
+
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(extraButtonTexture));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(extraButtonTexture));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(extraButtonTexture));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
     }
 
     @Override
@@ -230,6 +294,11 @@ public class RegisterScreen implements Screen {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
         if (bgTexture != null) bgTexture.dispose();
+
+        if (buttonUpTexture != null) buttonUpTexture.dispose();
+        if (buttonDownTexture != null) buttonDownTexture.dispose();
+        if (buttonOverTexture != null) buttonOverTexture.dispose();
+        if (extraButtonTexture != null) extraButtonTexture.dispose();
     }
 
     /** Simple password strength check:

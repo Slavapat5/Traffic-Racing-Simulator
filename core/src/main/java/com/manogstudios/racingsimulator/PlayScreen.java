@@ -18,6 +18,7 @@ import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 
 public class PlayScreen implements Screen {
@@ -267,13 +268,18 @@ public class PlayScreen implements Screen {
     }
 
     private void showDailyQuestsPopup() {
-        Dialog dialog = new Dialog("Daily Quests", skin);
-        dialog.getContentTable().pad(25);
+        TextButton.TextButtonStyle popupButtonStyle = createModernPopupButtonStyle();
+
+        Dialog dialog = new Dialog("Daily Quests", createModernDialogStyle());
+        dialog.getTitleLabel().setAlignment(Align.center);
+        dialog.getTitleLabel().setFontScale(1.15f);
+        dialog.getContentTable().pad(28);
 
         Label loadingLabel = new Label("Loading daily quests...", skin);
         loadingLabel.setAlignment(Align.center);
+        loadingLabel.setColor(Color.LIGHT_GRAY);
 
-        TextButton closeButton = new TextButton("Close", skin);
+        TextButton closeButton = new TextButton("Close", popupButtonStyle);
         closeButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -282,14 +288,14 @@ public class PlayScreen implements Screen {
         });
 
         dialog.getContentTable().add(loadingLabel).width(720).padBottom(20).row();
-        dialog.getContentTable().add(closeButton).width(160).height(45).padTop(10).row();
+        dialog.getContentTable().add(closeButton).width(170).height(48).padTop(10).row();
 
         dialog.show(stage);
         resizeDailyQuestDialog(dialog);
 
         SupabaseGameData.fetchDailyQuests(quests -> {
             dialog.getContentTable().clear();
-            dialog.getContentTable().pad(25);
+            dialog.getContentTable().pad(28);
 
             Label infoLabel = new Label(
                 "Complete these challenges before tomorrow to earn extra cash.",
@@ -299,31 +305,37 @@ public class PlayScreen implements Screen {
             infoLabel.setAlignment(Align.center);
             infoLabel.setColor(Color.LIGHT_GRAY);
 
-            dialog.getContentTable().add(infoLabel).width(720).padBottom(18).row();
+            dialog.getContentTable().add(infoLabel).width(720).padBottom(20).row();
 
             if (quests == null || quests.isEmpty()) {
+                Table emptyPanel = new Table();
+                emptyPanel.setBackground(darkPanelDrawable());
+                emptyPanel.pad(25);
+
                 Label none = new Label("No daily quests available.", skin);
                 none.setAlignment(Align.center);
+                none.setColor(Color.LIGHT_GRAY);
 
-                dialog.getContentTable().add(none).width(720).height(420).pad(10).row();
-                dialog.getContentTable().add(closeButton).width(160).height(45).padTop(12).row();
+                emptyPanel.add(none).center();
+
+                dialog.getContentTable().add(emptyPanel).width(720).height(420).pad(10).row();
+                dialog.getContentTable().add(closeButton).width(170).height(48).padTop(14).row();
 
                 resizeDailyQuestDialog(dialog);
                 return;
             }
 
-            Table questList = new Table(skin);
-            questList.defaults().pad(10).left();
+            Table questList = new Table();
+            questList.defaults().padBottom(12).left();
 
             for (SupabaseGameData.DailyQuest q : quests) {
-                Table card = new Table(skin);
-                card.setBackground("default-round");
-                card.setColor(0.12f, 0.12f, 0.12f, 0.95f);
-                card.pad(15);
-                card.defaults().left().padBottom(6);
+                Table card = new Table();
+                card.setBackground(darkQuestCardDrawable(q.completed));
+                card.pad(18);
+                card.defaults().left().padBottom(7);
 
                 Label title = new Label(q.title, skin);
-                title.setFontScale(1.2f);
+                title.setFontScale(1.15f);
                 title.setColor(q.completed ? Color.GREEN : Color.WHITE);
 
                 Label desc = new Label(q.description, skin);
@@ -336,6 +348,7 @@ public class PlayScreen implements Screen {
                     "Progress: " + shownProgress + " / " + q.target,
                     skin
                 );
+                progress.setColor(Color.WHITE);
 
                 Label reward = new Label(
                     q.completed
@@ -343,7 +356,6 @@ public class PlayScreen implements Screen {
                         : "Reward: $" + formatCash(q.rewardCash),
                     skin
                 );
-
                 reward.setColor(q.completed ? Color.GREEN : Color.GOLD);
 
                 card.add(title).left().row();
@@ -351,7 +363,7 @@ public class PlayScreen implements Screen {
                 card.add(progress).left().row();
                 card.add(reward).left().row();
 
-                questList.add(card).width(690).fillX().padBottom(10).row();
+                questList.add(card).width(700).fillX().padBottom(12).row();
             }
 
             ScrollPane scrollPane = new ScrollPane(questList, skin);
@@ -359,23 +371,30 @@ public class PlayScreen implements Screen {
             scrollPane.setScrollingDisabled(true, false);
             scrollPane.setForceScroll(false, true);
             scrollPane.setSmoothScrolling(true);
+            scrollPane.setOverscroll(false, false);
 
-            dialog.getContentTable().add(scrollPane).width(740).height(520).row();
-            dialog.getContentTable().add(closeButton).width(160).height(45).padTop(14).row();
+            dialog.getContentTable().add(scrollPane).width(740).height(510).row();
+            dialog.getContentTable().add(closeButton).width(170).height(48).padTop(16).row();
 
             resizeDailyQuestDialog(dialog);
 
         }, error -> {
             dialog.getContentTable().clear();
-            dialog.getContentTable().pad(25);
+            dialog.getContentTable().pad(28);
 
-            Label errorLabel = new Label("Could not load daily quests: " + error, skin);
+            Table errorPanel = new Table();
+            errorPanel.setBackground(darkPanelDrawable());
+            errorPanel.pad(25);
+
+            Label errorLabel = new Label("Could not load daily quests:\n" + error, skin);
             errorLabel.setWrap(true);
             errorLabel.setAlignment(Align.center);
             errorLabel.setColor(Color.RED);
 
-            dialog.getContentTable().add(errorLabel).width(720).height(420).padBottom(15).row();
-            dialog.getContentTable().add(closeButton).width(160).height(45).padTop(10).row();
+            errorPanel.add(errorLabel).width(650).center();
+
+            dialog.getContentTable().add(errorPanel).width(720).height(420).padBottom(15).row();
+            dialog.getContentTable().add(closeButton).width(170).height(48).padTop(10).row();
 
             resizeDailyQuestDialog(dialog);
         });
@@ -393,8 +412,12 @@ public class PlayScreen implements Screen {
     }
 
     private void showDailyBonusPopup() {
-        Dialog dialog = new Dialog("Daily Login Bonus", skin);
-        dialog.getContentTable().pad(20);
+        TextButton.TextButtonStyle popupButtonStyle = createModernPopupButtonStyle();
+
+        Dialog dialog = new Dialog("Daily Login Bonus", createModernDialogStyle());
+        dialog.getTitleLabel().setAlignment(Align.center);
+        dialog.getTitleLabel().setFontScale(1.15f);
+        dialog.getContentTable().pad(28);
 
         Label infoLabel = new Label(
             "Claim one reward per day.\n" +
@@ -405,56 +428,62 @@ public class PlayScreen implements Screen {
 
         infoLabel.setWrap(true);
         infoLabel.setAlignment(Align.center);
+        infoLabel.setColor(Color.LIGHT_GRAY);
 
-        dialog.getContentTable().add(infoLabel).width(420).padBottom(15).row();
+        dialog.getContentTable().add(infoLabel).width(460).padBottom(18).row();
 
-        Table rewardsTable = new Table(skin);
-        rewardsTable.defaults().pad(6);
+        Table rewardsPanel = new Table();
+        rewardsPanel.setBackground(darkPanelDrawable());
+        rewardsPanel.pad(18);
+        rewardsPanel.defaults().pad(6).left();
 
         int[] rewards = {1000, 1500, 2000, 2500, 3000, 4000, 7500};
 
         for (int i = 0; i < rewards.length; i++) {
             Label rewardLabel = new Label(
-                "Day " + (i + 1) + ": $" + rewards[i],
+                "Day " + (i + 1) + "    $" + formatCash(rewards[i]),
                 skin
             );
 
-            rewardsTable.add(rewardLabel).left().row();
+            rewardLabel.setColor(i == rewards.length - 1 ? Color.GOLD : Color.WHITE);
+            rewardsPanel.add(rewardLabel).width(360).left().row();
         }
 
-        dialog.getContentTable().add(rewardsTable).padBottom(15).row();
+        dialog.getContentTable().add(rewardsPanel).width(430).padBottom(18).row();
 
-        TextButton claimButton = new TextButton("Claim Today", skin);
-        TextButton closeButton = new TextButton("Close", skin);
+        TextButton claimButton = new TextButton("Claim Today", popupButtonStyle);
+        TextButton closeButton = new TextButton("Close", popupButtonStyle);
 
         Table buttonRow = new Table();
-        buttonRow.add(claimButton).width(180).height(45).padRight(10);
-        buttonRow.add(closeButton).width(120).height(45);
+        buttonRow.add(claimButton).width(190).height(48).padRight(12);
+        buttonRow.add(closeButton).width(130).height(48);
 
         dialog.getContentTable().add(buttonRow).row();
 
         Label feedbackLabel = new Label("", skin);
         feedbackLabel.setWrap(true);
         feedbackLabel.setAlignment(Align.center);
+        feedbackLabel.setColor(Color.LIGHT_GRAY);
 
-        dialog.getContentTable().add(feedbackLabel).width(420).padTop(10).row();
+        dialog.getContentTable().add(feedbackLabel).width(460).padTop(14).row();
 
         claimButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 claimButton.setDisabled(true);
+                feedbackLabel.setColor(Color.LIGHT_GRAY);
                 feedbackLabel.setText("Checking daily bonus...");
 
                 SupabaseGameData.claimDailyLogin(result -> {
                     if (result.claimed) {
                         feedbackLabel.setColor(Color.GREEN);
                         feedbackLabel.setText(
-                            "Claimed $" + result.reward + "!\n" +
+                            "Claimed $" + formatCash(result.reward) + "!\n" +
                                 "Current streak: " + result.streak + " day(s).\n" +
-                                "New cash balance: $" + result.cash
+                                "New cash balance: $" + formatCash(result.cash)
                         );
                     } else {
-                        feedbackLabel.setColor(Color.YELLOW);
+                        feedbackLabel.setColor(Color.GOLD);
                         feedbackLabel.setText(
                             "You already claimed today's reward.\n" +
                                 "Come back tomorrow.\n" +
@@ -464,7 +493,7 @@ public class PlayScreen implements Screen {
                 }, error -> {
                     claimButton.setDisabled(false);
                     feedbackLabel.setColor(Color.RED);
-                    feedbackLabel.setText("Could not claim daily bonus: " + error);
+                    feedbackLabel.setText("Could not claim daily bonus:\n" + error);
                 });
             }
         });
@@ -477,6 +506,76 @@ public class PlayScreen implements Screen {
         });
 
         dialog.show(stage);
+
+        float dialogWidth = Math.min(560f, stage.getWidth() - 80f);
+        float dialogHeight = Math.min(620f, stage.getHeight() - 80f);
+
+        dialog.setSize(dialogWidth, dialogHeight);
+        dialog.setPosition(
+            (stage.getWidth() - dialogWidth) / 2f,
+            (stage.getHeight() - dialogHeight) / 2f
+        );
+    }
+
+    private Window.WindowStyle createModernDialogStyle() {
+        Window.WindowStyle style = new Window.WindowStyle(skin.get(Window.WindowStyle.class));
+
+        style.background = skin.newDrawable(
+            "default-round",
+            new Color(0.035f, 0.035f, 0.045f, 0.97f)
+        );
+
+        style.titleFont = skin.getFont("default-font");
+        style.titleFontColor = Color.WHITE;
+
+        return style;
+    }
+
+    private TextButton.TextButtonStyle createModernPopupButtonStyle() {
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+
+        style.up = skin.newDrawable(
+            "default-round",
+            new Color(0.16f, 0.16f, 0.20f, 1f)
+        );
+
+        style.down = skin.newDrawable(
+            "default-round",
+            new Color(0.08f, 0.08f, 0.11f, 1f)
+        );
+
+        style.over = skin.newDrawable(
+            "default-round",
+            new Color(0.24f, 0.24f, 0.30f, 1f)
+        );
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
+    private Drawable darkPanelDrawable() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.09f, 0.09f, 0.12f, 0.96f)
+        );
+    }
+
+    private Drawable darkQuestCardDrawable(boolean completed) {
+        if (completed) {
+            return skin.newDrawable(
+                "default-round",
+                new Color(0.07f, 0.16f, 0.10f, 0.96f)
+            );
+        }
+
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.10f, 0.10f, 0.14f, 0.96f)
+        );
     }
 
     private String formatCash(int cash) {
