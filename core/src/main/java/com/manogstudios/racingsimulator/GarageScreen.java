@@ -22,6 +22,10 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.manogstudios.racingsimulator.network.SupabaseGameData;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.ArrayList;
 
@@ -55,6 +59,9 @@ public class GarageScreen implements Screen {
     private static final float CAR_BOX_WIDTH = 420f;
     private static final float CAR_BOX_PAD = 20f;
 
+    private Table paintTable;
+    private final Map<String, Image> carCardImages = new HashMap<>();
+
     public GarageScreen(Game game) {
         this.game = game;
     }
@@ -78,6 +85,7 @@ public class GarageScreen implements Screen {
         // Load data
         CarOwnershipManager.loadOwnedCars();
         CarDataBase.load();
+        CarPaintManager.load();
 
         // === CAR LIST (HORIZONTAL) ===
         Table carListTable = new Table();
@@ -85,10 +93,16 @@ public class GarageScreen implements Screen {
         carListTable.defaults().space(30);
         carListTable.left();
 
+        java.util.HashSet<String> displayedCars = new java.util.HashSet<>();
+
         for (String imagePath : CarOwnershipManager.getOwnedCars()) {
             CarData car = CarDataBase.getCarByImage(imagePath);
+
             if (car != null) {
-                addCarCard(carListTable, car);
+                // Deduplicate by the resolved/new car image, not the original saved filename.
+                if (displayedCars.add(car.image)) {
+                    addCarCard(carListTable, car);
+                }
             } else {
                 System.err.println("Missing car data for owned car: " + imagePath);
             }
@@ -176,8 +190,11 @@ public class GarageScreen implements Screen {
         statsTable.add(weightLabel).left().row();
         statsTable.add(engineLabel).left().row();
 
+        paintTable = new Table();
+        paintTable.left();
+
         Table infoContent = new Table();
-        infoContent.defaults().pad(10);
+
 
         // left = image
         infoContent.add(carPreviewImage)
@@ -186,7 +203,7 @@ public class GarageScreen implements Screen {
             .top()
             .padRight(20);
 
-// right = stats
+        // right = stats
         infoContent.add(statsTable)
             .expandX()
             .fillX()
@@ -194,7 +211,8 @@ public class GarageScreen implements Screen {
             .left()
             .row();
 
-// bottom = history across both columns
+
+        // bottom = history across both columns
         infoContent.add(historyLabel)
             .colspan(2)
             .expandX()
@@ -205,12 +223,19 @@ public class GarageScreen implements Screen {
             .width(700)
             .row();
 
-
+        // paint buttons under description
+        infoContent.add(paintTable)
+            .colspan(2)
+            .expandX()
+            .fillX()
+            .left()
+            .padTop(10)
+            .row();
 
         infoPanel.add(infoContent).expand().center();
 
         // BOTTOM: info panel full width
-        root.add(infoPanel).height(320).expandX().fillX().padTop(10);
+        root.add(infoPanel).height(380).expandX().fillX().padTop(10);
 
         // === TOP BAR (CASH + BACK) ===
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
@@ -271,7 +296,8 @@ public class GarageScreen implements Screen {
                         if (obj instanceof CarData) {
                             CarData car = (CarData) obj;
 
-                            CarSelectionData.setSelectedCarTexture(car.image);
+                            String selectedPaintImage = CarPaintManager.getSelectedPaintImage(car);
+                            CarSelectionData.setSelectedCarTexture(selectedPaintImage);
                             if (game instanceof Main) {
                                 ((Main) game).selectedCarName = car.title;
                             }
@@ -315,9 +341,13 @@ public class GarageScreen implements Screen {
 
         // Image
         try {
-            Texture carTexture = new Texture(Gdx.files.internal(car.image));
+            String displayImage = CarPaintManager.getSelectedPaintImage(car);
+            Texture carTexture = new Texture(Gdx.files.internal(displayImage));
             Image carImage = new Image(carTexture);
             carImage.setScaling(Scaling.fit);
+
+            carCardImages.put(car.image, carImage);
+
             carBox.add(carImage).size(300, 150).row();
         } catch (Exception e) {
             System.err.println("Failed to load owned car image: " + car.image);
@@ -359,8 +389,12 @@ public class GarageScreen implements Screen {
         selectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                CarSelectionData.setSelectedCarTexture(car.image);
-                System.out.println("Selected car set to: " + car.image);
+                String selectedPaintImage = CarPaintManager.getSelectedPaintImage(car);
+
+                CarSelectionData.setSelectedCarTexture(selectedPaintImage);
+                SelectedCar.set(selectedPaintImage);
+
+                System.out.println("Selected car texture set to: " + selectedPaintImage);
                 System.out.println("Selected car: " + car.title);
 
                 if (game instanceof Main) {
@@ -397,7 +431,8 @@ public class GarageScreen implements Screen {
 
     private void showCarInfo(CarData car) {
         try {
-            Texture carTexture = new Texture(Gdx.files.internal(car.image));
+            String displayImage = CarPaintManager.getSelectedPaintImage(car);
+            Texture carTexture = new Texture(Gdx.files.internal(displayImage));
             carPreviewImage.setDrawable(new TextureRegionDrawable(new TextureRegion(carTexture)));
         } catch (Exception e) {
             System.err.println("Failed to load preview image in garage: " + car.image);
@@ -418,6 +453,30 @@ public class GarageScreen implements Screen {
         } else {
             classLabel.setText("Class: ?");
             classLabel.setColor(Color.LIGHT_GRAY);
+        }
+
+        updatePaintButtons(car);
+    }
+
+    private void updateCarCardImage(CarData car) {
+        if (car == null) return;
+
+        Image cardImage = carCardImages.get(car.image);
+
+        if (cardImage == null) {
+            return;
+        }
+
+        try {
+            String displayImage = CarPaintManager.getSelectedPaintImage(car);
+            Texture newTexture = new Texture(Gdx.files.internal(displayImage));
+
+            cardImage.setDrawable(
+                new TextureRegionDrawable(new TextureRegion(newTexture))
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to update card image for: " + car.image);
+            e.printStackTrace();
         }
     }
 
@@ -446,8 +505,9 @@ public class GarageScreen implements Screen {
         if (car == null) return;
 
         String selectedTexture = CarSelectionData.getSelectedCarTexture();
+        String selectedPaintForThisCar = CarPaintManager.getSelectedPaintImage(car);
 
-        if (selectedTexture != null && selectedTexture.equals(car.image)) {
+        if (selectedTexture != null && selectedTexture.equals(selectedPaintForThisCar)) {
             Dialog warningDialog = new Dialog("Can't Sell Selected Car", skin);
             warningDialog.text("You can't sell the car you're currently using.\n\nSelect another car first, then try again.");
             warningDialog.button("OK");
@@ -487,6 +547,125 @@ public class GarageScreen implements Screen {
         confirmDialog.show(stage);
     }
 
+    private void updatePaintButtons(CarData car) {
+        paintTable.clear();
+
+        if (car == null || car.paints == null || car.paints.isEmpty()) {
+            paintTable.add(new Label("No paint options available.", skin)).left();
+            return;
+        }
+
+        Label title = new Label("Paint:", skin);
+        title.setFontScale(1.1f);
+        paintTable.add(title).padRight(10);
+
+        for (CarPaint paint : car.paints) {
+            boolean selected = CarPaintManager.isPaintSelected(car, paint);
+
+            String buttonText = selected
+                ? paint.name + " ✓"
+                : paint.name + " - $500";
+
+            TextButton paintButton = new TextButton(buttonText, skin);
+
+            paintButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    if (CarPaintManager.isPaintSelected(car, paint)) {
+                        Dialog d = new Dialog("Already Selected", skin);
+                        d.text("This paint is already selected.");
+                        d.button("OK");
+                        d.show(stage);
+                        return;
+                    }
+
+                    showPaintConfirmDialog(car, paint);
+                }
+            });
+
+            paintTable.add(paintButton).pad(4).height(40);
+        }
+    }
+
+    private void showPaintConfirmDialog(CarData car, CarPaint paint) {
+        Dialog confirmDialog = new Dialog("Paint Car?", skin) {
+            @Override
+            protected void result(Object object) {
+                if (Boolean.TRUE.equals(object)) {
+                    paintCar(car, paint);
+                }
+            }
+        };
+
+        confirmDialog.text(
+            "Paint " + car.title + " in " + paint.name + "?\n\n" +
+                "Cost: $500"
+        );
+
+        confirmDialog.button("Yes", true);
+        confirmDialog.button("Cancel", false);
+        confirmDialog.show(stage);
+    }
+
+    private void paintCar(CarData car, CarPaint paint) {
+        stage.getRoot().setTouchable(Touchable.disabled);
+
+        SupabaseGameData.paintCar(
+            car.image,
+            paint.image,
+            newCash -> {
+                stage.getRoot().setTouchable(Touchable.enabled);
+
+                if (newCash >= 0) {
+                    CashManager.setCash(newCash);
+                    CashManager.saveCash();
+
+                    if (cashLabel != null) {
+                        cashLabel.setText("$" + formatCash(CashManager.getCash()));
+                    }
+                }
+
+                CarPaintManager.setSelectedPaintImage(car.image, paint.image);
+
+                showCarInfo(car);
+                updateCarCardImage(car);
+                updateCenterHighlight();
+
+                Dialog success = new Dialog("Paint Updated", skin);
+                success.text(car.title + " is now painted " + paint.name + ".");
+                success.button("OK");
+                success.show(stage);
+            },
+            err -> {
+                stage.getRoot().setTouchable(Touchable.enabled);
+
+                String msg;
+                switch (err) {
+                    case "insufficient_funds":
+                        msg = "You don't have enough cash.";
+                        break;
+                    case "not_owned":
+                        msg = "You do not own this car.";
+                        break;
+                    case "invalid_paint":
+                        msg = "This paint is not available for this car.";
+                        break;
+                    case "not_logged_in":
+                        msg = "Please log in again.";
+                        break;
+                    default:
+                        msg = "Paint failed: " + err;
+                        break;
+                }
+
+                Dialog fail = new Dialog("Paint Failed", skin);
+                fail.text(msg);
+                fail.button("OK");
+                fail.show(stage);
+            }
+        );
+    }
+
     private void sellCar(CarData car, int refund) {
         if (car == null) return;
 
@@ -503,12 +682,18 @@ public class GarageScreen implements Screen {
         System.out.println("Sold car: " + car.title + " for $" + refund);
 
         String selectedTexture = CarSelectionData.getSelectedCarTexture();
+        String selectedPaintForThisCar = CarPaintManager.getSelectedPaintImage(car);
 
-        if (selectedTexture != null && selectedTexture.equals(car.image)) {
+        if (selectedTexture != null && selectedTexture.equals(selectedPaintForThisCar)) {
             if (!CarOwnershipManager.getOwnedCars().isEmpty()) {
                 String firstOwned = new ArrayList<>(CarOwnershipManager.getOwnedCars()).get(0);
-                SelectedCar.set(firstOwned);
-                CarSelectionData.setSelectedCarTexture(firstOwned);
+                CarData firstCar = CarDataBase.getCarByImage(firstOwned);
+
+                if (firstCar != null) {
+                    String firstPaint = CarPaintManager.getSelectedPaintImage(firstCar);
+                    SelectedCar.set(firstPaint);
+                    CarSelectionData.setSelectedCarTexture(firstPaint);
+                }
             }
         }
 

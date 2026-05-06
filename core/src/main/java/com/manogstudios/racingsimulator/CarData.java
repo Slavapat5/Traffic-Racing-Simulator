@@ -1,5 +1,7 @@
 package com.manogstudios.racingsimulator;
 
+import java.util.List;
+
 public class CarData {
     public String image;
     public String title;
@@ -10,6 +12,8 @@ public class CarData {
     public int weightKg;
     public String engine;
     public String longDescription;
+
+    public List<CarPaint> paints;
 
 
     // No-args constructor required for JSON deserialization

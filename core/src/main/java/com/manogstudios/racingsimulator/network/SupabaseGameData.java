@@ -2,6 +2,7 @@ package com.manogstudios.racingsimulator.network;
 
 import com.badlogic.gdx.Gdx;
 import com.manogstudios.racingsimulator.CarOwnershipManager;
+import com.manogstudios.racingsimulator.CarPaintManager;
 import com.manogstudios.racingsimulator.CashManager;
 import com.manogstudios.racingsimulator.HighScoreManager;
 import org.json.JSONArray;
@@ -280,6 +281,78 @@ public class SupabaseGameData {
                     }
 
                     if (onSuccess != null) Gdx.app.postRunnable(onSuccess);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("exception"));
+                }
+            }).start();
+        }, (err) -> {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(err));
+        });
+    }
+
+    public static void paintCar(String carImage,
+                                String paintImage,
+                                java.util.function.Consumer<Integer> onSuccessCash,
+                                java.util.function.Consumer<String> onFail) {
+
+        if (!SupabaseAuth.isLoggedIn) {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("not_logged_in"));
+            return;
+        }
+
+        if (carImage == null || carImage.isEmpty() || paintImage == null || paintImage.isEmpty()) {
+            if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept("invalid_paint"));
+            return;
+        }
+
+        withValidToken((token) -> {
+            new Thread(() -> {
+                try {
+                    JSONObject body = new JSONObject();
+                    body.put("car_image", carImage);
+                    body.put("paint_image", paintImage);
+
+                    HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(SUPABASE_URL + "/functions/v1/paint-car"))
+                        .header("Content-Type", "application/json")
+                        .header("apikey", API_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
+                        .build();
+
+                    HttpResponse<String> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    System.out.println("paintCar(function): " + response.statusCode() + " body=" + response.body());
+
+                    if (response.statusCode() / 100 != 2) {
+                        String msg = "paint_failed";
+
+                        try {
+                            JSONObject err = new JSONObject(response.body());
+                            msg = err.optString("error", err.optString("message", msg));
+                        } catch (Exception ignored) {}
+
+                        String finalMsg = msg;
+                        if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(finalMsg));
+                        return;
+                    }
+
+                    JSONObject json = new JSONObject(response.body());
+
+                    if (!json.optBoolean("ok", false)) {
+                        String msg = json.optString("error", "paint_failed");
+                        if (onFail != null) Gdx.app.postRunnable(() -> onFail.accept(msg));
+                        return;
+                    }
+
+                    int newCash = json.optInt("cash", -1);
+
+                    if (onSuccessCash != null) {
+                        Gdx.app.postRunnable(() -> onSuccessCash.accept(newCash));
+                    }
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -1024,7 +1097,7 @@ public class SupabaseGameData {
     public static void loadOwnedCars(String userId, String accessToken, Runnable onDone) {
         new Thread(() -> {
             try {
-                String query = "owned_cars?user_id=eq." + userId + "&select=car_image";
+                String query = "owned_cars?user_id=eq." + userId + "&select=car_image,selected_paint_image";
                 HttpRequest request = baseRequest(query, accessToken)
                     .GET()
                     .build();
@@ -1050,6 +1123,12 @@ public class SupabaseGameData {
                         JSONObject row = arr.getJSONObject(i);
                         String carImage = row.getString("car_image");
                         CarOwnershipManager.addCarFromCloud(carImage);
+
+                        String selectedPaintImage = row.optString("selected_paint_image", null);
+                        if (selectedPaintImage != null && !selectedPaintImage.isEmpty()) {
+                            CarPaintManager.setSelectedPaintImageFromCloud(carImage, selectedPaintImage);
+                        }
+
                     }
                 }
 
