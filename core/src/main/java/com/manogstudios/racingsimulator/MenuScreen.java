@@ -21,6 +21,7 @@ import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 
 public class MenuScreen implements Screen {
     private final Game game;
@@ -30,6 +31,8 @@ public class MenuScreen implements Screen {
     private Label usernameLabel;
     private Texture backgroundTexture;
     private SpriteBatch batch;
+
+    private OrthographicCamera backgroundCamera;
 
 
     // settings button textures
@@ -63,6 +66,9 @@ public class MenuScreen implements Screen {
 
         backgroundTexture = new Texture(Gdx.files.internal("Menu_Background.png"));
         batch = new SpriteBatch();
+
+        backgroundCamera = new OrthographicCamera();
+        backgroundCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -317,6 +323,7 @@ public class MenuScreen implements Screen {
                     Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
                 } else {
                     Gdx.graphics.setWindowedMode(1600, 900);
+                    resize(1600, 900);
                 }
 
                 GameSettings.setFullscreenEnabled(enableFullscreen);
@@ -509,8 +516,11 @@ public class MenuScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        backgroundCamera.update();
+        batch.setProjectionMatrix(backgroundCamera.combined);
+
         batch.begin();
-        batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(backgroundTexture, 0, 0, backgroundCamera.viewportWidth, backgroundCamera.viewportHeight);
         batch.end();
 
         stage.act(delta);
@@ -522,6 +532,11 @@ public class MenuScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+
+        if (backgroundCamera != null) {
+            backgroundCamera.setToOrtho(false, width, height);
+            backgroundCamera.update();
+        }
     }
 
     @Override public void pause() {}

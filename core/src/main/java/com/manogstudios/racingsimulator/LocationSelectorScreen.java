@@ -33,6 +33,11 @@ public class LocationSelectorScreen implements Screen {
     private Texture bgTexture;
     private Image bgImage;
 
+    private Texture defaultButtonUpTexture;
+    private Texture defaultButtonDownTexture;
+    private Texture defaultButtonOverTexture;
+    private TextButton.TextButtonStyle defaultButtonStyle;
+
     private ScrollPane scrollPane;
 
     private static final float LOCATION_CARD_SIZE = 512f;
@@ -48,6 +53,7 @@ public class LocationSelectorScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+        defaultButtonStyle = createDefaultButtonStyle();
 
         setupBackground();
 
@@ -164,7 +170,7 @@ public class LocationSelectorScreen implements Screen {
 
         Table card = new Table(skin);
         card.setBackground(skin.newDrawable("default-round", new Color(0.1f, 0.1f, 0.1f, 0.92f)));
-        card.pad(18);
+        card.pad(18, 18, 24, 18);
 
         Label nameLabel = new Label(locationName, skin);
         nameLabel.setAlignment(Align.center);
@@ -177,7 +183,9 @@ public class LocationSelectorScreen implements Screen {
         descLabel.setAlignment(Align.center);
         descLabel.setColor(Color.LIGHT_GRAY);
 
-        TextButton selectButton = new TextButton("Select", skin);
+        TextButton selectButton = new TextButton("Select", defaultButtonStyle);
+        selectButton.getLabel().setAlignment(Align.center);
+        selectButton.getLabel().setFontScale(1.0f);
 
         selectButton.addListener(new ClickListener() {
             @Override
@@ -189,7 +197,7 @@ public class LocationSelectorScreen implements Screen {
         card.add(nameLabel).width(520).center().padBottom(10).row();
         card.add(previewActor).size(LOCATION_CARD_SIZE, LOCATION_CARD_SIZE).center().padBottom(12).row();
         card.add(descLabel).width(500).center().padBottom(12).row();
-        card.add(selectButton).width(180).height(46).center().row();
+        card.add(selectButton).width(180).height(56).center().row();
 
         card.addListener(new ClickListener() {
             @Override
@@ -259,6 +267,35 @@ public class LocationSelectorScreen implements Screen {
         }
     }
 
+    private TextButton.TextButtonStyle createDefaultButtonStyle() {
+        defaultButtonUpTexture = new Texture(Gdx.files.internal("Default_Button.png"));
+        defaultButtonDownTexture = new Texture(Gdx.files.internal("Default_Button_Down.png"));
+        defaultButtonOverTexture = new Texture(Gdx.files.internal("Default_Button_Over.png"));
+
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(defaultButtonUpTexture));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(defaultButtonDownTexture));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(defaultButtonOverTexture));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
     private String formatCash(int cash) {
         return String.format("%,d", cash);
     }
@@ -308,5 +345,9 @@ public class LocationSelectorScreen implements Screen {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
         if (bgTexture != null) bgTexture.dispose();
+
+        if (defaultButtonUpTexture != null) defaultButtonUpTexture.dispose();
+        if (defaultButtonDownTexture != null) defaultButtonDownTexture.dispose();
+        if (defaultButtonOverTexture != null) defaultButtonOverTexture.dispose();
     }
 }

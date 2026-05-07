@@ -36,6 +36,13 @@ public class GameModeSelectorScreen implements Screen {
     private Texture modeCardTexture;
     private Drawable modeCardBackground;
 
+    private Texture defaultButtonUpTexture;
+    private Texture defaultButtonDownTexture;
+    private Texture defaultButtonOverTexture;
+    private Texture cashLabelTexture;
+
+    private TextButton.TextButtonStyle defaultButtonStyle;
+
     public GameModeSelectorScreen(Game game) {
         this.game = game;
     }
@@ -46,6 +53,7 @@ public class GameModeSelectorScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+        defaultButtonStyle = createDefaultButtonStyle();
 
         setupBackground();
         setupModeCardBackground();
@@ -140,11 +148,13 @@ public class GameModeSelectorScreen implements Screen {
         Table cashOverlay = new Table();
         cashOverlay.setFillParent(true);
         cashOverlay.top().left().padTop(15).padLeft(20);
-        cashOverlay.add(cashContainer).left();
+        cashOverlay.add(cashContainer).width(200).height(50).left();
         stage.addActor(cashOverlay);
 
         // === RESET SCORES (BOTTOM-CENTER) ===
-        TextButton resetButton = new TextButton("Reset Scores", skin);
+        TextButton resetButton = new TextButton("Reset Scores", defaultButtonStyle);
+        resetButton.getLabel().setAlignment(Align.center);
+        resetButton.getLabel().setFontScale(1.0f);
         resetButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -177,7 +187,7 @@ public class GameModeSelectorScreen implements Screen {
         Table bottomCenter = new Table();
         bottomCenter.setFillParent(true);
         bottomCenter.bottom().padBottom(18);
-        bottomCenter.add(resetButton).center().width(200).height(45);
+        bottomCenter.add(resetButton).center().width(220).height(46);
         stage.addActor(bottomCenter);
 
         // === BACK BUTTON (BOTTOM-RIGHT) ===
@@ -271,11 +281,18 @@ public class GameModeSelectorScreen implements Screen {
         card.add(highScoreLabel).padTop(2).row();
 
         Table buttonRow = new Table();
-        TextButton playButton = new TextButton("Play", skin);
-        buttonRow.add(playButton).width(110).height(40).padRight(6);
 
-        TextButton leaderboardButton = new TextButton("Leaderboard", skin);
-        buttonRow.add(leaderboardButton).width(130).height(40);
+        TextButton playButton = new TextButton("Play", defaultButtonStyle);
+        playButton.getLabel().setAlignment(Align.center);
+        playButton.getLabel().setFontScale(1.08f);
+
+        buttonRow.add(playButton).width(145).height(46).padRight(10);
+
+        TextButton leaderboardButton = new TextButton("Leaderboard", defaultButtonStyle);
+        leaderboardButton.getLabel().setAlignment(Align.center);
+        leaderboardButton.getLabel().setFontScale(0.98f);
+
+        buttonRow.add(leaderboardButton).width(165).height(46);
 
         boolean supported = hasLeaderboard(modeKey);
         leaderboardButton.setDisabled(!supported);
@@ -318,7 +335,7 @@ public class GameModeSelectorScreen implements Screen {
             }
         });
 
-        parent.add(card).width(340).height(260).pad(20);
+        parent.add(card).width(380).height(270).pad(20);
     }
 
     private void showLeaderboardDialog(String modeKey) {
@@ -457,25 +474,48 @@ public class GameModeSelectorScreen implements Screen {
         game.setScreen(new LocationSelectorScreen(game, modeKey));
     }
 
+    private TextButton.TextButtonStyle createDefaultButtonStyle() {
+        defaultButtonUpTexture = new Texture(Gdx.files.internal("Default_Button.png"));
+        defaultButtonDownTexture = new Texture(Gdx.files.internal("Default_Button_Down.png"));
+        defaultButtonOverTexture = new Texture(Gdx.files.internal("Default_Button_Over.png"));
+
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(defaultButtonUpTexture));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(defaultButtonDownTexture));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(defaultButtonOverTexture));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
     private String formatCash(int cash) {
         return String.format("%,d", cash);
     }
 
     private Drawable createCashLabelBackground() {
-        int width = 200;
-        int height = 50;
+        if (cashLabelTexture == null) {
+            cashLabelTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
+        }
 
-        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.LIGHT_GRAY);
-        pixmap.fill();
-
-        pixmap.setColor(Color.BLACK);
-        pixmap.drawRectangle(0, 0, width, height);
-
-        Texture texture = new Texture(pixmap);
-        pixmap.dispose();
-
-        return new TextureRegionDrawable(new TextureRegion(texture));
+        TextureRegionDrawable drawable = new TextureRegionDrawable(new TextureRegion(cashLabelTexture));
+        drawable.setMinWidth(0);
+        drawable.setMinHeight(0);
+        return drawable;
     }
 
     @Override
@@ -503,5 +543,10 @@ public class GameModeSelectorScreen implements Screen {
         if (skin != null) skin.dispose();
         if (bgTexture != null) bgTexture.dispose();
         if (modeCardTexture != null) modeCardTexture.dispose();
+
+        if (defaultButtonUpTexture != null) defaultButtonUpTexture.dispose();
+        if (defaultButtonDownTexture != null) defaultButtonDownTexture.dispose();
+        if (defaultButtonOverTexture != null) defaultButtonOverTexture.dispose();
+        if (cashLabelTexture != null) cashLabelTexture.dispose();
     }
 }

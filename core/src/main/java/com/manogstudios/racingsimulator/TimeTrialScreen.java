@@ -283,7 +283,7 @@ public class TimeTrialScreen implements Screen {
 
         Table timeTable = new Table();
         timeTable.setFillParent(true);
-        timeTable.top().right().padTop(18).padRight(130);
+        timeTable.top().right().padTop(55).padRight(190);
 
         timeLabel = new Label("Time Left: " + (int) timeRemaining + "s", skin);
         timeLabel.setFontScale(1.3f);
@@ -322,7 +322,7 @@ public class TimeTrialScreen implements Screen {
         TextButton pauseButton = createMenuButton("PAUSE");
         pauseButton.getLabel().setFontScale(0.9f);
 
-        pauseTable.add(pauseButton).width(120f).height(42f);
+        pauseTable.add(pauseButton).width(150f).height(42f);
 
         uiStage.addActor(pauseTable);
 

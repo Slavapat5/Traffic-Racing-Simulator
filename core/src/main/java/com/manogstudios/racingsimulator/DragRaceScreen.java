@@ -305,7 +305,7 @@ public class DragRaceScreen implements Screen {
         TextButton pauseButton = createMenuButton("PAUSE");
         pauseButton.getLabel().setFontScale(0.9f);
 
-        pauseTable.add(pauseButton).width(120f).height(42f);
+        pauseTable.add(pauseButton).width(150f).height(42f);
 
         uiStage.addActor(pauseTable);
 
@@ -542,7 +542,7 @@ public class DragRaceScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game));
+                game.setScreen(new DragRaceScreen(game));
             }
         });
 
