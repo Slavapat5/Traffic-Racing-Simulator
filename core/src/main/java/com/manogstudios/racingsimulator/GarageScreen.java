@@ -709,31 +709,35 @@ public class GarageScreen implements Screen {
         paintTable.clear();
 
         if (car == null || car.paints == null || car.paints.isEmpty()) {
-            paintTable.add(new Label("No paint options available.", skin)).left();
+            Label noPaintLabel = new Label("No paint options available.", skin);
+            noPaintLabel.setColor(Color.LIGHT_GRAY);
+            paintTable.add(noPaintLabel).left();
             return;
         }
 
         Label title = new Label("Paint:", skin);
         title.setFontScale(1.1f);
-        paintTable.add(title).padRight(10);
+        title.setColor(Color.WHITE);
+        paintTable.add(title).padRight(14);
 
         for (CarPaint paint : car.paints) {
             boolean selected = CarPaintManager.isPaintSelected(car, paint);
 
-            String buttonText = selected
-                ? paint.name + " ✓"
-                : paint.name + " - $500";
+            Color paintColor = getPaintColor(paint.name);
+            TextButton.TextButtonStyle paintStyle = createPaintButtonStyle(paintColor, selected);
 
-            TextButton paintButton = new TextButton(buttonText, skin);
+            TextButton paintButton = new TextButton(selected ? "✓" : "", paintStyle);
+            paintButton.getLabel().setAlignment(Align.center);
+            paintButton.getLabel().setFontScale(1.1f);
 
             paintButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     if (CarPaintManager.isPaintSelected(car, paint)) {
-                        Dialog d = new Dialog("Already Selected", skin);
-                        d.text("This paint is already selected.");
-                        d.button("OK");
-                        d.show(stage);
+                        showModernMessageDialog(
+                            "Already Selected",
+                            paint.name + " paint is already selected for this car."
+                        );
                         return;
                     }
 
@@ -741,28 +745,93 @@ public class GarageScreen implements Screen {
                 }
             });
 
-            paintTable.add(paintButton).pad(4).height(40);
+            Table paintOption = new Table();
+
+            paintOption.add(paintButton).width(42).height(42).row();
+
+            Label paintNameLabel = new Label(paint.name, skin);
+            paintNameLabel.setFontScale(0.75f);
+            paintNameLabel.setColor(selected ? Color.GREEN : Color.LIGHT_GRAY);
+            paintNameLabel.setAlignment(Align.center);
+
+            paintOption.add(paintNameLabel).width(70).center();
+
+            paintTable.add(paintOption).padRight(8).top();
         }
     }
 
-    private void showPaintConfirmDialog(CarData car, CarPaint paint) {
-        Dialog confirmDialog = new Dialog("Paint Car?", skin) {
-            @Override
-            protected void result(Object object) {
-                if (Boolean.TRUE.equals(object)) {
-                    paintCar(car, paint);
-                }
-            }
-        };
+    private Color getPaintColor(String paintName) {
+        if (paintName == null) return Color.WHITE;
 
-        confirmDialog.text(
-            "Paint " + car.title + " in " + paint.name + "?\n\n" +
-                "Cost: $500"
+        String name = paintName.toLowerCase();
+
+        if (name.contains("black")) return Color.BLACK;
+        if (name.contains("white")) return Color.WHITE;
+        if (name.contains("red")) return Color.RED;
+        if (name.contains("blue")) return Color.BLUE;
+        if (name.contains("green")) return Color.GREEN;
+        if (name.contains("yellow")) return Color.YELLOW;
+        if (name.contains("orange")) return Color.ORANGE;
+        if (name.contains("purple")) return new Color(0.55f, 0.20f, 0.90f, 1f);
+        if (name.contains("pink")) return new Color(1f, 0.35f, 0.70f, 1f);
+        if (name.contains("grey") || name.contains("gray")) return Color.GRAY;
+        if (name.contains("silver")) return new Color(0.75f, 0.75f, 0.80f, 1f);
+        if (name.contains("gold")) return Color.GOLD;
+        if (name.contains("cyan")) return Color.CYAN;
+
+        return Color.LIGHT_GRAY;
+    }
+
+    private TextButton.TextButtonStyle createPaintButtonStyle(Color baseColor, boolean selected) {
+        Color upColor = new Color(baseColor);
+        Color overColor = brightenColor(baseColor, 1.25f);
+        Color downColor = darkenColor(baseColor, 0.75f);
+
+        if (selected) {
+            overColor = Color.GREEN;
+        }
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+
+        style.up = skin.newDrawable("default-round", upColor);
+        style.over = skin.newDrawable("default-round", overColor);
+        style.down = skin.newDrawable("default-round", downColor);
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = selected ? Color.BLACK : Color.CLEAR;
+        style.overFontColor = selected ? Color.BLACK : Color.CLEAR;
+        style.downFontColor = selected ? Color.BLACK : Color.CLEAR;
+
+        return style;
+    }
+
+    private Color brightenColor(Color color, float amount) {
+        return new Color(
+            Math.min(color.r * amount, 1f),
+            Math.min(color.g * amount, 1f),
+            Math.min(color.b * amount, 1f),
+            color.a
         );
+    }
 
-        confirmDialog.button("Yes", true);
-        confirmDialog.button("Cancel", false);
-        confirmDialog.show(stage);
+    private Color darkenColor(Color color, float amount) {
+        return new Color(
+            color.r * amount,
+            color.g * amount,
+            color.b * amount,
+            color.a
+        );
+    }
+
+    private void showPaintConfirmDialog(CarData car, CarPaint paint) {
+        showModernConfirmDialog(
+            "Paint Car?",
+            "Paint " + car.title + " in " + paint.name + "?\n\n" +
+                "Cost: $500",
+            "Paint",
+            "Cancel",
+            () -> paintCar(car, paint)
+        );
     }
 
     private void paintCar(CarData car, CarPaint paint) {
@@ -789,10 +858,10 @@ public class GarageScreen implements Screen {
                 updateCarCardImage(car);
                 updateCenterHighlight();
 
-                Dialog success = new Dialog("Paint Updated", skin);
-                success.text(car.title + " is now painted " + paint.name + ".");
-                success.button("OK");
-                success.show(stage);
+                showModernMessageDialog(
+                    "Paint Updated",
+                    car.title + " is now painted " + paint.name + "."
+                );
             },
             err -> {
                 stage.getRoot().setTouchable(Touchable.enabled);
@@ -816,10 +885,10 @@ public class GarageScreen implements Screen {
                         break;
                 }
 
-                Dialog fail = new Dialog("Paint Failed", skin);
-                fail.text(msg);
-                fail.button("OK");
-                fail.show(stage);
+                showModernMessageDialog(
+                    "Paint Failed",
+                    msg
+                );
             }
         );
     }

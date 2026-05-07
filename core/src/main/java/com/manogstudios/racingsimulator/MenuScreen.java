@@ -38,6 +38,11 @@ public class MenuScreen implements Screen {
     // back button textures
     private Texture backUpTex, backDownTex, backOverTex;
 
+    private Texture defaultButtonUpTex;
+    private Texture defaultButtonDownTex;
+    private Texture defaultButtonOverTex;
+    private TextButton.TextButtonStyle defaultButtonStyle;
+
     public MenuScreen(Game game) {
         this.game = game;
     }
@@ -63,6 +68,7 @@ public class MenuScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+        defaultButtonStyle = createDefaultButtonStyle();
 
         // ===== MAIN CENTER CARD WITH BUTTONS =====
         Table centerRoot = new Table();
@@ -262,41 +268,44 @@ public class MenuScreen implements Screen {
         //settingsButton.getLabel().setFontScale(0.9f);
         settingsAnchor.add(settingsButton).size(180, 70);
 
-        // Popup card
-        Table settingsPopup = new Table(skin);
+        //  settings popup card
+        Table settingsPopup = new Table();
         settingsPopup.setVisible(false);
-        settingsPopup.defaults().pad(4).fillX();
-        settingsPopup.setBackground("default-round");
-        settingsPopup.setColor(0.08f, 0.08f, 0.08f, 0.95f);
-        settingsPopup.pad(10);
+        settingsPopup.setBackground(createDarkPopupBackground());
+        settingsPopup.pad(18);
+        settingsPopup.defaults().padBottom(10).fillX();
 
         Label settingsTitle = new Label("Settings", skin);
-        settingsTitle.setColor(Color.LIGHT_GRAY);
+        settingsTitle.setColor(Color.WHITE);
+        settingsTitle.setFontScale(1.15f);
         settingsTitle.setAlignment(Align.center);
-        settingsPopup.add(settingsTitle).expandX().left().padBottom(6).row();
 
-        Label divider = new Label("-----------------------------------------", skin);
-        divider.setColor(Color.DARK_GRAY);
-        settingsPopup.add(divider).expandX().left().padBottom(4).row();
+        Label settingsSubtitle = new Label("Game options", skin);
+        settingsSubtitle.setColor(Color.LIGHT_GRAY);
+        settingsSubtitle.setFontScale(0.85f);
+        settingsSubtitle.setAlignment(Align.center);
 
-        TextButton logoutButton = new TextButton("Log out", skin);
-        TextButton toMainMenu   = new TextButton("Back to Title Screen", skin);
-        TextButton quitButton   = new TextButton("Quit Game", skin);
-        TextButton cashButton   = new TextButton("Add Cash (debug)", skin);
-        TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
+        settingsPopup.add(settingsTitle).width(250).center().padBottom(2).row();
+        settingsPopup.add(settingsSubtitle).width(250).center().padBottom(14).row();
 
-        settingsPopup.add(fullscreenButton).row();
-        settingsPopup.add(toMainMenu).row();
-        settingsPopup.add(cashButton).row();
-        settingsPopup.add(logoutButton).row();
-        settingsPopup.add(quitButton).row();
+        TextButton fullscreenButton = createPopupButton(getFullscreenText());
+        TextButton toMainMenu = createPopupButton("Back to Title");
+        TextButton cashButton = createPopupButton("Add Cash");
+        TextButton logoutButton = createPopupButton("Log out");
+        TextButton quitButton = createPopupButton("Quit Game");
+
+        settingsPopup.add(fullscreenButton).width(250).height(42).row();
+        settingsPopup.add(toMainMenu).width(250).height(42).row();
+        settingsPopup.add(cashButton).width(250).height(42).row();
+        settingsPopup.add(logoutButton).width(250).height(42).row();
+        settingsPopup.add(quitButton).width(250).height(42).padBottom(0).row();
 
 
         // Attach popup above the settings button
         Table popupContainer = new Table();
         popupContainer.setFillParent(true);
-        popupContainer.bottom().right().padBottom(70).padRight(20);
-        popupContainer.add(settingsPopup).width(220);
+        popupContainer.bottom().right().padBottom(90).padRight(20);
+        popupContainer.add(settingsPopup).width(290);
         stage.addActor(popupContainer);
 
         fullscreenButton.addListener(new ClickListener() {
@@ -427,7 +436,48 @@ public class MenuScreen implements Screen {
         });
     }
 
+    private TextButton.TextButtonStyle createDefaultButtonStyle() {
+        defaultButtonUpTex = new Texture(Gdx.files.internal("Default_Button.png"));
+        defaultButtonDownTex = new Texture(Gdx.files.internal("Default_Button_Down.png"));
+        defaultButtonOverTex = new Texture(Gdx.files.internal("Default_Button_Over.png"));
 
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(defaultButtonUpTex));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(defaultButtonDownTex));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(defaultButtonOverTex));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
+    private TextButton createPopupButton(String text) {
+        TextButton button = new TextButton(text, defaultButtonStyle);
+        button.getLabel().setAlignment(Align.center);
+        button.getLabel().setFontScale(0.95f);
+        return button;
+    }
+
+    private Drawable createDarkPopupBackground() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.035f, 0.035f, 0.045f, 0.97f)
+        );
+    }
 
     private String formatCash(int cash) {
         return String.format("%,d", cash);
@@ -485,6 +535,9 @@ public class MenuScreen implements Screen {
         backgroundTexture.dispose();
         batch.dispose();
 
+        if (defaultButtonUpTex != null) defaultButtonUpTex.dispose();
+        if (defaultButtonDownTex != null) defaultButtonDownTex.dispose();
+        if (defaultButtonOverTex != null) defaultButtonOverTex.dispose();
 
         if (settingsUpTex != null)   settingsUpTex.dispose();
         if (settingsDownTex != null) settingsDownTex.dispose();
