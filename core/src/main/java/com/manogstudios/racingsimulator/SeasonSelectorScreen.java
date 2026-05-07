@@ -89,8 +89,8 @@ public class SeasonSelectorScreen implements Screen {
         addSeasonCard(
             seasonListTable,
             "Spring",
-            "Fresh green scenery and mild weather.",
-            "season_spring.png",
+            "Fresh seasonal scenery and mild weather.",
+            getSeasonPreviewImage("Spring"),
             new Color(0.45f, 0.70f, 0.35f, 1f)
         );
 
@@ -98,7 +98,7 @@ public class SeasonSelectorScreen implements Screen {
             seasonListTable,
             "Summer",
             "Bright skies and vivid warm colours.",
-            "season_summer.png",
+            getSeasonPreviewImage("Summer"),
             new Color(0.85f, 0.75f, 0.25f, 1f)
         );
 
@@ -106,7 +106,7 @@ public class SeasonSelectorScreen implements Screen {
             seasonListTable,
             "Autumn",
             "Orange and brown tones with a cooler feel.",
-            "season_autumn.png",
+            getSeasonPreviewImage("Autumn"),
             new Color(0.75f, 0.40f, 0.15f, 1f)
         );
 
@@ -114,7 +114,7 @@ public class SeasonSelectorScreen implements Screen {
             seasonListTable,
             "Winter",
             "Cold icy tone with snow-style colouring.",
-            "season_winter.png",
+            getSeasonPreviewImage("Winter"),
             new Color(0.70f, 0.85f, 0.95f, 1f)
         );
 
@@ -223,6 +223,25 @@ public class SeasonSelectorScreen implements Screen {
         });
 
         parent.add(card).width(560).pad(20);
+    }
+
+    private String getSeasonPreviewImage(String seasonName) {
+        String locationPart = toAssetName(locationName);
+        String seasonPart = toAssetName(seasonName);
+
+        return locationPart + "_" + seasonPart + ".png";
+    }
+
+    private String toAssetName(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value
+            .trim()
+            .toLowerCase()
+            .replace(" ", "_")
+            .replace("-", "_");
     }
 
     private Actor createPreviewActor(String imagePath, Color fallbackColor, String labelText) {
