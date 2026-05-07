@@ -29,6 +29,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
 
 public class TestDriveScreen implements Screen {
 
@@ -48,6 +50,11 @@ public class TestDriveScreen implements Screen {
     private Texture distanceTitleTexture;
     private Texture speedTitleTexture;
     private Texture cashBgTexture;
+
+    private Texture defaultButtonUpTexture;
+    private Texture defaultButtonDownTexture;
+    private Texture defaultButtonOverTexture;
+    private TextButton.TextButtonStyle defaultButtonStyle;
 
     private AchievementToastManager achievementToasts;
     private float achievementCheckTimer = 0f;
@@ -155,6 +162,8 @@ public class TestDriveScreen implements Screen {
 
         // UI
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+        defaultButtonStyle = createDefaultButtonStyle();
+
         uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(uiStage);
 
@@ -281,8 +290,10 @@ public class TestDriveScreen implements Screen {
         pauseTable.setFillParent(true);
         pauseTable.top().right().padTop(18).padRight(20);
 
-        TextButton pauseButton = new TextButton("Pause", skin);
-        pauseTable.add(pauseButton).width(100f).height(42f);
+        TextButton pauseButton = createMenuButton("PAUSE");
+        pauseButton.getLabel().setFontScale(0.9f);
+
+        pauseTable.add(pauseButton).width(120f).height(42f);
 
         uiStage.addActor(pauseTable);
 
@@ -510,27 +521,35 @@ public class TestDriveScreen implements Screen {
         pauseOverlay = new Table();
         pauseOverlay.setFillParent(true);
         pauseOverlay.setVisible(false);
-        pauseOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.55f));
+        pauseOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.65f));
 
-        pauseCard = new Table(skin);
-        pauseCard.setBackground("default-round");
-        pauseCard.pad(25);
-        pauseCard.defaults().pad(10).width(240).height(50);
+        pauseCard = new Table();
+        pauseCard.setBackground(createDarkPanelDrawable());
+        pauseCard.pad(32);
+        pauseCard.defaults().padBottom(12).width(300).height(48);
 
         Label titleLabel = new Label("Paused", skin);
-        titleLabel.setFontScale(1.4f);
+        titleLabel.setFontScale(1.7f);
+        titleLabel.setColor(Color.WHITE);
         titleLabel.setAlignment(Align.center);
 
-        TextButton continueButton = new TextButton("Continue", skin);
-        TextButton settingsButton = new TextButton("Settings", skin);
-        TextButton restartButton = new TextButton("Restart", skin);
-        TextButton quitButton = new TextButton("Quit", skin);
+        Label subtitleLabel = new Label("Free Ride is currently paused", skin);
+        subtitleLabel.setFontScale(0.9f);
+        subtitleLabel.setColor(Color.LIGHT_GRAY);
+        subtitleLabel.setAlignment(Align.center);
 
-        pauseCard.add(titleLabel).padBottom(15).row();
+        TextButton continueButton = createMenuButton("Continue");
+        TextButton settingsButton = createMenuButton("Settings");
+        TextButton restartButton = createMenuButton("Restart");
+        TextButton quitButton = createMenuButton("Quit Run");
+
+        pauseCard.add(titleLabel).width(300).center().padBottom(4).row();
+        pauseCard.add(subtitleLabel).width(300).center().padBottom(18).row();
+
         pauseCard.add(continueButton).row();
         pauseCard.add(settingsButton).row();
         pauseCard.add(restartButton).row();
-        pauseCard.add(quitButton).row();
+        pauseCard.add(quitButton).padBottom(0).row();
 
         pauseOverlay.add(pauseCard).center();
         uiStage.addActor(pauseOverlay);
@@ -559,46 +578,110 @@ public class TestDriveScreen implements Screen {
         quitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Dialog confirmDialog = new Dialog("Quit Run", skin) {
-                    @Override
-                    protected void result(Object object) {
-                        if ((Boolean) object) {
-                            game.setScreen(new GameModeSelectorScreen(game));
-                        }
-                    }
-                };
-
-                confirmDialog.text("Quit this run and return to game modes?");
-                confirmDialog.button("Yes", true);
-                confirmDialog.button("No", false);
-                confirmDialog.show(uiStage);
+                showModernConfirmDialog(
+                    "Quit Run",
+                    "Quit this run and return to game modes?",
+                    "Yes",
+                    "No",
+                    () -> game.setScreen(new GameModeSelectorScreen(game))
+                );
             }
         });
+    }
+
+    private void showModernConfirmDialog(
+        String title,
+        String message,
+        String confirmText,
+        String cancelText,
+        Runnable onConfirm
+    ) {
+        Dialog dialog = new Dialog(title, createModernDialogStyle());
+        dialog.getTitleLabel().setAlignment(Align.center);
+        dialog.getTitleLabel().setFontScale(1.15f);
+        dialog.getContentTable().pad(26);
+
+        Table messagePanel = new Table();
+        messagePanel.setBackground(createDarkInnerPanelDrawable());
+        messagePanel.pad(18);
+
+        Label messageLabel = new Label(message, skin);
+        messageLabel.setWrap(true);
+        messageLabel.setAlignment(Align.center);
+        messageLabel.setColor(Color.LIGHT_GRAY);
+
+        messagePanel.add(messageLabel).width(430).center();
+
+        TextButton confirmButton = createMenuButton(confirmText);
+        TextButton cancelButton = createMenuButton(cancelText);
+
+        confirmButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+                if (onConfirm != null) {
+                    onConfirm.run();
+                }
+            }
+        });
+
+        cancelButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+            }
+        });
+
+        Table buttonRow = new Table();
+        buttonRow.add(confirmButton).width(150).height(40).padRight(12);
+        buttonRow.add(cancelButton).width(140).height(40);
+
+        dialog.getContentTable().add(messagePanel).width(470).padBottom(20).row();
+        dialog.getContentTable().add(buttonRow).row();
+
+        dialog.show(uiStage);
+
+        float dialogWidth = Math.min(560f, uiStage.getWidth() - 80f);
+        float dialogHeight = Math.min(350f, uiStage.getHeight() - 80f);
+
+        dialog.setSize(dialogWidth, dialogHeight);
+        dialog.setPosition(
+            (uiStage.getWidth() - dialogWidth) / 2f,
+            (uiStage.getHeight() - dialogHeight) / 2f
+        );
     }
 
     private void createPauseSettingsOverlay() {
         pauseSettingsOverlay = new Table();
         pauseSettingsOverlay.setFillParent(true);
         pauseSettingsOverlay.setVisible(false);
-        pauseSettingsOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.55f));
+        pauseSettingsOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.65f));
 
-        pauseSettingsCard = new Table(skin);
-        pauseSettingsCard.setBackground("default-round");
-        pauseSettingsCard.pad(25);
-        pauseSettingsCard.defaults().pad(10).width(260).height(50);
+        pauseSettingsCard = new Table();
+        pauseSettingsCard.setBackground(createDarkPanelDrawable());
+        pauseSettingsCard.pad(32);
+        pauseSettingsCard.defaults().padBottom(12).width(330).height(48);
 
         Label titleLabel = new Label("Pause Settings", skin);
-        titleLabel.setFontScale(1.3f);
+        titleLabel.setFontScale(1.55f);
+        titleLabel.setColor(Color.WHITE);
         titleLabel.setAlignment(Align.center);
 
-        TextButton fullscreenButton = new TextButton(getFullscreenText(), skin);
-        TextButton controlsButton = new TextButton("Controls / Help", skin);
-        TextButton backButton = new TextButton("Back", skin);
+        Label subtitleLabel = new Label("Adjust options during this run", skin);
+        subtitleLabel.setFontScale(0.9f);
+        subtitleLabel.setColor(Color.LIGHT_GRAY);
+        subtitleLabel.setAlignment(Align.center);
 
-        pauseSettingsCard.add(titleLabel).padBottom(15).row();
+        TextButton fullscreenButton = createMenuButton(getFullscreenText());
+        TextButton controlsButton = createMenuButton("Controls / Help");
+        TextButton backButton = createMenuButton("Back");
+
+        pauseSettingsCard.add(titleLabel).width(330).center().padBottom(4).row();
+        pauseSettingsCard.add(subtitleLabel).width(330).center().padBottom(18).row();
+
         pauseSettingsCard.add(fullscreenButton).row();
         pauseSettingsCard.add(controlsButton).row();
-        pauseSettingsCard.add(backButton).row();
+        pauseSettingsCard.add(backButton).padBottom(0).row();
 
         pauseSettingsOverlay.add(pauseSettingsCard).center();
         uiStage.addActor(pauseSettingsOverlay);
@@ -614,6 +697,7 @@ public class TestDriveScreen implements Screen {
                     Gdx.graphics.setWindowedMode(1600, 900);
                 }
 
+                GameSettings.setFullscreenEnabled(enableFullscreen);
                 fullscreenButton.setText(getFullscreenText());
             }
         });
@@ -791,6 +875,96 @@ public class TestDriveScreen implements Screen {
         achievementToasts.queueAll(newlyUnlocked);
     }
 
+    private TextButton.TextButtonStyle createDefaultButtonStyle() {
+        defaultButtonUpTexture = new Texture(Gdx.files.internal("Default_Button.png"));
+        defaultButtonDownTexture = new Texture(Gdx.files.internal("Default_Button_Down.png"));
+        defaultButtonOverTexture = new Texture(Gdx.files.internal("Default_Button_Over.png"));
+
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(defaultButtonUpTexture));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(defaultButtonDownTexture));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(defaultButtonOverTexture));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
+    private TextButton createMenuButton(String text) {
+        TextButton button = new TextButton(text, defaultButtonStyle);
+        button.getLabel().setAlignment(Align.center);
+        button.getLabel().setFontScale(1.0f);
+        return button;
+    }
+
+    private Table createControlRow(String key, String action) {
+        Table row = new Table();
+
+        Label keyLabel = new Label(key, skin);
+        keyLabel.setAlignment(Align.center);
+        keyLabel.setColor(Color.WHITE);
+        keyLabel.setFontScale(0.95f);
+
+        Table keyBox = new Table();
+        keyBox.setBackground(skin.newDrawable(
+            "default-round",
+            new Color(0.16f, 0.16f, 0.22f, 1f)
+        ));
+        keyBox.pad(6);
+        keyBox.add(keyLabel).center();
+
+        Label actionLabel = new Label(action, skin);
+        actionLabel.setColor(Color.LIGHT_GRAY);
+        actionLabel.setWrap(true);
+
+        row.add(keyBox).width(120).height(34).padRight(14);
+        row.add(actionLabel).width(340).left();
+
+        return row;
+    }
+
+    private Window.WindowStyle createModernDialogStyle() {
+        Window.WindowStyle style = new Window.WindowStyle(skin.get(Window.WindowStyle.class));
+
+        style.background = skin.newDrawable(
+            "default-round",
+            new Color(0.035f, 0.035f, 0.045f, 0.98f)
+        );
+
+        style.titleFont = skin.getFont("default-font");
+        style.titleFontColor = Color.WHITE;
+
+        return style;
+    }
+
+    private Drawable createDarkPanelDrawable() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.035f, 0.035f, 0.045f, 0.97f)
+        );
+    }
+
+    private Drawable createDarkInnerPanelDrawable() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.09f, 0.09f, 0.12f, 0.96f)
+        );
+    }
+
     private void showPauseMenu() {
         if (pauseOverlay != null) pauseOverlay.setVisible(true);
         if (pauseSettingsOverlay != null) pauseSettingsOverlay.setVisible(false);
@@ -816,30 +990,9 @@ public class TestDriveScreen implements Screen {
         return "Fullscreen: " + (Gdx.graphics.isFullscreen() ? "ON" : "OFF");
     }
 
-    private void showControlsDialog() {
-        Dialog controlsDialog = new Dialog("Controls", skin);
 
-        Label controlsLabel = new Label(
-            "W = Accelerate\n" +
-                "S = Brake / Reverse\n" +
-                "A = Steer Left\n" +
-                "D = Steer Right\n" +
-                "ESC = Pause / Back\n" +
-                "Mouse = Click buttons and menus\n\n" +
-                "Notes:\n" +
-                "- In driving modes, ESC opens the pause menu.\n" +
-                "- In pause settings, use Back to return to the pause menu.\n" +
-                "- Drag Race uses W to accelerate and S to brake.",
-            skin
-        );
 
-        controlsLabel.setWrap(true);
-        controlsLabel.setAlignment(Align.left);
 
-        controlsDialog.getContentTable().add(controlsLabel).width(420).pad(20);
-        controlsDialog.button("OK");
-        controlsDialog.show(uiStage);
-    }
 
     private Table createResultStatBox(String titleText, String valueText, Color valueColor) {
         Table box = new Table(skin);
@@ -861,6 +1014,8 @@ public class TestDriveScreen implements Screen {
 
         return box;
     }
+
+
 
     private void onCrash() {
         gameOver = true;
@@ -927,6 +1082,66 @@ public class TestDriveScreen implements Screen {
     }
 
 
+
+
+    private void showControlsDialog() {
+        Dialog controlsDialog = new Dialog("Controls / Help", createModernDialogStyle());
+        controlsDialog.getTitleLabel().setAlignment(Align.center);
+        controlsDialog.getTitleLabel().setFontScale(1.15f);
+        controlsDialog.getContentTable().pad(26);
+
+        Table controlsPanel = new Table();
+        controlsPanel.setBackground(createDarkInnerPanelDrawable());
+        controlsPanel.pad(18);
+        controlsPanel.defaults().padBottom(8).left();
+
+        controlsPanel.add(createControlRow("W", "Accelerate")).width(500).row();
+        controlsPanel.add(createControlRow("S", "Brake / Reverse")).width(500).row();
+        controlsPanel.add(createControlRow("A", "Steer Left")).width(500).row();
+        controlsPanel.add(createControlRow("D", "Steer Right")).width(500).row();
+        controlsPanel.add(createControlRow("ESC", "Pause / Back")).width(500).row();
+        controlsPanel.add(createControlRow("Mouse", "Click buttons and menus")).width(500).row();
+
+        Label notesLabel = new Label(
+            "Notes:\n" +
+                "- In driving modes, ESC opens the pause menu.\n" +
+                "- In pause settings, use Back to return to the pause menu.\n" +
+                "- Drag Race uses W to accelerate and S to brake.",
+            skin
+        );
+        notesLabel.setWrap(true);
+        notesLabel.setAlignment(Align.left);
+        notesLabel.setColor(Color.LIGHT_GRAY);
+
+        Table notesPanel = new Table();
+        notesPanel.setBackground(createDarkInnerPanelDrawable());
+        notesPanel.pad(16);
+        notesPanel.add(notesLabel).width(500);
+
+        TextButton closeButton = createMenuButton("OK");
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                controlsDialog.hide();
+            }
+        });
+
+        controlsDialog.getContentTable().add(controlsPanel).width(550).padBottom(16).row();
+        controlsDialog.getContentTable().add(notesPanel).width(550).padBottom(18).row();
+        controlsDialog.getContentTable().add(closeButton).width(150).height(40).row();
+
+        controlsDialog.show(uiStage);
+
+        float dialogWidth = Math.min(650f, uiStage.getWidth() - 80f);
+        float dialogHeight = Math.min(620f, uiStage.getHeight() - 80f);
+
+        controlsDialog.setSize(dialogWidth, dialogHeight);
+        controlsDialog.setPosition(
+            (uiStage.getWidth() - dialogWidth) / 2f,
+            (uiStage.getHeight() - dialogHeight) / 2f
+        );
+    }
+
     @Override
     public void resize(int width, int height) {
         uiStage.getViewport().update(width, height, true);
@@ -946,6 +1161,9 @@ public class TestDriveScreen implements Screen {
         if (uiStage != null) uiStage.dispose();
         if (skin != null) skin.dispose();
         if (playerCar != null) playerCar.dispose();
+        if (defaultButtonUpTexture != null) defaultButtonUpTexture.dispose();
+        if (defaultButtonDownTexture != null) defaultButtonDownTexture.dispose();
+        if (defaultButtonOverTexture != null) defaultButtonOverTexture.dispose();
 
         for (TrafficCarType type : trafficTypes) {
             if (type.texture != null) type.texture.dispose();
