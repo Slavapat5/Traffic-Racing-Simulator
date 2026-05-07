@@ -204,10 +204,16 @@ public class SeasonSelectorScreen implements Screen {
             }
         });
 
-        card.add(nameLabel).width(520).center().padBottom(10).row();
+        card.add(nameLabel)
+            .width(520)
+            .height(38)
+            .center()
+            .padTop(6)
+            .padBottom(10)
+            .row();
         card.add(previewActor).size(SEASON_CARD_SIZE, SEASON_CARD_SIZE).center().padBottom(12).row();
         card.add(descLabel).width(500).center().padBottom(12).row();
-        card.add(selectButton).width(180).height(56).center().row();
+        card.add(selectButton).width(190).height(46).center().padBottom(6).row();
 
         card.addListener(new ClickListener() {
             @Override

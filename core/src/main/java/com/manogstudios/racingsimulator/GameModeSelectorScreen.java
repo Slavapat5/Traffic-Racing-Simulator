@@ -259,13 +259,20 @@ public class GameModeSelectorScreen implements Screen {
     private void addModeCard(Table parent, String title, String description, String modeKey) {
         Table card = new Table(skin);
         card.setBackground(modeCardBackground);
-        card.pad(18).defaults().space(8);
+        card.pad(22, 18, 18, 18).defaults().space(7);
         card.setTransform(true);
 
         Label titleLabel = new Label(title, skin);
         titleLabel.setAlignment(Align.center);
         titleLabel.setFontScale(1.1f);
-        card.add(titleLabel).center().padBottom(4).row();
+
+        card.add(titleLabel)
+            .width(330)
+            .height(48)
+            .center()
+            .padTop(6)
+            .padBottom(0)
+            .row();
 
         Label descLabel = new Label(description, skin);
         descLabel.setColor(Color.LIGHT_GRAY);
@@ -286,13 +293,13 @@ public class GameModeSelectorScreen implements Screen {
         playButton.getLabel().setAlignment(Align.center);
         playButton.getLabel().setFontScale(1.08f);
 
-        buttonRow.add(playButton).width(145).height(46).padRight(10);
+        buttonRow.add(playButton).width(145).height(42).padRight(10);
 
         TextButton leaderboardButton = new TextButton("Leaderboard", defaultButtonStyle);
         leaderboardButton.getLabel().setAlignment(Align.center);
         leaderboardButton.getLabel().setFontScale(0.98f);
 
-        buttonRow.add(leaderboardButton).width(165).height(46);
+        buttonRow.add(leaderboardButton).width(165).height(42);
 
         boolean supported = hasLeaderboard(modeKey);
         leaderboardButton.setDisabled(!supported);
@@ -335,22 +342,46 @@ public class GameModeSelectorScreen implements Screen {
             }
         });
 
-        parent.add(card).width(380).height(270).pad(20);
+        parent.add(card).width(380).height(280).pad(20);
     }
 
     private void showLeaderboardDialog(String modeKey) {
         if (!SupabaseAuth.isLoggedIn) {
-            Dialog d = new Dialog("Leaderboard", skin);
-            d.text("You must be logged in to view the leaderboard.");
-            d.button("OK");
-            d.show(stage);
+            showSimpleLeaderboardMessage(
+                "Leaderboard",
+                "You must be logged in to view the leaderboard."
+            );
             return;
         }
 
-        Dialog loading = new Dialog("Leaderboard", skin);
-        loading.text("Loading top scores...");
-        loading.button("Close");
+        Dialog loading = new Dialog("Leaderboard", createModernDialogStyle());
+        loading.getTitleLabel().setAlignment(Align.center);
+        loading.getTitleLabel().setFontScale(1.1f);
+        loading.getContentTable().pad(22);
+
+        Table loadingPanel = new Table();
+        loadingPanel.setBackground(createLeaderboardPanelBackground());
+        loadingPanel.pad(18);
+
+        Label loadingLabel = new Label("Loading top scores...", skin);
+        loadingLabel.setAlignment(Align.center);
+        loadingLabel.setColor(Color.LIGHT_GRAY);
+
+        loadingPanel.add(loadingLabel).width(320).center();
+
+        TextButton closeLoadingButton = createDialogButton("Close");
+        closeLoadingButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                loading.hide();
+            }
+        });
+
+        loading.getContentTable().add(loadingPanel).width(380).padBottom(16).row();
+        loading.getContentTable().add(closeLoadingButton).width(140).height(42).row();
+
         loading.show(stage);
+        sizeLeaderboardDialog(loading);
 
         SupabaseGameData.fetchLeaderboard(
             modeKey,
@@ -361,14 +392,29 @@ public class GameModeSelectorScreen implements Screen {
                     loading.hide();
 
                     Dialog dialog = new Dialog(
-                        "Top 10 – " + prettifyModeName(modeKey),
-                        skin
+                        "Leaderboard - " + prettifyModeName(modeKey),
+                        createModernDialogStyle()
                     );
+
+                    dialog.getTitleLabel().setAlignment(Align.center);
+                    dialog.getTitleLabel().setFontScale(1.12f);
 
                     styleLeaderboardDialog(dialog, entries);
 
-                    dialog.button("Close");
+                    dialog.getButtonTable().clear();
+
+                    TextButton closeButton = createDialogButton("Close");
+                    closeButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            dialog.hide();
+                        }
+                    });
+
+                    dialog.getButtonTable().add(closeButton).width(150).height(42).padTop(12);
+
                     dialog.show(stage);
+                    sizeLeaderboardDialog(dialog);
                 });
             }
         );
@@ -379,22 +425,37 @@ public class GameModeSelectorScreen implements Screen {
 
         Table content = dialog.getContentTable();
         content.clear();
-        content.pad(15);
+        content.pad(20);
         content.defaults().pad(4);
 
-        content.setBackground("default-round");
-        content.setColor(0.06f, 0.06f, 0.06f, 0.95f);
+        Label subtitle = new Label("Best scores for this game mode", skin);
+        subtitle.setColor(Color.LIGHT_GRAY);
+        subtitle.setAlignment(Align.center);
+        subtitle.setFontScale(0.9f);
+
+        content.add(subtitle).width(420).center().padBottom(10).row();
 
         if (entries == null || entries.isEmpty()) {
+            Table emptyPanel = new Table();
+            emptyPanel.setBackground(createLeaderboardPanelBackground());
+            emptyPanel.pad(20);
+
             Label none = new Label("No scores yet for this mode.", skin);
             none.setColor(Color.LIGHT_GRAY);
             none.setAlignment(Align.center);
-            content.add(none).width(320).pad(10);
+
+            emptyPanel.add(none).width(340).center();
+
+            content.add(emptyPanel).width(400).height(220).row();
             return;
         }
 
+        Table outerPanel = new Table();
+        outerPanel.setBackground(createLeaderboardPanelBackground());
+        outerPanel.pad(14);
+
         Table header = new Table();
-        header.defaults().pad(3).left();
+        header.defaults().pad(4).left();
 
         Label rankHeader = new Label("#", skin);
         Label nameHeader = new Label("Player", skin);
@@ -404,16 +465,14 @@ public class GameModeSelectorScreen implements Screen {
         nameHeader.setColor(Color.GOLD);
         scoreHeader.setColor(Color.GOLD);
 
-        header.add(rankHeader).width(30).left();
+        header.add(rankHeader).width(40).left();
         header.add(nameHeader).expandX().left();
-        header.add(scoreHeader).width(80).right();
+        header.add(scoreHeader).width(90).right();
 
-        content.add(header).expandX().fillX().row();
+        outerPanel.add(header).expandX().fillX().padBottom(8).row();
 
-        Table entriesTable = new Table(skin);
-        entriesTable.defaults().pad(3).left();
-        entriesTable.setBackground("default-round");
-        entriesTable.setColor(0.1f, 0.1f, 0.1f, 0.9f);
+        Table entriesTable = new Table();
+        entriesTable.defaults().pad(5).left();
 
         int rank = 1;
         for (LeaderboardEntry e : entries) {
@@ -421,17 +480,22 @@ public class GameModeSelectorScreen implements Screen {
                 ? e.username
                 : "Player";
 
+            Color rankColor = Color.LIGHT_GRAY;
+            if (rank == 1) rankColor = Color.GOLD;
+            else if (rank == 2) rankColor = new Color(0.80f, 0.80f, 0.85f, 1f);
+            else if (rank == 3) rankColor = new Color(0.80f, 0.55f, 0.30f, 1f);
+
             Label rankLabel = new Label(String.valueOf(rank), skin);
             Label nameLabel = new Label(username, skin);
             Label scoreLabel = new Label(String.valueOf(e.score), skin);
 
-            rankLabel.setColor(Color.LIGHT_GRAY);
+            rankLabel.setColor(rankColor);
             nameLabel.setColor(Color.WHITE);
             scoreLabel.setColor(Color.CYAN);
 
-            entriesTable.add(rankLabel).width(30).left();
+            entriesTable.add(rankLabel).width(40).left();
             entriesTable.add(nameLabel).expandX().left();
-            entriesTable.add(scoreLabel).width(80).right();
+            entriesTable.add(scoreLabel).width(90).right();
             entriesTable.row();
 
             rank++;
@@ -444,12 +508,9 @@ public class GameModeSelectorScreen implements Screen {
         sp.setSmoothScrolling(true);
         sp.setOverscroll(false, false);
 
-        content.row();
-        content.add(sp)
-            .width(360)
-            .height(260)
-            .expand()
-            .fill();
+        outerPanel.add(sp).width(390).height(260).expand().fill().row();
+
+        content.add(outerPanel).width(420).row();
     }
 
     private String prettifyModeName(String modeKey) {
@@ -501,6 +562,77 @@ public class GameModeSelectorScreen implements Screen {
         style.downFontColor = Color.LIGHT_GRAY;
 
         return style;
+    }
+
+    private Window.WindowStyle createModernDialogStyle() {
+        Window.WindowStyle style = new Window.WindowStyle(skin.get(Window.WindowStyle.class));
+
+        style.background = skin.newDrawable(
+            "default-round",
+            new Color(0.035f, 0.035f, 0.045f, 0.97f)
+        );
+
+        style.titleFont = skin.getFont("default-font");
+        style.titleFontColor = Color.WHITE;
+
+        return style;
+    }
+
+    private Drawable createLeaderboardPanelBackground() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.09f, 0.09f, 0.12f, 0.96f)
+        );
+    }
+
+    private TextButton createDialogButton(String text) {
+        TextButton button = new TextButton(text, defaultButtonStyle);
+        button.getLabel().setAlignment(Align.center);
+        button.getLabel().setFontScale(0.95f);
+        return button;
+    }
+
+    private void sizeLeaderboardDialog(Dialog dialog) {
+        float dialogWidth = Math.min(520f, stage.getWidth() - 80f);
+        float dialogHeight = Math.min(500f, stage.getHeight() - 80f);
+
+        dialog.setSize(dialogWidth, dialogHeight);
+        dialog.setPosition(
+            (stage.getWidth() - dialogWidth) / 2f,
+            (stage.getHeight() - dialogHeight) / 2f
+        );
+    }
+
+    private void showSimpleLeaderboardMessage(String title, String message) {
+        Dialog dialog = new Dialog(title, createModernDialogStyle());
+        dialog.getTitleLabel().setAlignment(Align.center);
+        dialog.getTitleLabel().setFontScale(1.1f);
+        dialog.getContentTable().pad(22);
+
+        Table panel = new Table();
+        panel.setBackground(createLeaderboardPanelBackground());
+        panel.pad(18);
+
+        Label messageLabel = new Label(message, skin);
+        messageLabel.setWrap(true);
+        messageLabel.setAlignment(Align.center);
+        messageLabel.setColor(Color.LIGHT_GRAY);
+
+        panel.add(messageLabel).width(360).center();
+
+        TextButton closeButton = createDialogButton("OK");
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+            }
+        });
+
+        dialog.getContentTable().add(panel).width(400).padBottom(16).row();
+        dialog.getContentTable().add(closeButton).width(140).height(42).row();
+
+        dialog.show(stage);
+        sizeLeaderboardDialog(dialog);
     }
 
     private String formatCash(int cash) {

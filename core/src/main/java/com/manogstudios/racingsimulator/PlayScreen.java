@@ -98,8 +98,8 @@ public class PlayScreen implements Screen {
         versionLabel = new Label(GAME_VERSION, skin);
         versionLabel.setFontScale(1.6f);
 
-        dailyBonusIconTexture = new Texture(Gdx.files.internal("PlayScreen_Gift.png"));
-        dailyQuestIconTexture = new Texture(Gdx.files.internal("PlayScreen_Quest.png"));
+        dailyBonusIconTexture = new Texture(Gdx.files.internal("PlayScreen_Gift2.png"));
+        dailyQuestIconTexture = new Texture(Gdx.files.internal("PlayScreen_Quest2.png"));
 
         ImageButton dailyBonusButton = new ImageButton(
             new TextureRegionDrawable(new TextureRegion(dailyBonusIconTexture))

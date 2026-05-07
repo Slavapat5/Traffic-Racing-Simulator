@@ -170,7 +170,7 @@ public class LocationSelectorScreen implements Screen {
 
         Table card = new Table(skin);
         card.setBackground(skin.newDrawable("default-round", new Color(0.1f, 0.1f, 0.1f, 0.92f)));
-        card.pad(18, 18, 24, 18);
+        card.pad(22, 18, 24, 18);
 
         Label nameLabel = new Label(locationName, skin);
         nameLabel.setAlignment(Align.center);
@@ -194,10 +194,16 @@ public class LocationSelectorScreen implements Screen {
             }
         });
 
-        card.add(nameLabel).width(520).center().padBottom(10).row();
+        card.add(nameLabel)
+            .width(520)
+            .height(38)
+            .center()
+            .padTop(6)
+            .padBottom(10)
+            .row();
         card.add(previewActor).size(LOCATION_CARD_SIZE, LOCATION_CARD_SIZE).center().padBottom(12).row();
         card.add(descLabel).width(500).center().padBottom(12).row();
-        card.add(selectButton).width(180).height(56).center().row();
+        card.add(selectButton).width(190).height(46).center().padBottom(6).row();
 
         card.addListener(new ClickListener() {
             @Override
