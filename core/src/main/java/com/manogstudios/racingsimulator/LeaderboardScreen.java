@@ -176,7 +176,9 @@ public class LeaderboardScreen implements Screen {
     private void addModeButton(Table parent, String label, final String modeKey) {
         TextButton button = new TextButton(label, modeButtonStyle);
         button.getLabel().setAlignment(Align.center);
-        button.getLabel().setFontScale(0.85f);
+
+
+        button.getLabel().setFontScale(1.05f);
 
         button.addListener(new ClickListener() {
             @Override

@@ -22,6 +22,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 public class SettingsScreen implements Screen {
 
@@ -93,29 +95,7 @@ public class SettingsScreen implements Screen {
         controlsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                Dialog controlsDialog = new Dialog("Controls", skin);
-
-                Label controlsLabel = new Label(
-                    "W = Accelerate\n" +
-                        "S = Brake / Reverse\n" +
-                        "A = Steer Left\n" +
-                        "D = Steer Right\n" +
-                        "ESC = Pause or go back\n" +
-                        "ENTER / SPACE = Confirm on some menus\n" +
-                        "Mouse = Click buttons and menus\n\n" +
-                        "Notes:\n" +
-                        "- In gameplay, ESC opens the pause menu.\n" +
-                        "- In menus, ESC usually goes back to the previous screen.\n" +
-                        "- Drag Race uses W to accelerate and S to brake.",
-                    skin
-                );
-
-                controlsLabel.setWrap(true);
-                controlsLabel.setAlignment(Align.left);
-
-                controlsDialog.getContentTable().add(controlsLabel).width(420).pad(20);
-                controlsDialog.button("OK");
-                controlsDialog.show(stage);
+                showControlsPopup();
             }
         });
 
@@ -181,6 +161,158 @@ public class SettingsScreen implements Screen {
                 return false;
             }
         });
+    }
+
+    private void showControlsPopup() {
+        TextButton.TextButtonStyle popupButtonStyle = createModernPopupButtonStyle();
+
+        Dialog controlsDialog = new Dialog("Controls / Help", createModernDialogStyle());
+        controlsDialog.getTitleLabel().setAlignment(Align.center);
+        controlsDialog.getTitleLabel().setFontScale(1.2f);
+        controlsDialog.getContentTable().pad(28);
+
+        Label subtitle = new Label(
+            "Use these controls to navigate menus and drive during gameplay.",
+            skin
+        );
+        subtitle.setWrap(true);
+        subtitle.setAlignment(Align.center);
+        subtitle.setColor(Color.LIGHT_GRAY);
+
+        controlsDialog.getContentTable().add(subtitle).width(560).padBottom(20).row();
+
+        Table controlsPanel = new Table();
+        controlsPanel.setBackground(darkPanelDrawable());
+        controlsPanel.pad(18);
+        controlsPanel.defaults().padBottom(10).left();
+
+        controlsPanel.add(createControlRow("W", "Accelerate")).width(520).row();
+        controlsPanel.add(createControlRow("S", "Brake / Reverse")).width(520).row();
+        controlsPanel.add(createControlRow("A", "Steer Left")).width(520).row();
+        controlsPanel.add(createControlRow("D", "Steer Right")).width(520).row();
+        controlsPanel.add(createControlRow("ESC", "Pause during gameplay / go back in menus")).width(520).row();
+        controlsPanel.add(createControlRow("ENTER / SPACE", "Confirm on some menus")).width(520).row();
+        controlsPanel.add(createControlRow("Mouse", "Click buttons and menu options")).width(520).row();
+
+        controlsDialog.getContentTable().add(controlsPanel).width(580).padBottom(18).row();
+
+        Table notesPanel = new Table();
+        notesPanel.setBackground(darkPanelDrawable());
+        notesPanel.pad(16);
+
+        Label notesLabel = new Label(
+            "Notes:\n" +
+                "- In gameplay, ESC opens the pause menu.\n" +
+                "- In menus, ESC usually returns to the previous screen.\n" +
+                "- Drag Race uses W to accelerate and S to brake.",
+            skin
+        );
+
+        notesLabel.setWrap(true);
+        notesLabel.setAlignment(Align.left);
+        notesLabel.setColor(Color.LIGHT_GRAY);
+
+        notesPanel.add(notesLabel).width(520);
+
+        controlsDialog.getContentTable().add(notesPanel).width(580).padBottom(20).row();
+
+        TextButton closeButton = new TextButton("Close", popupButtonStyle);
+        closeButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                controlsDialog.hide();
+            }
+        });
+
+        controlsDialog.getContentTable().add(closeButton).width(170).height(48).row();
+
+        controlsDialog.show(stage);
+
+        float dialogWidth = Math.min(680f, stage.getWidth() - 80f);
+        float dialogHeight = Math.min(650f, stage.getHeight() - 80f);
+
+        controlsDialog.setSize(dialogWidth, dialogHeight);
+        controlsDialog.setPosition(
+            (stage.getWidth() - dialogWidth) / 2f,
+            (stage.getHeight() - dialogHeight) / 2f
+        );
+    }
+
+    private Table createControlRow(String key, String action) {
+        Table row = new Table();
+
+        Label keyLabel = new Label(key, skin);
+        keyLabel.setAlignment(Align.center);
+        keyLabel.setColor(Color.WHITE);
+        keyLabel.setFontScale(1.05f);
+
+        Table keyBox = new Table();
+        keyBox.setBackground(keyBoxDrawable());
+        keyBox.pad(6);
+        keyBox.add(keyLabel).center();
+
+        Label actionLabel = new Label(action, skin);
+        actionLabel.setColor(Color.LIGHT_GRAY);
+        actionLabel.setWrap(true);
+
+        row.add(keyBox).width(130).height(36).padRight(14);
+        row.add(actionLabel).width(360).left();
+
+        return row;
+    }
+
+    private Window.WindowStyle createModernDialogStyle() {
+        Window.WindowStyle style = new Window.WindowStyle(skin.get(Window.WindowStyle.class));
+
+        style.background = skin.newDrawable(
+            "default-round",
+            new Color(0.035f, 0.035f, 0.045f, 0.97f)
+        );
+
+        style.titleFont = skin.getFont("default-font");
+        style.titleFontColor = Color.WHITE;
+
+        return style;
+    }
+
+    private TextButton.TextButtonStyle createModernPopupButtonStyle() {
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+
+        style.up = skin.newDrawable(
+            "default-round",
+            new Color(0.16f, 0.16f, 0.20f, 1f)
+        );
+
+        style.down = skin.newDrawable(
+            "default-round",
+            new Color(0.08f, 0.08f, 0.11f, 1f)
+        );
+
+        style.over = skin.newDrawable(
+            "default-round",
+            new Color(0.24f, 0.24f, 0.30f, 1f)
+        );
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
+    private Drawable darkPanelDrawable() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.09f, 0.09f, 0.12f, 0.96f)
+        );
+    }
+
+    private Drawable keyBoxDrawable() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.16f, 0.16f, 0.22f, 1f)
+        );
     }
 
     private String getFullscreenText() {

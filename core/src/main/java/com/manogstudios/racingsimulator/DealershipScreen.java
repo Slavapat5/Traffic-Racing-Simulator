@@ -58,6 +58,13 @@ public class DealershipScreen implements Screen {
     private int currentCenterIndex = -1;
     private static final float CAR_SLOT_WIDTH = 420f;
 
+    private Texture buttonUpTexture;
+    private Texture buttonDownTexture;
+    private Texture buttonOverTexture;
+    private Texture cashLabelTexture;
+
+    private TextButton.TextButtonStyle defaultButtonStyle;
+
     public DealershipScreen(Game game) {
         this.game = game;
     }
@@ -145,6 +152,8 @@ public class DealershipScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        defaultButtonStyle = createDefaultButtonStyle();
 
         Table root = new Table();
         root.setFillParent(true);
@@ -337,12 +346,12 @@ public class DealershipScreen implements Screen {
 
         Container<Label> cashContainer = new Container<>(cashLabel);
         cashContainer.setBackground(createCashLabelBackground());
-        cashContainer.setColor(Color.BLACK);
+        cashContainer.center();
 
         Table topBar = new Table();
         topBar.top().pad(10);
         topBar.setFillParent(true);
-        topBar.add(cashContainer).expandX().left().padLeft(75);
+        topBar.add(cashContainer).width(200).height(50).expandX().left().padLeft(75);
 
 
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
@@ -378,29 +387,20 @@ public class DealershipScreen implements Screen {
         if (car == null) return;
 
         if (CarOwnershipManager.ownsCar(car.image)) {
-            Dialog ownedDialog = new Dialog("Already Owned", skin);
-            ownedDialog.text("You already own this car.");
-            ownedDialog.button("OK");
-            ownedDialog.show(stage);
+            showModernMessageDialog(
+                "Already Owned",
+                "You already own this car."
+            );
             return;
         }
 
-        Dialog confirmDialog = new Dialog("Confirm Purchase", skin) {
-            @Override
-            protected void result(Object object) {
-                boolean yes = (Boolean) object;
-                if (yes) {
-                    tryBuyCarSecure(car, () -> game.setScreen(new DealershipScreen(game)));
-                }
-            }
-        };
-
-        confirmDialog.text(
-            "Buy " + car.title + " for $" + String.format("%,d", car.price) + "?"
+        showModernConfirmDialog(
+            "Confirm Purchase",
+            "Buy " + car.title + " for $" + formatCash(car.price) + "?",
+            "Buy",
+            "Cancel",
+            () -> tryBuyCarSecure(car, () -> game.setScreen(new DealershipScreen(game)))
         );
-        confirmDialog.button("Yes", true);
-        confirmDialog.button("No", false);
-        confirmDialog.show(stage);
     }
 
     private void addCarToList(Table parent, CarData car) {
@@ -450,14 +450,18 @@ public class DealershipScreen implements Screen {
         carBox.add(priceLabel).row();
 
         if (!CarOwnershipManager.ownsCar(car.image)) {
-            TextButton buyButton = new TextButton("Buy", skin);
+            TextButton buyButton = new TextButton("Buy", defaultButtonStyle);
+            buyButton.getLabel().setAlignment(Align.center);
+            buyButton.getLabel().setFontScale(1.1f);
+
             buyButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     showPurchaseConfirmDialog(car);
                 }
             });
-            carBox.add(buyButton).padTop(10).row();
+
+            carBox.add(buyButton).width(160).height(38).padTop(10).row();
         } else {
             Label ownedLabel = new Label("Owned", skin);
             ownedLabel.setFontScale(1.1f);
@@ -468,8 +472,163 @@ public class DealershipScreen implements Screen {
         carCards.add(carBox);
     }
 
+    private TextButton.TextButtonStyle createDefaultButtonStyle() {
+        buttonUpTexture = new Texture(Gdx.files.internal("Default_Button.png"));
+        buttonDownTexture = new Texture(Gdx.files.internal("Default_Button_Down.png"));
+        buttonOverTexture = new Texture(Gdx.files.internal("Default_Button_Over.png"));
+
+        TextureRegionDrawable up = new TextureRegionDrawable(new TextureRegion(buttonUpTexture));
+        TextureRegionDrawable down = new TextureRegionDrawable(new TextureRegion(buttonDownTexture));
+        TextureRegionDrawable over = new TextureRegionDrawable(new TextureRegion(buttonOverTexture));
+
+        up.setMinWidth(0);
+        up.setMinHeight(0);
+        down.setMinWidth(0);
+        down.setMinHeight(0);
+        over.setMinWidth(0);
+        over.setMinHeight(0);
+
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = up;
+        style.down = down;
+        style.over = over;
+
+        style.font = skin.getFont("default-font");
+        style.fontColor = Color.WHITE;
+        style.overFontColor = Color.WHITE;
+        style.downFontColor = Color.LIGHT_GRAY;
+
+        return style;
+    }
+
     public String formatCash(int cash) {
         return String.format("%,d", cash);
+    }
+
+    private Window.WindowStyle createModernDialogStyle() {
+        Window.WindowStyle style = new Window.WindowStyle(skin.get(Window.WindowStyle.class));
+
+        style.background = skin.newDrawable(
+            "default-round",
+            new Color(0.035f, 0.035f, 0.045f, 0.98f)
+        );
+
+        style.titleFont = skin.getFont("default-font");
+        style.titleFontColor = Color.WHITE;
+
+        return style;
+    }
+
+    private Drawable darkPopupPanelDrawable() {
+        return skin.newDrawable(
+            "default-round",
+            new Color(0.09f, 0.09f, 0.12f, 0.96f)
+        );
+    }
+
+    private void resizeSmallDialog(Dialog dialog) {
+        float dialogWidth = Math.min(560f, stage.getWidth() - 80f);
+        float dialogHeight = Math.min(360f, stage.getHeight() - 80f);
+
+        dialog.setSize(dialogWidth, dialogHeight);
+        dialog.setPosition(
+            (stage.getWidth() - dialogWidth) / 2f,
+            (stage.getHeight() - dialogHeight) / 2f
+        );
+    }
+
+    private void showModernMessageDialog(String title, String message) {
+        Dialog dialog = new Dialog(title, createModernDialogStyle());
+        dialog.getTitleLabel().setAlignment(Align.center);
+        dialog.getTitleLabel().setFontScale(1.15f);
+        dialog.getContentTable().pad(26);
+
+        Table messagePanel = new Table();
+        messagePanel.setBackground(darkPopupPanelDrawable());
+        messagePanel.pad(18);
+
+        Label messageLabel = new Label(message, skin);
+        messageLabel.setWrap(true);
+        messageLabel.setAlignment(Align.center);
+        messageLabel.setColor(Color.LIGHT_GRAY);
+
+        messagePanel.add(messageLabel).width(430).center();
+
+        TextButton okButton = new TextButton("OK", defaultButtonStyle);
+        okButton.getLabel().setAlignment(Align.center);
+        okButton.getLabel().setFontScale(1.05f);
+
+        okButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+            }
+        });
+
+        dialog.getContentTable().add(messagePanel).width(470).padBottom(20).row();
+        dialog.getContentTable().add(okButton).width(150).height(38).row();
+
+        dialog.show(stage);
+        resizeSmallDialog(dialog);
+    }
+
+    private void showModernConfirmDialog(
+        String title,
+        String message,
+        String confirmText,
+        String cancelText,
+        Runnable onConfirm
+    ) {
+        Dialog dialog = new Dialog(title, createModernDialogStyle());
+        dialog.getTitleLabel().setAlignment(Align.center);
+        dialog.getTitleLabel().setFontScale(1.15f);
+        dialog.getContentTable().pad(26);
+
+        Table messagePanel = new Table();
+        messagePanel.setBackground(darkPopupPanelDrawable());
+        messagePanel.pad(18);
+
+        Label messageLabel = new Label(message, skin);
+        messageLabel.setWrap(true);
+        messageLabel.setAlignment(Align.center);
+        messageLabel.setColor(Color.LIGHT_GRAY);
+
+        messagePanel.add(messageLabel).width(430).center();
+
+        TextButton confirmButton = new TextButton(confirmText, defaultButtonStyle);
+        confirmButton.getLabel().setAlignment(Align.center);
+        confirmButton.getLabel().setFontScale(1.0f);
+
+        TextButton cancelButton = new TextButton(cancelText, defaultButtonStyle);
+        cancelButton.getLabel().setAlignment(Align.center);
+        cancelButton.getLabel().setFontScale(1.0f);
+
+        confirmButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+                if (onConfirm != null) {
+                    onConfirm.run();
+                }
+            }
+        });
+
+        cancelButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+            }
+        });
+
+        Table buttonRow = new Table();
+        buttonRow.add(confirmButton).width(160).height(38).padRight(12);
+        buttonRow.add(cancelButton).width(140).height(38);
+
+        dialog.getContentTable().add(messagePanel).width(470).padBottom(20).row();
+        dialog.getContentTable().add(buttonRow).row();
+
+        dialog.show(stage);
+        resizeSmallDialog(dialog);
     }
 
     private void selectCar(CarData car) {
@@ -498,20 +657,15 @@ public class DealershipScreen implements Screen {
     }
 
     private Drawable createCashLabelBackground() {
-        int width = 200;
-        int height = 50;
+        if (cashLabelTexture == null) {
+            cashLabelTexture = new Texture(Gdx.files.internal("Cash_Label.png"));
+        }
 
-        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.LIGHT_GRAY);
-        pixmap.fill();
+        TextureRegionDrawable drawable = new TextureRegionDrawable(new TextureRegion(cashLabelTexture));
+        drawable.setMinWidth(0);
+        drawable.setMinHeight(0);
 
-        pixmap.setColor(Color.BLACK);
-        pixmap.drawRectangle(0, 0, width, height);
-
-        Texture texture = new Texture(pixmap);
-        pixmap.dispose();
-
-        return new TextureRegionDrawable(new TextureRegion(texture));
+        return drawable;
     }
 
     private void moveSelection(int direction) {
@@ -656,6 +810,12 @@ public class DealershipScreen implements Screen {
 
     @Override
     public void dispose() {
-        stage.dispose();
+        if (stage != null) stage.dispose();
+        if (skin != null) skin.dispose();
+
+        if (buttonUpTexture != null) buttonUpTexture.dispose();
+        if (buttonDownTexture != null) buttonDownTexture.dispose();
+        if (buttonOverTexture != null) buttonOverTexture.dispose();
+        if (cashLabelTexture != null) cashLabelTexture.dispose();
     }
 }
