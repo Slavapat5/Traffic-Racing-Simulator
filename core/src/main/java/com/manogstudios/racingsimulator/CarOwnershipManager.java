@@ -33,7 +33,7 @@ public class CarOwnershipManager {
             }
         } else {
             // First time this user logs in, give starter car
-            ownedCars.add("Mazda MX-5 Miata - 2014.png"); //  starter car
+            ownedCars.add("2014 Sazda FX5 Shiatto - Light Red.png"); //  starter car
             saveOwnedCars();
         }
     }

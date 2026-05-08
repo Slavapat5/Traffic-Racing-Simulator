@@ -190,10 +190,10 @@ public class TestDriveScreen implements Screen {
         System.out.println("Surroundings texture = " + theme.surroundingsTexturePath);
 
         // Traffic car types
-        addTrafficType("BMW 330i - 2025.png", 600f, 600f, 5f);
-        addTrafficType("Ford Fiesta ST - 2019.png", 600f, 600f, 4f);
-        addTrafficType("Mazda MX-5 Miata - 2014.png", 600f, 600f, 3f);
-        addTrafficType("Mclaren 650s - 2015.png", 600f, 600f, 1.5f);
+        addTrafficType("2025 DMV 365e - Silver.png",600f, 600f, 5f);  // common sedan
+        addTrafficType("2019 Nord Sesta SV - Light Red.png",600f, 600f, 4f);  // common
+        addTrafficType("2014 Sazda FX5 Shiatto - Light Red.png",600f, 600f, 3f);  // a bit sporty
+        addTrafficType("2015 Solaren 660z - Light Green.png",600f, 600f, 1.5f);// rarer sports car
 
         // Player car (selected)
         String selectedCarTexture = CarSelectionData.getSelectedCarTexture();

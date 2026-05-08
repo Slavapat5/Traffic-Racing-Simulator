@@ -1,7 +1,7 @@
 package com.manogstudios.racingsimulator;
 
 public class CarSelectionData {
-    private static String selectedCarTexture = "Mazda MX-5 Miata - 2014.png";
+    private static String selectedCarTexture = "2014 Sazda FX5 Shiatto - Light Red.png";
 
     public static void setSelectedCarTexture(String texturePath){
         selectedCarTexture = texturePath;

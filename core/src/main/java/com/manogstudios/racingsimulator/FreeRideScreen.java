@@ -197,10 +197,10 @@ public class FreeRideScreen implements Screen {
 
 
         // Traffic car types (variety + spawn chances)
-        addTrafficType("BMW 330i - 2025.png",600f, 600f, 5f);  // common sedan
-        addTrafficType("Ford Fiesta ST - 2019.png",600f, 600f, 4f);  // common
-        addTrafficType("Mazda MX-5 Miata - 2014.png",600f, 600f, 3f);  // a bit sporty
-        addTrafficType("Mclaren 650s - 2015.png",600f, 600f, 1.5f);// rarer sports car
+        addTrafficType("2025 DMV 365e - Silver.png",600f, 600f, 5f);  // common sedan
+        addTrafficType("2019 Nord Sesta SV - Light Red.png",600f, 600f, 4f);  // common
+        addTrafficType("2014 Sazda FX5 Shiatto - Light Red.png",600f, 600f, 3f);  // a bit sporty
+        addTrafficType("2015 Solaren 660z - Light Green.png",600f, 600f, 1.5f);// rarer sports car
 
 
         // Player car
@@ -245,8 +245,6 @@ public class FreeRideScreen implements Screen {
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
         // --- UI ---
-
-
         Table scoreTable = new Table();
         scoreTable.setFillParent(true);
         scoreTable.top().left().padTop(10).padLeft(0);
