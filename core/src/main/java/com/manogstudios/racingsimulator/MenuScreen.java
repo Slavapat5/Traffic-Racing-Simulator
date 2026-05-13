@@ -296,13 +296,12 @@ public class MenuScreen implements Screen {
 
         TextButton fullscreenButton = createPopupButton(getFullscreenText());
         TextButton toMainMenu = createPopupButton("Back to Title");
-        TextButton cashButton = createPopupButton("Add Cash");
         TextButton logoutButton = createPopupButton("Log out");
         TextButton quitButton = createPopupButton("Quit Game");
 
         settingsPopup.add(fullscreenButton).width(250).height(42).row();
         settingsPopup.add(toMainMenu).width(250).height(42).row();
-        settingsPopup.add(cashButton).width(250).height(42).row();
+
         settingsPopup.add(logoutButton).width(250).height(42).row();
         settingsPopup.add(quitButton).width(250).height(42).padBottom(0).row();
 
@@ -389,47 +388,6 @@ public class MenuScreen implements Screen {
         });
 
 
-        cashButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Dialog confirmDialog = new Dialog("Confirm Cash?", skin) {
-                    @Override
-                    protected void result(Object object) {
-                        if ((Boolean) object) {
-                            // Server-side cash grant for testing
-                            if (!com.manogstudios.racingsimulator.network.SupabaseAuth.isLoggedIn) {
-                                Dialog d = new Dialog("Not logged in", skin);
-                                d.text("Login first so cash can be saved to the cloud.");
-                                d.button("OK");
-                                d.show(stage);
-                                return;
-                            }
-
-                            com.manogstudios.racingsimulator.network.SupabaseGameData.adjustCash(
-                                100000,
-                                newCash -> {
-                                    // update local cache + UI
-                                    CashManager.setCash(newCash);
-                                    CashManager.saveCash();
-                                    // cashLabel.setText("$" + formatCash(CashManager.getCash()));
-                                },
-                                err -> {
-                                    Dialog d = new Dialog("Cash update failed", skin);
-                                    d.text("Error: " + err);
-                                    d.button("OK");
-                                    d.show(stage);
-                                }
-                            );
-                        }
-                    }
-                };
-
-                confirmDialog.text("Add $10,000 server-side?");
-                confirmDialog.button("Yes", true);
-                confirmDialog.button("No", false);
-                confirmDialog.show(stage);
-            }
-        });
 
         stage.addListener(new InputListener() {
             @Override

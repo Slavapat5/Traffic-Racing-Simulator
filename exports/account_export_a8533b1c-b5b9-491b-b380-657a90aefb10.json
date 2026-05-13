@@ -1,23 +1,41 @@
 {
     "high_scores": {
-        "endless_two_way": 0,
-        "free_ride": 3768,
-        "endless_one_way": 19038,
-        "time_trial": 0,
-        "drag_sprint": 40710
+        "endless_two_way": 28818,
+        "free_ride": 29139,
+        "endless_one_way": 45405,
+        "time_trial": 13053,
+        "drag_sprint": 71495
     },
     "game": "Traffic Racing Simulator",
     "owned_cars": [
+        "2015 Solaren 660z - Light Green.png",
+        "2015 Lambini Uragan - Yellow.png",
+        "Ferrari 458 - 2015.png",
+        "2023 DOJ Challenge RST Hellbunny - Black.png",
+        "Ferrari SF90 Stradale - 2024.png",
+        "2024 Ferrati SFX900 Strattalius - Light Red.png",
+        "2025 DMV 365e - Black.png",
+        "2025 DMV 365e - Grey.png",
+        "2010 Sedecrem STR Solaren - Silver.png",
+        "Dodge Challenger SRT Hellcat - 2023.png",
+        "2019 Nord Sesta SV - Light Red.png",
+        "Ford Fiesta ST - 2019.png",
+        "Lamborghini Huracan - 2015.png",
+        "2015 Lambini Uragan - Orange.png",
+        "2014 Sazda FX5 Shiatto - Light Red.png",
+        "2015 Ferrati 460 - Light Red.png",
         "Mazda MX-5 Miata - 2014.png",
+        "DOJ Challenge RST Hellbunny - 2023.png",
+        "2023 DOJ Challenge RST Hellbunny - White.png",
         "Mclaren 650s - 2015.png",
         "BMW 330i - 2025.png",
-        "Ford Fiesta ST - 2019.png",
+        "2019 Slovagen Ball GTR V8 - Light Red.png",
         "Volkswagen Golf GTI Mk8 - 2019.png"
     ],
-    "exported_at": "2026-04-28T17:05:10.730792100Z",
+    "exported_at": "2026-05-12T18:36:14.977706900Z",
     "account": {
         "user_id": "a8533b1c-b5b9-491b-b380-657a90aefb10",
-        "cash": 6060,
-        "username": "Test User"
+        "cash": 169066,
+        "username": "Test User 2"
     }
 }
