@@ -1,7 +1,7 @@
 package com.manogstudios.racingsimulator;
 
 public class SelectedCar {
-    private static String selectedCarImage = "Mazda MX-5 Miata - 2014.png"; // Default car if none are selected
+    private static String selectedCarImage = "2014 Sazda FX5 Shiatto - Light Red.png"; // Default car if none are selected
 
     public static void set(String carImage) {
         selectedCarImage = carImage;

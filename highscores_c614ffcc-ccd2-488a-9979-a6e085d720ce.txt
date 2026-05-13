@@ -1,3 +1,0 @@
-free_ride=11635
-endless_one_way=1255
-time_trial=5367
