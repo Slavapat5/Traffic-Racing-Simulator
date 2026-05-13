@@ -63,6 +63,7 @@ public class CarRegistry {
         CarStats sedecremStr = new CarStats(2080f, 309f, 2.2f);
         statsMap.put("2010 Sedecrem STR Solaren - Grey.png", sedecremStr);
         statsMap.put("2010 Sedecrem STR Solaren - Silver.png", sedecremStr);
+        statsMap.put("Mercedes SLR Mclaren - 2010.png", sedecremStr);
     }
 
     public static CarStats getStats(String carImageName) {
