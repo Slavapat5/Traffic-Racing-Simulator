@@ -1,5 +1,0 @@
-endless_two_way=28818
-free_ride=29139
-endless_one_way=45405
-time_trial=13053
-drag_sprint=71495
