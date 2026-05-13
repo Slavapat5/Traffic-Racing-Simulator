@@ -225,6 +225,7 @@ public class SeasonSelectorScreen implements Screen {
         parent.add(card).width(560).pad(20);
     }
 
+    // Builds a preview image filename from the selected location and season
     private String getSeasonPreviewImage(String seasonName) {
         String locationPart = toAssetName(locationName);
         String seasonPart = toAssetName(seasonName);
@@ -263,7 +264,9 @@ public class SeasonSelectorScreen implements Screen {
         }
     }
 
+    // Saves the selected season and launches the correct gameplay screen
     private void onSeasonSelected(String seasonName) {
+        EnvironmentSelectionData.setSelectedLocation(locationName);
         EnvironmentSelectionData.setSelectedSeason(seasonName);
         launchGameplayScreen();
     }

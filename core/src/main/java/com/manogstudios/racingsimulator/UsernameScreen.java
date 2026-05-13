@@ -104,7 +104,7 @@ public class UsernameScreen implements Screen {
         card.add(confirmButton).colspan(2).width(360).height(45).padTop(10).row();
 
         //  Back to menu if user changes their mind
-        TextButton backButton = new TextButton("Back to Menu", skin);
+        TextButton backButton = new TextButton("Back to Login", skin);
         card.add(backButton).colspan(2).width(200).height(40).padTop(8).row();
 
         // Add card to root
@@ -157,8 +157,8 @@ public class UsernameScreen implements Screen {
                                     statusLabel.setColor(Color.GREEN);
                                     statusLabel.setText("Username set! Loading game...");
                                     game.setScreen(new PlayScreen(game));
-                                    System.out.println("Warning: public username did not update.");
                                 } else {
+                                    System.out.println("Warning: public username did not update.");
                                     statusLabel.setColor(Color.RED);
                                     statusLabel.setText("Saved username, but failed to publish it.\nTry again.");
                                     confirmButton.setDisabled(false);
@@ -174,7 +174,8 @@ public class UsernameScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new PlayScreen(game));
+                SupabaseAuth.logout();
+                game.setScreen(new LoginScreen(game));
             }
         });
     }

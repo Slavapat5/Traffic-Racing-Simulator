@@ -533,7 +533,7 @@ public class TestDriveScreen implements Screen {
         titleLabel.setColor(Color.WHITE);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Free Ride is currently paused", skin);
+        Label subtitleLabel = new Label("Test Drive is currently paused", skin);
         subtitleLabel.setFontScale(0.9f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -1096,7 +1096,7 @@ public class TestDriveScreen implements Screen {
         controlsPanel.defaults().padBottom(8).left();
 
         controlsPanel.add(createControlRow("W", "Accelerate")).width(500).row();
-        controlsPanel.add(createControlRow("S", "Brake / Reverse")).width(500).row();
+        controlsPanel.add(createControlRow("S", "Brake")).width(500).row();
         controlsPanel.add(createControlRow("A", "Steer Left")).width(500).row();
         controlsPanel.add(createControlRow("D", "Steer Right")).width(500).row();
         controlsPanel.add(createControlRow("ESC", "Pause / Back")).width(500).row();
@@ -1164,6 +1164,7 @@ public class TestDriveScreen implements Screen {
         if (defaultButtonUpTexture != null) defaultButtonUpTexture.dispose();
         if (defaultButtonDownTexture != null) defaultButtonDownTexture.dispose();
         if (defaultButtonOverTexture != null) defaultButtonOverTexture.dispose();
+        if (cashBgTexture != null) cashBgTexture.dispose();
 
         for (TrafficCarType type : trafficTypes) {
             if (type.texture != null) type.texture.dispose();

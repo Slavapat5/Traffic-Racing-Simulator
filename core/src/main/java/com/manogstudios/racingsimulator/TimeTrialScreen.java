@@ -44,7 +44,7 @@ public class TimeTrialScreen implements Screen {
     private float invulnTimer = 0f;                   // temporary invulnerability after crash
     private static final float CRASH_COOLDOWN_SECONDS = 0.8f;
     private static final float INVULN_SECONDS = 1.2f;
-    private static final int CRASH_PENALTY_POINTS = 800;  // tweak
+    private static final int CRASH_PENALTY_POINTS = 800;
 
     // Road
     private Texture roadTexture;
@@ -71,8 +71,8 @@ public class TimeTrialScreen implements Screen {
     private float roadWidth = 800f;
     private static final float ROAD_BOUNDARY_OFFSET_X = 40f;
 
-    // --- Time Trial config ---
-    private final float timeLimitSeconds;   // e.g. 60, 90, 120
+    //  Time Trial config
+    private final float timeLimitSeconds;
     private float timeRemaining;            // counts down
 
     private boolean paused = false;
@@ -130,7 +130,7 @@ public class TimeTrialScreen implements Screen {
     private float speedScoreAccumulator = 0f; // adds score over time based on speed
     private boolean gameOver = false;
 
-    // --- Telemetry (run session) ---
+    // Telemetry (run session)
     private long runStartMillis = 0L;
     private int runCrashCount = 0;
     private int runNearMisses = 0;
@@ -139,6 +139,7 @@ public class TimeTrialScreen implements Screen {
     private float speedSampleSeconds = 0f;
     private float maxSpeedMph = 0f;
 
+    private int penaltyPoints = 0;
 
     // UI
     private Stage uiStage;
@@ -246,7 +247,7 @@ public class TimeTrialScreen implements Screen {
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
-        // --- UI layout ---
+        // UI layout
 
 
         Table scoreTable = new Table();
@@ -476,7 +477,8 @@ public class TimeTrialScreen implements Screen {
         // Score formula
         int distancePoints = (int) (distanceScore / 10f);
         int speedPoints = (int) speedScoreAccumulator;
-        score = distancePoints + speedPoints + bonusPoints;
+        score = distancePoints + speedPoints + bonusPoints - penaltyPoints;
+        if (score < 0) score = 0;
 
         // UI update
         scoreLabel.setText(String.valueOf(score));
@@ -563,10 +565,9 @@ public class TimeTrialScreen implements Screen {
         runCrashCount++;
 
         // Penalty
-        score -= CRASH_PENALTY_POINTS;
-        if (score < 0) score = 0;
+        penaltyPoints += CRASH_PENALTY_POINTS;
 
-        // Push the traffic car away to prevent immediate re-collision spam
+        // Push the traffic car away to prevent immediate re-collision
         if (hitCar != null) {
             hitCar.y = playerCar.getY() + 2500f;
             hitCar.bounds.setPosition(hitCar.x, hitCar.y);
@@ -974,7 +975,7 @@ public class TimeTrialScreen implements Screen {
         titleLabel.setColor(Color.WHITE);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Free Ride is currently paused", skin);
+        Label subtitleLabel = new Label("Time Trial is currently paused", skin);
         subtitleLabel.setFontScale(0.9f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -1012,7 +1013,7 @@ public class TimeTrialScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game));
+                game.setScreen(new TimeTrialScreen(game, timeLimitSeconds));
             }
         });
 
@@ -1108,7 +1109,7 @@ public class TimeTrialScreen implements Screen {
         controlsPanel.defaults().padBottom(8).left();
 
         controlsPanel.add(createControlRow("W", "Accelerate")).width(500).row();
-        controlsPanel.add(createControlRow("S", "Brake / Reverse")).width(500).row();
+        controlsPanel.add(createControlRow("S", "Brake")).width(500).row();
         controlsPanel.add(createControlRow("A", "Steer Left")).width(500).row();
         controlsPanel.add(createControlRow("D", "Steer Right")).width(500).row();
         controlsPanel.add(createControlRow("ESC", "Pause / Back")).width(500).row();
@@ -1175,7 +1176,7 @@ public class TimeTrialScreen implements Screen {
         gameOverOverlay = new Table();
         gameOverOverlay.setFillParent(true);
 
-        // Full-screen dim background.
+        // Full-screen dim background
         gameOverOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.72f));
 
         Table panel = new Table(skin);
@@ -1269,7 +1270,7 @@ public class TimeTrialScreen implements Screen {
 
         statsRow2.add(createResultStatBox(
             "Penalty",
-            "-" + (crashCount * CRASH_PENALTY_POINTS),
+            "-" + penaltyPoints,
             crashCount > 0 ? Color.RED : Color.LIGHT_GRAY
         )).width(260).height(105);
 
