@@ -53,17 +53,17 @@ public class Car {
                        boolean turnLeft, boolean turnRight,
                        List<Rectangle> borders) {
 
-        // Accelerate / decelerate
+        // Accelerate and decelerate
         if (moveForward) {
             speed += acceleration * delta;
         } else {
-            // Natural slowdown when not accelerating
-            speed *= 0.99f;
+            // Natural slowdown when not accelerating.
+            speed *= COAST_DAMPING;
         }
 
         if (brake) {
-            // Stronger slowdown when braking
-            speed *= 0.9f;
+            // Stronger slowdown when braking.
+            speed *= BRAKE_DAMPING;
         }
 
         // Clamp speed >= 0 (no reverse)
@@ -79,7 +79,7 @@ public class Car {
             speed = maxSpeed;
         }
 
-        // --- STEERING ---
+        // ---- Steering ----
         float steerFactor = 1f;
         if (speed > 0) {
             steerFactor = MathUtils.clamp(0.6f + (1f - speed / maxSpeed) * 0.4f, 0.6f, 1f);
@@ -135,7 +135,7 @@ public class Car {
     }
 
 
-     //Soft reset position. This stops motion but keeps rotation unless I want otherwise.
+    // Resets the car position and stops movement while keeping the current rotation.
 
     public void setPosition(float x, float y) {
         this.x = x;
@@ -146,7 +146,7 @@ public class Car {
     }
 
 
-     // Sets speed safely using existing fields
+    // Sets the current speed while keeping it within the allowed min/max range
     public void setSpeed(float s) {
         if (s < 0f) s = 0f;
         if (s > maxSpeed) s = maxSpeed;

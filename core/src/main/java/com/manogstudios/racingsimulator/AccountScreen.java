@@ -59,17 +59,17 @@ public class AccountScreen implements Screen {
         root.pad(30);
         stage.addActor(root);
 
-        // title
+        // Title
         Label title = new Label("Account", skin);
         title.setFontScale(2f);
         title.setAlignment(Align.center);
 
-        // username edit
+        // Username edit
         Label usernameLabel = new Label("Username", skin);
         usernameField = new TextField("", skin);
         usernameField.setMessageText("Enter username");
 
-        // error label
+        // Error label
         statusLabel = new Label("", skin);
         statusLabel.setColor(Color.YELLOW);
 
@@ -97,7 +97,7 @@ public class AccountScreen implements Screen {
                 saveUsernameButton.setDisabled(true);
 
 
-                // saves the username to the private profile table, then also updates the public username used for leaderboards.
+                // Saves the username to the private profile table, then also updates the public username used for leaderboards.
                 SupabaseGameData.updateUsername(
                     SupabaseAuth.userId,
                     SupabaseAuth.accessToken,
@@ -132,7 +132,7 @@ public class AccountScreen implements Screen {
         userIdLabel.setWrap(false);
         userIdLabel.setAlignment(Align.left);
 
-        // displays account progression currently loaded into the local manager classes
+        // Displays account progression currently loaded into the local manager classes
         cashLabel = new Label("Cash: $" + formatCash(CashManager.getCash()), skin);
 
 
@@ -153,7 +153,7 @@ public class AccountScreen implements Screen {
         bestEndlessTwoWayLabel = new Label("Endless Two Way: " + bestEndless2, skin);
         bestDragSprintLabel    = new Label("Drag Sprint: " + bestDragSprint, skin);
 
-        // buttons at the bottom
+        // Buttons at the bottom
         TextButton backButton = new TextButton("Back to Menu", skin);
         backButton.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
@@ -339,7 +339,7 @@ public class AccountScreen implements Screen {
 
         root.add(bottomButtons).colspan(2).right().padTop(20);
 
-        // load existing username from Supabase
+        // Load existing username from Supabase
         SupabaseGameData.fetchUsername(
             SupabaseAuth.userId,
             SupabaseAuth.accessToken,
@@ -355,7 +355,7 @@ public class AccountScreen implements Screen {
         return String.format("%,d", cash);
     }
 
-    // exports a local JSON copy of the players account data for transparency or testing
+    // Exports a local JSON copy of the players account data for transparency or testing
     private void exportAccountData() {
         try {
             JSONObject export = new JSONObject();
@@ -427,7 +427,7 @@ public class AccountScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // live updates if these change while the screen is open
+        // Live updates if these change while the screen is open
         cashLabel.setText("Cash: $" + formatCash(CashManager.getCash()));
 
         int ownedCars = CarOwnershipManager.getOwnedCars().size();

@@ -48,12 +48,13 @@ public class CarOwnershipManager {
     }
 
     public static void addCar(String imagePath) {
-        // Local-only. Cloud writes must be server-side
+        // Adds a car to the local owned-cars set
+        // Normal purchases should be handled by the Supabase purchase-car Edge Function
         addCarInternal(imagePath, false);
     }
 
 
-    // This is ONLY for when loading cars FROM Supabase, to avoid re-uploading.
+    // Used when loading cars from Supabase so the game does not upload them again
     public static void addCarFromCloud(String imagePath) {
         addCarInternal(imagePath, false);
     }

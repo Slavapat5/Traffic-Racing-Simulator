@@ -8,10 +8,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
-
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+// This class displays achievement unlock pop-ups one at a time during the game
 public class AchievementToastManager {
 
     private final Stage stage;
@@ -25,6 +25,7 @@ public class AchievementToastManager {
         this.skin = skin;
     }
 
+    // Adds newly unlocked achievements to the queue and starts showing them if no toast is active
     public void queueAll(Array<AchievementsManager.AchievementState> newlyUnlocked) {
         if (newlyUnlocked == null || newlyUnlocked.size == 0) return;
 
@@ -41,6 +42,7 @@ public class AchievementToastManager {
         return String.format("%,d", cash);
     }
 
+    // Shows the next queued achievement toast with an animation
     private void showNext() {
         AchievementsManager.AchievementState achievement = queue.poll();
 
@@ -81,13 +83,7 @@ public class AchievementToastManager {
         toast.add(descLabel).width(360).left().padTop(4).row();
         toast.add(rewardLabel).left().padTop(6).row();
 
-        toast.add(titleLabel).left().row();
-        toast.add(nameLabel).left().padTop(4).row();
-        toast.add(descLabel).width(360).left().padTop(4).row();
-
         toast.pack();
-
-
 
         float targetX = stage.getWidth() - toast.getWidth() - 25f;
         float targetY = stage.getHeight() - toast.getHeight() - 85f;
@@ -98,6 +94,7 @@ public class AchievementToastManager {
         stage.addActor(toast);
         toast.toFront();
 
+        // Animate in, wait a bit, animate out, then show the next toast in the queue
         toast.addAction(Actions.sequence(
             Actions.parallel(
                 Actions.fadeIn(0.25f),

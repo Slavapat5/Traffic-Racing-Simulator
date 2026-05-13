@@ -25,7 +25,9 @@ public class CarEarnings {
 
         float progress = (car.price - BASE_PRICE) / (TARGET_PRICE - BASE_PRICE);
 
-        int bonus = Math.round(MIN_BONUS_PER_MILE + (progress * 400f));
+        int bonus = Math.round(
+            MIN_BONUS_PER_MILE + (progress * (MAX_BONUS_PER_MILE - MIN_BONUS_PER_MILE))
+        );
 
         return MathUtils.clamp(bonus, MIN_BONUS_PER_MILE, MAX_BONUS_PER_MILE);
     }

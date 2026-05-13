@@ -3,8 +3,6 @@ package com.manogstudios.racingsimulator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonReader;
-import com.badlogic.gdx.utils.JsonValue;
 
 import java.util.*;
 
@@ -24,17 +22,19 @@ public class CarDataBase {
         return cars;
     }
 
+
+
     public static CarData getCarByImage(String imagePath) {
         if (imagePath == null) return null;
 
-
+        // First try to match the cars main image
         for (CarData car : cars) {
             if (car.image != null && car.image.equals(imagePath)) {
                 return car;
             }
         }
 
-
+        // Then check paint variant images
         for (CarData car : cars) {
             if (car.paints == null) continue;
 
@@ -45,7 +45,7 @@ public class CarDataBase {
             }
         }
 
-
+        //  Support old save data that might still contain pre-renamed car filenames
         String mappedImage = mapOldImageToNewImage(imagePath);
 
         if (!mappedImage.equals(imagePath)) {
@@ -104,7 +104,7 @@ public class CarDataBase {
         }
     }
 
-    // Tests
+    // Test helpers used by unit tests
     public static void clear() {
         cars.clear();
     }

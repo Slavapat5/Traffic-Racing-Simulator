@@ -80,7 +80,7 @@ public class AchievementsScreen implements Screen {
 
         root.add(scrollPane).expand().fill().padBottom(20).row();
 
-        // Populate entries
+        // Creates one card for each registered achievement
         Array<AchievementsManager.AchievementState> all = AchievementsManager.getAll();
         for (AchievementsManager.AchievementState a : all) {
             boolean unlocked = a.unlocked;
@@ -104,7 +104,7 @@ public class AchievementsScreen implements Screen {
                 descLabel.setColor(Color.DARK_GRAY);
             }
 
-            // === Card-style box per achievement ===
+            // Card-style box showing the achievement name, description, reward, and lock status
             Table card = new Table(skin);
             card.setBackground("default-round");
             card.setColor(0.15f, 0.15f, 0.15f, 0.95f);
@@ -116,7 +116,7 @@ public class AchievementsScreen implements Screen {
             card.add(rewardLabel).left().row();
             card.add(statusLabel).left();
 
-            // Add card to main list with spacing around it
+            // Adds the card to the scrollable achievements list
             listTable.add(card).expandX().fillX().pad(6, 10, 6, 10).row();
         }
 
@@ -126,7 +126,6 @@ public class AchievementsScreen implements Screen {
         }
 
         // Back button
-
         ImageButton backButton = new ImageButton(backButtonStyle);
 
         backButton.addListener(new ClickListener() {

@@ -9,8 +9,10 @@ import java.util.Map;
 public class CarPaintManager {
 
     private static final String PREF_NAME = "car_paint_preferences";
+    // Stores the selected paint image for each base car image
     private static final Map<String, String> selectedPaints = new HashMap<>();
 
+    // Loads saved paint choices from LibGDX Preferences and ignores invalid paint entries
     public static void load() {
         selectedPaints.clear();
 
@@ -37,6 +39,7 @@ public class CarPaintManager {
         prefs.flush();
     }
 
+    // Returns the selected paint or the first available paint as the default
     public static String getSelectedPaintImage(CarData car) {
         if (car == null) return null;
 
@@ -53,6 +56,7 @@ public class CarPaintManager {
         return car.image;
     }
 
+    // Validates that the chosen paint belongs to the selected car before saving it
     public static void setSelectedPaintImage(String baseCarImage, String paintImage) {
         if (baseCarImage == null || paintImage == null) return;
 

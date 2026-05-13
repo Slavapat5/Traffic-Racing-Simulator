@@ -10,8 +10,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.time.Instant;
-
+// This class stores all achievement definitions and whats needed for them to unlock - first saved locally and the synced to Supabase
 public class AchievementsManager {
+
+
 
     public static class AchievementDef {
         public final String id;
@@ -41,8 +43,8 @@ public class AchievementsManager {
     private static String currentUserId = "default";
     private static Preferences prefs;
 
+    // registers all achievements used by the game
     static {
-        // === Define achievements here ===
         register("free_ride_first_run",
             "First Ride",
             "Finish a Free Ride run for the first time.");
@@ -462,7 +464,7 @@ public class AchievementsManager {
         return newlyUnlocked;
     }
 
-    // Called after a Free Ride run ends, returns newly unlocked achievements.
+    // Checks Free Ride achievements during gameplay and returns any newly unlocked achievements
     public static Array<AchievementState> onFreeRideLiveUpdate(
         int score,
         int distMeters,
@@ -616,7 +618,7 @@ public class AchievementsManager {
         return newlyUnlocked;
     }
 
-
+    // Loads unlocked achievements from Supabase and applies them to the local achievement state
     public static void syncFromCloud(Runnable onDone) {
         if (!SupabaseAuth.isLoggedIn || SupabaseAuth.userId == null || SupabaseAuth.accessToken == null) {
             if (onDone != null) Gdx.app.postRunnable(onDone);
@@ -692,6 +694,7 @@ public class AchievementsManager {
         return newlyUnlocked;
     }
 
+    // Loads achievement unlock states from local LibGDX Preferences
     private static void load() {
         if (prefs == null) return;
         for (AchievementState a : achievements) {
@@ -700,6 +703,7 @@ public class AchievementsManager {
         }
     }
 
+    // Saves achievement unlock states locally so they remain unlocked after restarting the game
     private static void save() {
         if (prefs == null) return;
         for (AchievementState a : achievements) {
@@ -719,7 +723,7 @@ public class AchievementsManager {
         a.unlockedAt = TimeUtils.millis();
         newly.add(a);
 
-        // Push to cloud using Edge Function
+        // Pushes the unlock to Supabase through an Edge Function so rewards are handled on the server-side
         if (SupabaseAuth.isLoggedIn) {
             SupabaseGameData.unlockAchievementRewarded(
                 a.def.id,

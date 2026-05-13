@@ -3,7 +3,6 @@ package com.manogstudios.racingsimulator.network;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
