@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     // Service-role client for DB (bypasses RLS)
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check existing unlocked_at (so we don't overwrite the original timestamp)
+    // Check existing unlocked_at to not overwrite the original timestamp
     const { data: existing, error: exErr } = await supabase
       .from("user_achievements")
       .select("unlocked_at")

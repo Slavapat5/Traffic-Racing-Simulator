@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     const impliedMph = impliedMps * 2.2369362920544;
 
     // This is a HARD reject only if it's totally impossible.
-    // Keep this high so you don't break legit runs if tuning is off.
+    // Keep this high
     if (impliedMph > 600) {
       return json(400, { ok: false, error: "impossible_speed" });
     }
@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
       return json(500, { ok: false, error: "db_write_failed", details: error.message });
     }
 
-    // Return flags (useful while testing)
+    // Return flags
     return json(200, { ok: true, id: data.id, is_suspicious: data.is_suspicious, flags: data.anomaly_flags });
 
   } catch (_e) {

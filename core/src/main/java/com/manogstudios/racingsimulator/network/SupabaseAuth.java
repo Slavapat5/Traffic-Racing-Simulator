@@ -55,7 +55,7 @@ public class SupabaseAuth {
     // Public API
     // ---------------------------
 
-    /** Call this at startup  */
+
     public static void restoreSessionFromPrefs() {
         String at = prefs.getString("accessToken", null);
         String rt = prefs.getString("refreshToken", null);
@@ -70,7 +70,7 @@ public class SupabaseAuth {
         isLoggedIn = (accessToken != null && refreshToken != null && userId != null);
     }
 
-    /** Ensures accessToken is valid (refreshes if needed). Callback runs on LibGDX thread. */
+    // Ensures accessToken is valid (refreshes if needed). Callback runs on LibGDX thread.
     public static void ensureValidSession(Consumer<Boolean> callback) {
         // Not logged in
         if (!isLoggedIn || refreshToken == null || refreshToken.isEmpty()) {
@@ -80,7 +80,7 @@ public class SupabaseAuth {
 
         long now = System.currentTimeMillis();
 
-        // If token is still valid and not near expiry, its good
+        // If token is still valid and not near expiry, its good to be re-used
         if (accessToken != null && (accessTokenExpiresAtMillis - now) > REFRESH_SAFETY_WINDOW_MS) {
             if (callback != null) Gdx.app.postRunnable(() -> callback.accept(true));
             return;
@@ -235,13 +235,13 @@ public class SupabaseAuth {
     // ---------------------------
 
     private static void applySessionFromAuthResponse(JSONObject json) {
-        // access_token is always present on successful login/refresh
+        // Successful login/refresh responses have an access_token
         String at = json.optString("access_token", null);
         if (at != null && !at.isEmpty()) {
             accessToken = at;
         }
 
-        // refresh_token present on login/refresh
+        // Successful login/refresh responses have a refresh_token
         String rt = json.optString("refresh_token", null);
         if (rt != null && !rt.isEmpty()) {
             refreshToken = rt;
@@ -762,7 +762,7 @@ public class SupabaseAuth {
                     if (response.statusCode() / 100 == 2) {
                         result.success = true;
 
-                        // verification can rotate session data; refresh local tokens if returned
+                        // verification can rotate session data, refresh local tokens if returned
                         try {
                             JSONObject json = new JSONObject(response.body());
                             if (json.has("access_token")) {

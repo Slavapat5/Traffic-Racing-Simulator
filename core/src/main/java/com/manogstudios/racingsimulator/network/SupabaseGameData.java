@@ -26,9 +26,9 @@ public class SupabaseGameData {
 
     private static final HttpClient client = HttpClient.newHttpClient();
 
-    /**
-     * Ensures there is a valid access token then provides it to useToken.
-     */
+
+
+    // Makes sure there is a valid access token,then provides it to useToken.
     private static void withValidToken(java.util.function.Consumer<String> useToken,
                                        java.util.function.Consumer<String> onFail) {
         SupabaseAuth.ensureValidSession((ok) -> {
@@ -51,6 +51,7 @@ public class SupabaseGameData {
             .header("Content-Type", "application/json");
     }
 
+    // uses Supabase Edge Function so car purchases are checked server-side, prevents the client-side from tampering with prices or duplicate cars
     public static void purchaseCar(String carImage,
                                    int price,
                                    java.util.function.Consumer<Integer> onSuccessCash,
@@ -215,6 +216,7 @@ public class SupabaseGameData {
         });
     }
 
+    // sends gameplay telemetry to Supabase for testing, debugging, and run history
     public static void submitRunTelemetry(
         String mode,
         long startedAtMillis,
@@ -421,6 +423,7 @@ public class SupabaseGameData {
         });
     }
 
+    // loads the users cloud cash balance from the profiles table - if no profiule exists, starter profile is made with default money
     public static void loadProfile(String userId, String accessToken, Runnable onDone) {
         new Thread(() -> {
             try {
@@ -540,7 +543,7 @@ public class SupabaseGameData {
         }).start();
     }
 
-    // NOTE: If  user_achievements table is server-only, prefer unlockAchievement() and avoid this REST write.
+    // this is legacy code, unlockAchievement() is preferred because the edge function can validate and reward achievements server-side
     public static void saveAchievementUnlocked(String userId,
                                                String accessToken,
                                                String achievementId,
@@ -1115,7 +1118,7 @@ public class SupabaseGameData {
                 CarOwnershipManager.clearOwnedCars();
 
                 if (arr.length() == 0) {
-                    String starter = "Mazda MX-5 Miata - 2014.png";
+                    String starter = "2014 Sazda FX5 Shiatto - Light Red.png";
                     CarOwnershipManager.addCarFromCloud(starter);
                     saveOwnedCar(userId, accessToken, starter);
                 } else {
@@ -1210,6 +1213,7 @@ public class SupabaseGameData {
         }).start();
     }
 
+    // This is also legacy code, submitScore() is preferred because Edge Function can validates scores server-side
     public static void saveHighScore_UNSAFE(String userId, String accessToken, String mode, int score) {
         if (userId == null || accessToken == null) return;
 

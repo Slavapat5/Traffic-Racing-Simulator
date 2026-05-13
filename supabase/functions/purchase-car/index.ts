@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
-    // Identify user from the JWT, not trusting client user_id)
+    // Identify user from the JWT, not trusting client user_id
     const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
     if (userErr || !userData?.user) {
       return new Response(JSON.stringify({ ok: false, error: "invalid_jwt" }), {

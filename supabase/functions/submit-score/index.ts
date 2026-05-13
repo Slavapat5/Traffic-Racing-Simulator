@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Allow only known modes to prevent arbitrary junk modes
+// Allow only known modes to prevent any junk modes
 const ALLOWED_MODES = new Set([
   "free_ride",
   "drag_sprint",
@@ -73,11 +73,11 @@ serve(async (req) => {
       return jsonResponse(400, { error: "invalid_score" });
     }
 
-    // Service role client to write (bypasses RLS) — NEVER expose this key to client
+    // Service role client to write (bypasses RLS) - dont expose this key to client
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
     // Only improve score: keep the maximum score for (user_id, mode)
-    // This prevents someone from overwriting with lower values (and keeps logic consistent)
+    // This stops someone from overwriting with lower values
     const { data: existing, error: exErr } = await admin
       .from("high_scores")
       .select("score")
