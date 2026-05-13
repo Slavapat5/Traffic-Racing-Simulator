@@ -83,7 +83,7 @@ public class LeaderboardScreen implements Screen {
             bgTexture = null; // just black if missing
         }
 
-        //  Root layout: center a card
+        //  Root layout - center a card
         Table root = new Table();
         root.setFillParent(true);
         root.center();
@@ -98,7 +98,7 @@ public class LeaderboardScreen implements Screen {
 
         root.add(card).width(900).height(550);
 
-        // --- Title + subtitle ---
+        // Title + subtitle
         titleLabel = new Label("Leaderboards", skin);
         titleLabel.setAlignment(Align.center);
         titleLabel.setFontScale(1.5f);

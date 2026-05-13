@@ -176,6 +176,7 @@ public class MfaSetupScreen implements Screen {
         });
     }
 
+    // Loads the current MFA state so the screen can show whether 2FA is enabled.
     private void loadFactorState() {
         statusLabel.setColor(Color.LIGHT_GRAY);
         statusLabel.setText("Checking MFA status...");
@@ -214,6 +215,7 @@ public class MfaSetupScreen implements Screen {
         });
     }
 
+    // Starts TOTP enrollment and displays the secret/URI for the authenticator app
     private void beginTotpEnrollment() {
         statusLabel.setColor(Color.LIGHT_GRAY);
         statusLabel.setText("Starting TOTP enrollment...");
@@ -247,6 +249,7 @@ public class MfaSetupScreen implements Screen {
         });
     }
 
+    // Creates a challenge and verifies the users 6 digit authenticator code
     private void verifyEnrollmentCode() {
         String code = codeField.getText().trim();
 
@@ -290,6 +293,7 @@ public class MfaSetupScreen implements Screen {
         });
     }
 
+    // Removes the currently verified MFA factor from the account
     private void disableCurrentFactor() {
         if (verifiedFactorId == null || verifiedFactorId.isEmpty()) {
             statusLabel.setColor(Color.RED);

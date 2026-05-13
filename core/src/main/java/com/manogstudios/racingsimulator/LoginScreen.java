@@ -106,7 +106,7 @@ public class LoginScreen implements Screen {
         passwordField.setPasswordCharacter('*');
         passwordField.setMessageText("••••••••");
 
-        // little "Show" button
+        // little Show button
         TextButton showButton = new TextButton("Show", defaultButtonStyle);
 
         // password field + show button
@@ -208,7 +208,7 @@ public class LoginScreen implements Screen {
                 feedbackLabel.setColor(Color.LIGHT_GRAY);
                 feedbackLabel.setText("Logging in...");
 
-                // calls Sypabase Auth
+                // Sends the login request to Supabase Auth
                 SupabaseAuth.login(email, password, success -> {
                     Gdx.app.postRunnable(() -> {
                         if (success) {

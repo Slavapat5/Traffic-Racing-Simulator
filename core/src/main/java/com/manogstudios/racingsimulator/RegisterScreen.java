@@ -63,7 +63,7 @@ public class RegisterScreen implements Screen {
         root.center();
         stage.addActor(root);
 
-        // --- Card / panel ---
+        // Card
         Table card = new Table(skin);
         card.pad(30);
         card.defaults().pad(8).fillX();
@@ -149,7 +149,7 @@ public class RegisterScreen implements Screen {
         card.add(bottomRow).colspan(2).padTop(10).row();
 
 
-        //  Button logic
+        // Handles account registration
         registerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -169,6 +169,12 @@ public class RegisterScreen implements Screen {
                         "Password must be at least 8 characters\n" +
                             "and include upper, lower, and a number."
                     );
+                    return;
+                }
+
+                if (!email.contains("@") || !email.contains(".")) {
+                    statusLabel.setColor(Color.RED);
+                    statusLabel.setText("Please enter a valid email address.");
                     return;
                 }
 

@@ -38,7 +38,6 @@ public class PlayScreen implements Screen {
 
     public PlayScreen(Game game) {
         this.game = game;
-        System.out.println("PlayScreen constructor called!");
     }
 
     @Override
@@ -52,7 +51,7 @@ public class PlayScreen implements Screen {
             return;
         }
 
-        // tie local save managers to this Supabase user
+        // Connects local manager classes to the currently logged in Supabase user
         String userId = SupabaseAuth.userId;
         String token = SupabaseAuth.accessToken;
         System.out.println("Initializing save data for user: " + userId);
@@ -69,7 +68,7 @@ public class PlayScreen implements Screen {
 
         SupabaseGameData.loadProfile(userId, token, () -> {
             System.out.println("Profile loaded from Supabase. Cash = " + CashManager.getCash());
-            // could refresh any cash labels here.
+            // Cloud profile load updates CashManager, refresh visible labels after this if I need to
         });
 
         SupabaseGameData.loadOwnedCars(userId, token, () -> {
@@ -80,8 +79,6 @@ public class PlayScreen implements Screen {
             System.out.println("High scores loaded from Supabase.");
         });
 
-
-        System.out.println("PlayScreen show() method called!");
         batch = new SpriteBatch();
         stage = new Stage(new ScreenViewport());
 
@@ -211,7 +208,7 @@ public class PlayScreen implements Screen {
         versionTable.add(versionLabel);
 
 
-// Privacy / data notice text
+        // Privacy/data notice text
         Label privacyLabel = new Label(
             "By using an account, you agree that this game stores your email/login account, " +
                 "username, leaderboard scores, owned cars, cash, achievements, and 2FA status using Supabase. " +

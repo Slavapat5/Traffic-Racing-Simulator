@@ -100,6 +100,7 @@ public class MfaCodeScreen implements Screen {
         loadVerifiedFactor();
     }
 
+    // Loads the verified MFA factor that will be challenged during login
     private void loadVerifiedFactor() {
         statusLabel.setColor(Color.LIGHT_GRAY);
         statusLabel.setText("Checking enrolled 2FA factor...");
@@ -127,6 +128,7 @@ public class MfaCodeScreen implements Screen {
         });
     }
 
+    // If the user leaves before MFA is completed, clear the partial login session
     private void verifyCode() {
         String code = codeField.getText().trim();
 
@@ -139,6 +141,13 @@ public class MfaCodeScreen implements Screen {
         if (code.isEmpty()) {
             statusLabel.setColor(Color.RED);
             statusLabel.setText("Please enter the 6-digit code.");
+            return;
+        }
+
+        // MfaCodeScreen
+        if (!code.matches("\\d{6}")) {
+            statusLabel.setColor(Color.RED);
+            statusLabel.setText("Please enter a valid 6-digit code.");
             return;
         }
 
@@ -236,7 +245,7 @@ public class MfaCodeScreen implements Screen {
 
         dispose();
     }
-    
+
     @Override
     public void dispose() {
         if (stage != null) stage.dispose();

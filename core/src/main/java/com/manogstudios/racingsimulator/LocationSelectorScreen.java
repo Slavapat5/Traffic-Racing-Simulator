@@ -57,13 +57,13 @@ public class LocationSelectorScreen implements Screen {
 
         setupBackground();
 
-        // ROOT
+        // Main screen layout
         Table root = new Table();
         root.setFillParent(true);
         root.top().padTop(70).padLeft(40).padRight(40).padBottom(100);
         stage.addActor(root);
 
-        //  TITLE
+        //  Title
         Label titleLabel = new Label("Select Location", skin);
         titleLabel.setAlignment(Align.center);
         titleLabel.setFontScale(1.5f);
@@ -81,7 +81,7 @@ public class LocationSelectorScreen implements Screen {
 
         root.add(titleTable).expandX().center().padBottom(25).row();
 
-        // LOCATION CARDS ROW
+        // Horizontal list of selectable location cards.
         Table locationListTable = new Table();
         locationListTable.pad(20);
         locationListTable.defaults().space(40);
@@ -119,7 +119,7 @@ public class LocationSelectorScreen implements Screen {
 
         root.add(scrollPane).expand().fill().row();
 
-        //  CASH TOP LEFT
+        //  Cash Top Left
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.2f);
         cashLabel.setAlignment(Align.center);
@@ -134,7 +134,7 @@ public class LocationSelectorScreen implements Screen {
         cashOverlay.add(cashContainer).left();
         stage.addActor(cashOverlay);
 
-        //  BACK BUTTON BOTTOM RIGHT
+        //  Back button bottom right
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
         backButton.addListener(new ClickListener() {
             @Override
@@ -149,7 +149,7 @@ public class LocationSelectorScreen implements Screen {
         bottomRight.add(backButton).width(80).height(30);
         stage.addActor(bottomRight);
 
-        //  ESC BACK
+        //  Escape = back
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {

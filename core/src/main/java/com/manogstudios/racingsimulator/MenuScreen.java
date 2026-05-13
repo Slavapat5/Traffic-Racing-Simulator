@@ -35,10 +35,10 @@ public class MenuScreen implements Screen {
     private OrthographicCamera backgroundCamera;
 
 
-    // settings button textures
+    // Textures used for the settings button states
     private Texture settingsUpTex, settingsDownTex, settingsOverTex;
 
-    // back button textures
+    // Textures used for the back button states
     private Texture backUpTex, backDownTex, backOverTex;
 
     private Texture defaultButtonUpTex;
@@ -271,7 +271,6 @@ public class MenuScreen implements Screen {
         stage.addActor(settingsAnchor);
 
         ImageTextButton settingsButton = new ImageTextButton("SETTINGS", settingsStyle);
-        //settingsButton.getLabel().setFontScale(0.9f);
         settingsAnchor.add(settingsButton).size(180, 70);
 
         //  settings popup card
@@ -376,6 +375,7 @@ public class MenuScreen implements Screen {
                     @Override
                     protected void result(Object object) {
                         if ((Boolean) object) {
+                            SupabaseAuth.logout();
                             game.setScreen(new LoginScreen(game));
                         }
                     }

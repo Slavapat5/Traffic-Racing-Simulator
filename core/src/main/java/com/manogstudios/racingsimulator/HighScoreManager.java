@@ -77,7 +77,7 @@ public class HighScoreManager {
             scores.put(modeKey, newScore);
             saveHighScores();
 
-            // Push to Supabase via Edge Function (server-side write)
+            // Push to Supabase using Edge Function
             if (SupabaseAuth.isLoggedIn) {
                 SupabaseGameData.submitScore(modeKey, newScore);
             }
