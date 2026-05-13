@@ -122,7 +122,7 @@ public class FreeRideScreen implements Screen {
     private int bonusPoints = 0;   // near misses, etc.
     private boolean gameOver = false;
 
-    // --- Anti-AFK ---
+    //  Anti-AFK
     private static final float AFK_GRACE_SECONDS = 8f;              // gives player time at start
     private static final float AFK_LOW_SPEED_LIMIT_MPH = 35f;       // below this counts as slow rolling
     private static final float AFK_MAX_LOW_ACTIVITY_SECONDS = 20f;  // allowed idle time
@@ -130,7 +130,7 @@ public class FreeRideScreen implements Screen {
     private float lowActivityTimer = 0f;
     private boolean endedByAfk = false;
 
-    // --- Telemetry (run session) ---
+    //  Telemetry (run session)
     private long runStartMillis = 0L;
     private int runCrashCount = 0;
     private int runNearMisses = 0;
@@ -244,7 +244,7 @@ public class FreeRideScreen implements Screen {
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
-        // --- UI ---
+        //  UI
         Table scoreTable = new Table();
         scoreTable.setFillParent(true);
         scoreTable.top().left().padTop(10).padLeft(0);
@@ -579,7 +579,7 @@ public class FreeRideScreen implements Screen {
         gameOverOverlay = new Table();
         gameOverOverlay.setFillParent(true);
 
-        // Full-screen dim background. No PNG needed.
+        // Full-screen dim background.
         gameOverOverlay.setBackground(skin.newDrawable("white", 0f, 0f, 0f, 0.72f));
 
         Table panel = new Table(skin);
@@ -845,7 +845,7 @@ public class FreeRideScreen implements Screen {
         if (dy < 0) dy = 0;
         distanceScore = dy;
 
-        // Convert raw distance to something like meters for display
+        // Convert raw distance to meters for display
         int displayDistance = (int) (distanceScore / 10f);
 
         // Simple scoring formula
@@ -900,13 +900,13 @@ public class FreeRideScreen implements Screen {
                 continue;
             }
 
-            // --- COLLISION CHECK ---
+            //  COLLISION CHECK
             if (playerRect.overlaps(t.bounds)) {
                 onCrash();
                 break;
             }
 
-            // --- NEAR MISS DETECTION ---
+            // NEAR MISS DETECTION
             if (!t.nearMissAwarded) {
                 if (!playerRect.overlaps(t.bounds)) {
 
@@ -1001,7 +1001,7 @@ public class FreeRideScreen implements Screen {
             float spawnY = baseSpawnY;
 
             if (isLaneClearForSpawn(x, spawnY)) {
-                // Random speed within that type's range
+                // Random speed within that types range
                 float speed = MathUtils.random(type.minSpeed, type.maxSpeed);
 
                 TrafficCar car = new TrafficCar(type.texture, x, spawnY, speed);

@@ -6,7 +6,6 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -20,8 +19,6 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import java.util.HashMap;
@@ -39,7 +36,7 @@ public class GarageScreen implements Screen {
     private Label selectedCarLabel;
     private Label selectedPriceLabel;
 
-    // NEW: Class/PI label (info panel)
+    // Displays the selected car's class and PI rating in the info panel
     private Label classLabel;
 
     private Label horsepowerLabel;
@@ -186,9 +183,6 @@ public class GarageScreen implements Screen {
         historyLabel.setAlignment(Align.left);
         historyLabel.setColor(Color.LIGHT_GRAY);
 
-        carPreviewImage = new Image();
-        carPreviewImage.setScaling(Scaling.fit);
-
         Table statsTable = new Table();
         statsTable.defaults().left().padBottom(6);
 
@@ -205,14 +199,14 @@ public class GarageScreen implements Screen {
         Table infoContent = new Table();
 
 
-        // left = image
+        // Left column - selected car preview
         infoContent.add(carPreviewImage)
             .size(320, 180)
             .left()
             .top()
             .padRight(20);
 
-        // right = stats
+        // Right column - selected car stats
         infoContent.add(statsTable)
             .expandX()
             .fillX()
@@ -221,7 +215,7 @@ public class GarageScreen implements Screen {
             .row();
 
 
-        // bottom = history across both columns
+        // Bottom rows - long description and paint options
         infoContent.add(historyLabel)
             .colspan(2)
             .expandX()
@@ -243,10 +237,10 @@ public class GarageScreen implements Screen {
 
         infoPanel.add(infoContent).expand().center();
 
-        // BOTTOM: info panel full width
+        // bottom - info panel full width
         root.add(infoPanel).height(380).expandX().fillX().padTop(10);
 
-        // === TOP BAR (CASH + BACK) ===
+        //  TOP BAR (CASH + BACK)
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.2f);
         cashLabel.setAlignment(Align.center);
@@ -271,7 +265,6 @@ public class GarageScreen implements Screen {
         topBar.add(backButton).right().width(80).height(30).padRight(75);
         stage.addActor(topBar);
 
-        // ARROW BUTTONS USE SAME LOGIC AS KEYBOARD
         leftArrow.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -286,7 +279,7 @@ public class GarageScreen implements Screen {
             }
         });
 
-        // KEYBOARD INPUT
+        // Keyboard Input
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
@@ -339,7 +332,7 @@ public class GarageScreen implements Screen {
         });
     }
 
-    // === ADD ONE CAR CARD TO HORIZONTAL ROW ===
+    // Add one car to horizontal row
     private void addCarCard(Table parent, CarData car) {
         Table carBox = new Table(skin);
         carBox.setBackground("default-round");
@@ -368,7 +361,7 @@ public class GarageScreen implements Screen {
         nameLabel.setFontScale(1.2f);
         carBox.add(nameLabel).row();
 
-        // NEW: Class/PI line on the card itself
+        // Class/PI line on the card itself
         CarStats stats = CarRegistry.getStats(car.image);
         String classText = (stats != null && stats.carClass != null)
             ? (stats.carClass.name() + " " + stats.pi)
@@ -491,7 +484,6 @@ public class GarageScreen implements Screen {
         engineLabel.setText("Engine: " + car.engine);
         historyLabel.setText(car.longDescription);
 
-        // set class label here too
         CarStats stats = CarRegistry.getStats(car.image);
         if (stats != null && stats.carClass != null) {
             classLabel.setText("Class: " + stats.carClass.name() + " " + stats.pi);

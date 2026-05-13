@@ -1,5 +1,6 @@
 package com.manogstudios.racingsimulator;
 
+// Holds the texture paths and road width for a selected location/season theme
 public class EnvironmentTheme {
     public final String roadTexturePath;
     public final String surroundingsTexturePath;

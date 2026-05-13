@@ -88,9 +88,6 @@ public class EndlessTwoWayScreen implements Screen {
     private float furthestPlayerY = 0f;
     private static final float MAX_BACKWARD_DISTANCE = 120f;
 
-    // --- Two-way config ---
-    // Lanes 0 and 1 are "opposing traffic" (coming toward the player).
-    private static final int[] OPPOSING_LANES = {0, 1};
 
     // Bonus for driving in opposing lanes (risk reward)
     private static final float OPPOSING_MIN_MPH = 70f;            // must be at least this fast to earn bonus
@@ -642,7 +639,7 @@ public class EndlessTwoWayScreen implements Screen {
         titleLabel.setColor(Color.WHITE);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Free Ride is currently paused", skin);
+        Label subtitleLabel = new Label("Endless Two Way is currently paused", skin);
         subtitleLabel.setFontScale(0.9f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -680,7 +677,7 @@ public class EndlessTwoWayScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game));
+                game.setScreen(new EndlessTwoWayScreen(game));
             }
         });
 

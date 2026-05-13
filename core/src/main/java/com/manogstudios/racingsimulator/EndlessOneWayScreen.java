@@ -70,7 +70,7 @@ public class EndlessOneWayScreen implements Screen {
     private Table pauseSettingsOverlay;
     private Table pauseSettingsCard;
 
-    // --- Multiplier (Endless) ---
+    //  Multiplier (Endless) -
     private static final float SPEED_THRESHOLD_MPH = 90f;
 
     private float multiplierMeter = 0f; // 0..1
@@ -106,7 +106,7 @@ public class EndlessOneWayScreen implements Screen {
     private static final float FAST_LANE_SPEED_BOOST_MIN = 60f;
     private static final float FAST_LANE_SPEED_BOOST_MAX = 140f;
 
-    //  boost grows as heat ramps
+    // Fast lane traffic speed increases as the heat level rises
     private static final float FAST_LANE_BOOST_GROWTH_PER_STEP = 10f;
     private float fastLaneBoostExtra = 0f;
 
@@ -115,7 +115,7 @@ public class EndlessOneWayScreen implements Screen {
     private float fastLaneTrafficBias = 0.10f;             // base bias chance
     private static final float FAST_LANE_BIAS_MAX = 0.40f; // cap
 
-    // --- Difficulty Ramp (Heat) ---
+    //  Difficulty Ramp (Heat)
     private static final float HEAT_STEP_SECONDS = 20f;
     private float heatTimer = 0f;
 
@@ -196,7 +196,7 @@ public class EndlessOneWayScreen implements Screen {
     private int bonusPoints = 0;
     private boolean gameOver = false;
 
-    // --- Anti-AFK ---
+    //  Anti-AFK
     private static final float AFK_GRACE_SECONDS = 8f;
     private static final float AFK_LOW_SPEED_LIMIT_MPH = 35f;
     private static final float AFK_MAX_LOW_ACTIVITY_SECONDS = 20f;
@@ -304,7 +304,7 @@ public class EndlessOneWayScreen implements Screen {
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
-        // --- UI ---
+        // UI
 
         Table scoreStack = new Table();
         scoreStack.setFillParent(true);
@@ -498,7 +498,7 @@ public class EndlessOneWayScreen implements Screen {
         scoreMultiplier = MathUtils.clamp(stepped, 1.0f, MULTIPLIER_MAX);
     }
 
-    // --- Difficulty ramp logic ---
+    //  Difficulty ramp logic
     private void updateHeat(float delta) {
         heatTimer += delta;
 
@@ -522,7 +522,7 @@ public class EndlessOneWayScreen implements Screen {
         // 3) more frequent clusters
         clusterChance = Math.min(CLUSTER_CHANCE_MAX, clusterChance + CLUSTER_CHANCE_ADD);
 
-        // 4) fast lane becomes more "dangerous" over time, capped
+        // 4) fast lane becomes more dangerous over time, capped
         fastLaneTrafficBias = Math.min(FAST_LANE_BIAS_MAX, fastLaneTrafficBias + 0.02f);
 
         fastLaneGapCurrent = Math.max(MIN_GAP_Y_FAST_MIN, fastLaneGapCurrent - FAST_LANE_GAP_REDUCE_PER_STEP);
@@ -530,7 +530,7 @@ public class EndlessOneWayScreen implements Screen {
         fastLaneBoostExtra += FAST_LANE_BOOST_GROWTH_PER_STEP;
     }
 
-    //  Fast lane helper: find nearest lane index for player position
+    //  Fast lane helper - find nearest lane index for player position
     private int getNearestLaneIndex(float xPos) {
         int best = 0;
         float bestDist = Math.abs(xPos - laneX[0]);
@@ -545,7 +545,7 @@ public class EndlessOneWayScreen implements Screen {
         return best;
     }
 
-    //  Fast lane helper: bias spawn toward fast lane (lane 0)
+    //  Fast lane helper - bias spawn toward fast lane (lane 0)
     private int pickSpawnLaneIndex() {
         // Increase bias as clusters get more common
         float bias = Math.min(FAST_LANE_BIAS_MAX, fastLaneTrafficBias + clusterChance * 0.6f);
@@ -556,7 +556,7 @@ public class EndlessOneWayScreen implements Screen {
     }
 
     private void updateLogic(float delta) {
-        // heat ramp (infinite difficulty)
+        // Gradually increases traffic density and speed for endless difficulty scaling
         updateHeat(delta);
 
         boolean moveForward = Gdx.input.isKeyPressed(Input.Keys.W);
@@ -589,7 +589,7 @@ public class EndlessOneWayScreen implements Screen {
 
 
         int speedDisplay = (int) mph;
-        speedLabel.setText("Speed: " + speedDisplay + " mph");
+        speedLabel.setText(speedDisplay + " mph");
 
         updateAntiAfk(delta, mph, moveForward, brake, turnLeft, turnRight);
 
@@ -603,7 +603,7 @@ public class EndlessOneWayScreen implements Screen {
             multLabel.setText(String.format("x%.1f", scoreMultiplier));
         }
 
-        // --- Fast lane scoring (lane discipline) ---
+        // Fast lane scoring (lane discipline) -
         int playerLane = getNearestLaneIndex(playerCar.getX());
         boolean inFastLane = (playerLane == FAST_LANE_INDEX);
         boolean fastLaneQualified = inFastLane && (mph >= FAST_LANE_MIN_MPH);
@@ -774,7 +774,7 @@ public class EndlessOneWayScreen implements Screen {
         titleLabel.setColor(Color.WHITE);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Free Ride is currently paused", skin);
+        Label subtitleLabel = new Label("Endless One Way is currently paused", skin);
         subtitleLabel.setFontScale(0.9f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -812,7 +812,7 @@ public class EndlessOneWayScreen implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new FreeRideScreen(game));
+                game.setScreen(new EndlessOneWayScreen(game));
             }
         });
 
@@ -1309,7 +1309,7 @@ public class EndlessOneWayScreen implements Screen {
         scoreMultiplier = 1.0f;
         fastLaneScoreAccumulator = 0f;
 
-        // Leaderboard / best score
+        // Leaderboard/best score
         int previousBest = HighScoreManager.getHighScore("endless_one_way");
         boolean newBestScore = score > previousBest;
 

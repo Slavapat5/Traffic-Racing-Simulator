@@ -22,8 +22,6 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.manogstudios.racingsimulator.network.SupabaseAuth;
 import com.manogstudios.racingsimulator.network.SupabaseGameData;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class DealershipScreen implements Screen {
     private final Game game;
@@ -69,11 +67,8 @@ public class DealershipScreen implements Screen {
         this.game = game;
     }
 
-    /**
-     * Server-authoritative purchase via Edge Function.
-     * - Prevents client-side cash cheating
-     * - Prevents duplicate ownership server-side
-     */
+
+    // Server-authoritative purchase via Edge Function, Prevents client-side cash cheating, Prevents duplicate ownership server-side
     public void tryBuyCarSecure(CarData car, Runnable onDoneUI) {
 
         if (CarOwnershipManager.ownsCar(car.image)) {
@@ -95,7 +90,7 @@ public class DealershipScreen implements Screen {
         // Disable input while request runs (prevents double-buy)
         stage.getRoot().setTouchable(Touchable.disabled);
 
-        // Important - SupabaseGameData.purchaseCar signature should be: purchaseCar(String carImage, int price, Consumer<Integer> onSuccessCash, Consumer<String> onFail)
+        // Sends the purchase request to the server-authoritative Edge Function
         SupabaseGameData.purchaseCar(
             car.image,
             car.price,
@@ -231,7 +226,7 @@ public class DealershipScreen implements Screen {
             }
         });
 
-        // --- Info panel ---
+        // Info panel
         infoPanel = new Table(skin);
         infoPanel.setBackground("default-round");
         infoPanel.setColor(0f, 0f, 0f, 1f);
@@ -264,9 +259,6 @@ public class DealershipScreen implements Screen {
         carPreviewImage.setScaling(Scaling.fit);
         carPreviewImage.setSize(300, 300);
 
-        carPreviewImage = new Image();
-        carPreviewImage.setScaling(Scaling.fit);
-
         Table statsTable = new Table();
         statsTable.defaults().left().padBottom(6);
 
@@ -280,14 +272,14 @@ public class DealershipScreen implements Screen {
         Table infoContent = new Table();
         infoContent.defaults().pad(10);
 
-// left = image
+        // left = image
         infoContent.add(carPreviewImage)
             .size(320, 180)
             .left()
             .top()
             .padRight(20);
 
-// right = stats
+        // right = stats
         infoContent.add(statsTable)
             .expandX()
             .fillX()
@@ -295,7 +287,7 @@ public class DealershipScreen implements Screen {
             .left()
             .row();
 
-// bottom = history across both columns
+        // bottom = history across both columns
         infoContent.add(historyLabel)
             .colspan(2)
             .expandX()
@@ -310,9 +302,9 @@ public class DealershipScreen implements Screen {
 
         infoPanel.add(infoContent).expand().center();
 
-        // Top: arrows + scrollable dealership area
+        // Top - arrows + scrollable dealership area
         root.add(dealershipRow).expand().fill().row();
-        // Bottom: info panel
+        // Bottom - info panel
         root.add(infoPanel).height(320).expandX().fillX().padTop(10);
 
         // Keyboard input

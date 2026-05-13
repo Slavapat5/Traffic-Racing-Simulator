@@ -163,7 +163,7 @@ public class DragRaceScreen implements Screen {
         borderRectangles.add(new Rectangle(leftEdge - 50f, -100000f, 50f, 200000f));
         borderRectangles.add(new Rectangle(rightEdge, -100000f, 50f, 200000f));
 
-        //  Pick player + opponent
+        // Selects the players chosen car and picks a fair AI opponent
         String selectedCarTexture = CarSelectionData.getSelectedCarTexture();
         playerStats = CarRegistry.getStats(selectedCarTexture);
 
@@ -195,7 +195,7 @@ public class DragRaceScreen implements Screen {
             MIN_SPEED
         );
 
-        // --- UI ---
+        //  UI
 
 
         Table cashTable = new Table();
@@ -346,7 +346,7 @@ public class DragRaceScreen implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        //  infinite segment draw
+        // Draws repeating road segments around the camera to create an endless strip effect
         float segH = 1080f;
         float segW = 1920f;
         float baseY = (float) Math.floor(camera.position.y / segH) * segH;
@@ -455,7 +455,7 @@ public class DragRaceScreen implements Screen {
             checkLiveAchievements();
         }
 
-        // finish checks
+        // Records finish times once either car reaches the finish distance.
         float playerDist = playerCar.getY() - startY;
         float aiDist = aiCar.getY() - startY;
 
@@ -481,10 +481,6 @@ public class DragRaceScreen implements Screen {
                 }
             }
 
-            //Leaderboard submit (drag_sprint)
-
-             // Faster time => higher score.
-
         }
     }
 
@@ -504,7 +500,7 @@ public class DragRaceScreen implements Screen {
         titleLabel.setColor(Color.WHITE);
         titleLabel.setAlignment(Align.center);
 
-        Label subtitleLabel = new Label("Free Ride is currently paused", skin);
+        Label subtitleLabel = new Label("Drag Race is currently paused", skin);
         subtitleLabel.setFontScale(0.9f);
         subtitleLabel.setColor(Color.LIGHT_GRAY);
         subtitleLabel.setAlignment(Align.center);
@@ -664,8 +660,6 @@ public class DragRaceScreen implements Screen {
 
         controlsPanel.add(createControlRow("W", "Accelerate")).width(500).row();
         controlsPanel.add(createControlRow("S", "Brake / Reverse")).width(500).row();
-        controlsPanel.add(createControlRow("A", "Steer Left")).width(500).row();
-        controlsPanel.add(createControlRow("D", "Steer Right")).width(500).row();
         controlsPanel.add(createControlRow("ESC", "Pause / Back")).width(500).row();
         controlsPanel.add(createControlRow("Mouse", "Click buttons and menus")).width(500).row();
 
@@ -1065,14 +1059,8 @@ public class DragRaceScreen implements Screen {
         raceResultOverlay.toFront();
     }
 
-    /**
-     * Picks an opponent car from CarDataBase / CarRegistry that:
-     * - is not the player's exact car
-     * - has same CarClass
-     * - closest PI to player (fair fight)
-     *
-     * Falls back to any other car if something is missing.
-     */
+
+     // Picks an opponent car that: is not the player's exact car, has same CarClass, closest PI to player (fair fight), Falls back to any other car if something is missing.
     private String pickOpponentSameClassClosestPI(String playerTexture, CarStats playerStats) {
         CarDataBase.load();
 
@@ -1098,7 +1086,7 @@ public class DragRaceScreen implements Screen {
             }
         }
 
-        // Fallback: if no same-class found, pick any other
+        // Fallback - if no same-class found, pick any other
         if (bestTexture == null) {
             for (CarData car : CarDataBase.getAllCars()) {
                 if (car != null && car.image != null && !car.image.equals(playerTexture)) {

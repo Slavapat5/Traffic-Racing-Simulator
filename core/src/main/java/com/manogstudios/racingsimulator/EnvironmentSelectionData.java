@@ -1,5 +1,6 @@
 package com.manogstudios.racingsimulator;
 
+// Stores the currently selected environment choices between selection screens and gameplay screens.
 public class EnvironmentSelectionData {
     private static String selectedLocation = "Plains";
     private static String selectedSeason = "Summer";

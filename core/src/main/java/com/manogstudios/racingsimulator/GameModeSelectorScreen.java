@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -58,13 +57,13 @@ public class GameModeSelectorScreen implements Screen {
         setupBackground();
         setupModeCardBackground();
 
-        // === ROOT LAYOUT OVERLAY ===
+        //  Root Layout Overlay
         Table root = new Table();
         root.setFillParent(true);
         root.top().padTop(90).padLeft(60).padRight(60).padBottom(110); // extra bottom pad for bottom controls
         stage.addActor(root);
 
-        // --- Title row ---
+        // Title row
         Label titleLabel = new Label("Select Game Mode", skin);
         titleLabel.setAlignment(Align.center);
         titleLabel.setFontScale(1.4f);
@@ -80,7 +79,7 @@ public class GameModeSelectorScreen implements Screen {
 
         root.add(titleTable).expandX().center().padBottom(30).row();
 
-        // === MODE CARDS ROW ===
+        // MODE CARDS ROW
         Table modeListTable = new Table();
         modeListTable.pad(10);
         modeListTable.defaults().space(40);
@@ -136,7 +135,7 @@ public class GameModeSelectorScreen implements Screen {
             .padTop(10)
             .row();
 
-        // === CASH (TOP-LEFT) ===
+        //  CASH (TOP-LEFT)
         cashLabel = new Label("$" + formatCash(CashManager.getCash()), skin);
         cashLabel.setFontScale(1.2f);
         cashLabel.setAlignment(Align.center);
@@ -151,7 +150,7 @@ public class GameModeSelectorScreen implements Screen {
         cashOverlay.add(cashContainer).width(200).height(50).left();
         stage.addActor(cashOverlay);
 
-        // === RESET SCORES (BOTTOM-CENTER) ===
+        //  RESET SCORES (BOTTOM-CENTER)
         TextButton resetButton = new TextButton("Reset Scores", defaultButtonStyle);
         resetButton.getLabel().setAlignment(Align.center);
         resetButton.getLabel().setFontScale(1.0f);
@@ -190,7 +189,7 @@ public class GameModeSelectorScreen implements Screen {
         bottomCenter.add(resetButton).center().width(220).height(46);
         stage.addActor(bottomCenter);
 
-        // === BACK BUTTON (BOTTOM-RIGHT) ===
+        //  BACK BUTTON (BOTTOM-RIGHT)
         ImageButton backButton = new ImageButton(UIStyles.getBackButtonStyle());
         backButton.addListener(new ClickListener() {
             @Override
@@ -239,7 +238,7 @@ public class GameModeSelectorScreen implements Screen {
             bgImage.setFillParent(true);
             stage.addActor(bgImage); // behind everything else
         } catch (Exception e) {
-            bgTexture = null; // no background image, just default clear color
+            bgTexture = null;
         }
     }
 

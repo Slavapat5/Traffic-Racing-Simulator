@@ -90,7 +90,6 @@ public class ChangePasswordScreen implements Screen {
         root.add(card).width(480);
 
         // Listeners
-
         saveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -138,7 +137,7 @@ public class ChangePasswordScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new AccountScreen(game)); // or MenuScreen if you prefer
+                game.setScreen(new AccountScreen(game));
             }
         });
     }
