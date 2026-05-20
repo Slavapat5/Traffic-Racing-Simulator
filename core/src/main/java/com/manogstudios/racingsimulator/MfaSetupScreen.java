@@ -176,11 +176,12 @@ public class MfaSetupScreen implements Screen {
         });
     }
 
-    // Loads the current MFA state so the screen can show whether 2FA is enabled.
+    // Loads the current MFA status so the screen can show whether 2FA is enabled.
     private void loadFactorState() {
         statusLabel.setColor(Color.LIGHT_GRAY);
         statusLabel.setText("Checking MFA status...");
 
+        // was the request succesful?
         SupabaseAuth.fetchMfaStatus(result -> {
             if (!result.success) {
                 statusLabel.setColor(Color.RED);
@@ -189,12 +190,14 @@ public class MfaSetupScreen implements Screen {
                 return;
             }
 
+            // clear old data
             verifiedFactorId = null;
             pendingFactorId = null;
             pendingChallengeId = null;
             setupInfoArea.setText("");
             codeField.setText("");
 
+            // if supabase says theyre is a verified factor, game stores factor id
             if (!result.verifiedFactorIds.isEmpty()) {
                 verifiedFactorId = result.verifiedFactorIds.get(0);
             }
@@ -227,16 +230,18 @@ public class MfaSetupScreen implements Screen {
                 return;
             }
 
+            // storing factor id
             pendingFactorId = result.factorId;
             pendingChallengeId = null;
 
             StringBuilder info = new StringBuilder();
             info.append("Add this factor to your authenticator app.\n\n");
 
+            // displaying secret to user
             if (result.secret != null) {
                 info.append("Secret:\n").append(result.secret).append("\n\n");
             }
-
+            // displaying uri
             if (result.uri != null) {
                 info.append("URI:\n").append(result.uri).append("\n\n");
             }

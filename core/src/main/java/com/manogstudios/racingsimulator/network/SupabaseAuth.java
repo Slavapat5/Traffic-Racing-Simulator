@@ -28,7 +28,6 @@ public class SupabaseAuth {
 
     // Identity
     public static String userId = null;
-
     // Expiry tracking
     // accessTokenExpiresAtMillis is absolute time in millis when access token expires
     private static long accessTokenExpiresAtMillis = 0L;
@@ -478,6 +477,7 @@ public class SupabaseAuth {
 
             final String token = accessToken;
 
+
             new Thread(() -> {
                 MfaFactorsResult result = new MfaFactorsResult();
 
@@ -580,6 +580,7 @@ public class SupabaseAuth {
                         }
 
                         String current = decodeAalFromJwt(accessToken);
+                        // assume aal1 if no aal
                         result.currentLevel = (current != null && !current.isEmpty()) ? current : "aal1";
 
                         if ("aal2".equalsIgnoreCase(result.currentLevel)) {
@@ -851,6 +852,7 @@ public class SupabaseAuth {
                     return;
                 }
 
+                // checking if at least one factor is verified
                 boolean hasVerified = false;
                 for (MfaFactor factor : factorsResult.factors) {
                     if ("verified".equalsIgnoreCase(factor.status)) {
@@ -885,6 +887,7 @@ public class SupabaseAuth {
 
             byte[] decoded = java.util.Base64.getUrlDecoder().decode(parts[1]);
             String payload = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+
             JSONObject json = new JSONObject(payload);
 
             String aal = json.optString("aal", null);

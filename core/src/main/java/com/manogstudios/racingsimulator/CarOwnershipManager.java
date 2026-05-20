@@ -93,6 +93,43 @@ public class CarOwnershipManager {
         }
     }
 
+    public static boolean removeCarResolved(CarData car){
+        if (car == null || car.image == null) return false;
+
+        Set<String> toRemove = new HashSet<>();
+
+        for (String ownedImage : ownedCars){
+            if (ownedImage.equals(car.image)){
+                toRemove.add(ownedImage);
+                continue;
+            }
+
+            CarData resolved = CarDataBase.getCarByImage(ownedImage);
+            if (resolved != null && resolved.image != null && resolved.image.equals(car.image)){
+                toRemove.add(ownedImage);
+            }
+        }
+
+        if (toRemove.isEmpty()) {
+            return false;
+        }
+
+
+        for (String imagePath : toRemove) {
+            ownedCars.remove(imagePath);
+
+            if (SupabaseAuth.isLoggedIn){
+                SupabaseGameData.removeOwnedCar(
+                    SupabaseAuth.userId,
+                    SupabaseAuth.accessToken,
+                    imagePath
+                );
+            }
+        }
+        saveOwnedCars();
+        return true;
+    }
+
 
     public static void clearOwnedCars() {
         ownedCars.clear();

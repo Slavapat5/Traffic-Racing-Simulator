@@ -41,8 +41,6 @@ public class SupabaseGameData {
         });
     }
 
-
-
     private static HttpRequest.Builder baseRequest(String path, String accessToken) {
         return HttpRequest.newBuilder()
             .uri(URI.create(SUPABASE_URL + "/rest/v1/" + path))
@@ -251,6 +249,7 @@ public class SupabaseGameData {
                     body.put("crashes", crashes);
                     body.put("near_misses", nearMisses);
 
+                    // optional values (only if they exist)
                     if (avgSpeedMph != null) body.put("avg_speed_mph", avgSpeedMph);
                     if (maxSpeedMph != null) body.put("max_speed_mph", maxSpeedMph);
                     if (carId != null) body.put("car_id", carId);
@@ -672,6 +671,7 @@ public class SupabaseGameData {
                             }
                         }
 
+                        // fallback username
                         if (username == null || username.isEmpty()) {
                             String shortId = userId.length() > 8 ? userId.substring(0, 8) : userId;
                             username = "Player " + shortId;

@@ -895,7 +895,16 @@ public class GarageScreen implements Screen {
             return;
         }
 
-        CarOwnershipManager.removeCar(car.image);
+        boolean removed = CarOwnershipManager.removeCarResolved(car);
+
+        if(!removed){
+            showModernMessageDialog(
+                "Sell Failed",
+                "This car could not be removed from your owned cars."
+            );
+            return;
+        }
+
         CashManager.addCash(refund);
 
         System.out.println("Sold car: " + car.title + " for $" + refund);

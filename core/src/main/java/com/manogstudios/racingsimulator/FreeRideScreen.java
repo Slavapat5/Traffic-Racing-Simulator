@@ -28,7 +28,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 
 public class FreeRideScreen implements Screen {
-
     private final Game game;
 
     // Rendering
@@ -361,6 +360,8 @@ public class FreeRideScreen implements Screen {
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
+        // Calculations for road generation
 
         float baseY = (float) Math.floor(camera.position.y / SEGMENT_HEIGHT) * SEGMENT_HEIGHT;
         float roadX = roadCenterX - SEGMENT_WIDTH / 2f;

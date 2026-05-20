@@ -1,0 +1,4 @@
+endless_two_way=5208
+free_ride=11635
+endless_one_way=1429
+time_trial=5367
